@@ -1,0 +1,7 @@
+export { default as PromoBanner } from './PromoBanner'
+export { default as WhatYouLearn } from './WhatYouLearn'
+export { default as TargetAudience } from './TargetAudience'
+export { default as Testimonials } from './Testimonials'
+export { default as PricingSection } from './PricingSection'
+export { default as FAQSection } from './FAQSection'
+export { default as CertificatePreview } from './CertificatePreview'
