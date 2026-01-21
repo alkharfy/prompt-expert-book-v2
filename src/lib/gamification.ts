@@ -327,3 +327,125 @@ export async function syncReadingToGamification(
         dbLogger.error('Error in syncReadingToGamification', error)
     }
 }
+
+/**
+ * إعادة حساب نقاط المستخدم بالكامل بناءً على التمارين والفصول المكتملة
+ * يستخدم لإصلاح أي مشاكل في التزامن
+ */
+export async function recalculateUserPoints(userId: string): Promise<void> {
+    try {
+        dbLogger.debug(`Starting point recalculation for user ${userId}`)
+
+        // 1. حساب نقاط التمارين
+        const { data: exercisesData, error: exercisesError } = await supabase
+            .from('exercise_progress')
+            .select('points_earned')
+            .eq('user_id', userId)
+            .eq('is_completed', true)
+
+        if (exercisesError) {
+            dbLogger.error('Error fetching exercises for recalculation', exercisesError)
+            return
+        }
+
+        const exercisesList = exercisesData as unknown as { points_earned: number }[]
+        const exercisesPoints = exercisesList?.reduce((sum, ex) => sum + (ex.points_earned || 0), 0) || 0
+        const exercisesCount = exercisesList?.length || 0
+
+        // 2. حساب نقاط القراءة (الفصول)
+        // نحتاج لجلب عدد الفصول المكتملة من progress
+        const { data: readingData, error: readingError } = await supabase
+            .from('reading_progress')
+            .select('completed_chapters')
+            .eq('user_id', userId)
+            .maybeSingle() as { data: { completed_chapters?: string[] } | null; error: unknown }
+
+        if (readingError) {
+            dbLogger.error('Error fetching reading progress for recalculation', readingError)
+            return
+        }
+
+        const completedChapters = readingData?.completed_chapters?.length || 0
+        const readingPoints = completedChapters * 50
+
+        // 3. المجموع الكلي
+        const totalPoints = exercisesPoints + readingPoints
+
+        // 4. تحديث جدول Gamification
+        // نحاول استعادة الـ Streak إذا كان المستخدم نشطاً اليوم
+        // نتحقق من آخر نشاط في التمارين
+        const { data: lastExercise } = await supabase
+            .from('exercise_progress')
+            .select('completed_at')
+            .eq('user_id', userId)
+            .order('completed_at', { ascending: false })
+            .limit(1)
+            .maybeSingle() as { data: { completed_at: string } | null }
+
+        let lastActivityDate = null
+        let currentStreakUpdate = {}
+
+        if (lastExercise?.completed_at) {
+            const lastDate = new Date(lastExercise.completed_at).toISOString().split('T')[0]
+            const today = new Date().toISOString().split('T')[0]
+
+            // إذا كان آخر نشاط هو اليوم
+            if (lastDate === today) {
+                lastActivityDate = today
+                // إذا لم يكن هناك streak محفوظ أو كان 0، نجعله 1 على الأقل بما أنه نشط اليوم
+                // (لا يمكننا معرفة الـ streak الحقيقي بدون سجل كامل، لكن 1 أفضل من 0)
+                currentStreakUpdate = {
+                    last_activity_date: today,
+                    // نستخدم raw upsert لذا لا يمكننا قراءة القيمة الحالية بسهولة هنا
+                    // لكن بما أننا نعيد الحساب، نفترض أننا نريد إصلاح القيم الصفرية
+                    // سيتم تعيينه إلى 1 إذا لم يكن هناك قيمة، أو الحفاظ على القيمة إذا وجدت (في تحديث منفصل لو أردنا، لكن هنا سنقوم بتحديث شامل)
+                }
+            }
+        }
+
+        // نقوم بتحديث البيانات
+        // ملاحظة: Upsert سيقوم بإنشاء صف جديد أو تحديث الموجود
+        // للحفاظ على الـ streak الموجود، نحتاج لقراءته أولاً، لكننا نريد تحديثه إذا كان 0 ومستخدم نشط
+
+        const { data: existingGam } = await supabase
+            .from('user_gamification')
+            .select('current_streak, longest_streak')
+            .eq('user_id', userId)
+            .maybeSingle() as { data: { current_streak: number, longest_streak: number } | null }
+
+        let finalStreak = existingGam?.current_streak || 0
+        let finalLongest = existingGam?.longest_streak || 0
+
+        // إذا كان نشط اليوم والستريك 0، نجعله 1
+        if (lastActivityDate && finalStreak === 0) {
+            finalStreak = 1
+            finalLongest = Math.max(finalLongest, 1)
+        }
+
+        const { error: updateError } = await (supabase
+            .from('user_gamification') as unknown as UpsertTable)
+            .upsert({
+                user_id: userId,
+                total_points: totalPoints,
+                exercises_completed: exercisesCount,
+                chapters_completed: completedChapters,
+                current_level: Math.floor(totalPoints / 100) + 1,
+                points_to_next_level: 100 - (totalPoints % 100),
+                current_streak: finalStreak,
+                longest_streak: finalLongest,
+                ...(lastActivityDate ? { last_activity_date: lastActivityDate } : {}),
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'user_id'
+            })
+
+        if (updateError) {
+            dbLogger.error('Error updating recalculated points', updateError)
+        } else {
+            dbLogger.info(`Recalculated points for user ${userId}: ${totalPoints} (Ex: ${exercisesPoints}, Read: ${readingPoints})`)
+        }
+
+    } catch (error) {
+        dbLogger.error('Error in recalculateUserPoints', error)
+    }
+}

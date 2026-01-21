@@ -15,15 +15,32 @@ export default function Navigation() {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [readingProgress, setReadingProgress] = useState(0)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+    const toggleDropdown = (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDropdownOpen(!isDropdownOpen)
+    }
 
     const headerRef = useRef<HTMLElement>(null)
 
     useEffect(() => {
-        // Close menu on route change
+        // Close menus on route change
         setIsMenuOpen(false)
+        setIsDropdownOpen(false)
     }, [pathname])
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (isDropdownOpen) {
+                setIsDropdownOpen(false)
+            }
+        }
+        document.addEventListener('click', handleClickOutside)
+        return () => document.removeEventListener('click', handleClickOutside)
+    }, [isDropdownOpen])
 
     useEffect(() => {
         // ... existing useEffect logic ...
@@ -79,7 +96,7 @@ export default function Navigation() {
             resizeObserver.disconnect()
             window.removeEventListener('resize', updateHeaderHeight)
         }
-    }, []) // Empty dependency array as it only needs to run once. Pathname is handled by a separate useEffect or by the fact that pathname changes trigger re-render anyway. Wait, the original had [pathname]. Let's keep it mostly same but adjust.
+    }, [])
 
     const handleLogout = async () => {
         await authSystem.logout()
@@ -151,6 +168,48 @@ export default function Navigation() {
                                 الفهرس
                             </Link>
                         </li>
+
+                        {isLoggedIn && (
+                            <li className={`nav-dropdown-parent ${isDropdownOpen ? 'open' : ''}`}>
+                                <span
+                                    className={`nav-link dropdown-trigger ${isDropdownOpen ? 'active' : ''}`}
+                                    onClick={toggleDropdown}
+                                >
+                                    الأدوات والتعلم
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'none' }}>
+                                        <path d="M6 9l6 6 6-6" />
+                                    </svg>
+                                </span>
+                                <ul className={`nav-dropdown ${isDropdownOpen ? 'show' : ''}`}>
+                                    <li>
+                                        <Link href="/exercises" className={`dropdown-link ${pathname === '/exercises' ? 'active' : ''}`}>
+                                            التمارين التفاعلية
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/tools" className={`dropdown-link ${pathname === '/tools' ? 'active' : ''}`}>
+                                            صندوق الأدوات
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/bookmarks" className={`dropdown-link ${pathname === '/bookmarks' ? 'active' : ''}`}>
+                                            إشاراتي المرجعية
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/achievements" className={`dropdown-link ${pathname === '/achievements' ? 'active' : ''}`}>
+                                            الإنجازات والشهادات
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/leaderboard" className={`dropdown-link ${pathname === '/leaderboard' ? 'active' : ''}`}>
+                                            لوحة المتصدرين
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </li>
+                        )}
+
                         {isLoggedIn && (
                             <li>
                                 <Link
@@ -161,76 +220,20 @@ export default function Navigation() {
                                 </Link>
                             </li>
                         )}
-                        {isLoggedIn && (
-                            <li>
-                                <Link
-                                    href="/bookmarks"
-                                    className={`nav-link ${pathname === '/bookmarks' ? 'active' : ''}`}
-                                    title="إشاراتي المرجعية"
-                                >
-                                    إشاراتي
-                                </Link>
-                            </li>
-                        )}
-                        {isLoggedIn && (
-                            <li>
-                                <Link
-                                    href="/exercises"
-                                    className={`nav-link ${pathname === '/exercises' ? 'active' : ''}`}
-                                    title="التمارين التفاعلية"
-                                >
-                                    التمارين
-                                </Link>
-                            </li>
-                        )}
-                        {isLoggedIn && (
-                            <li>
-                                <Link
-                                    href="/tools"
-                                    className={`nav-link ${pathname === '/tools' ? 'active' : ''}`}
-                                    title="صندوق الأدوات"
-                                >
-                                    الأدوات
-                                </Link>
-                            </li>
-                        )}
-                        {isLoggedIn && (
-                            <li>
-                                <Link
-                                    href="/achievements"
-                                    className={`nav-link ${pathname === '/achievements' ? 'active' : ''}`}
-                                    title="الإنجازات والشهادات"
-                                >
-                                    الإنجازات
-                                </Link>
-                            </li>
-                        )}
-                        <li>
-                            <Link
-                                href="/leaderboard"
-                                className={`nav-link ${pathname === '/leaderboard' ? 'active' : ''}`}
-                                title="لوحة المتصدرين"
-                            >
-                                المتصدرين
-                            </Link>
-                        </li>
+
                         <li>
                             {isLoggedIn ? (
                                 <motion.button
                                     onClick={handleLogout}
-                                    className="nav-link"
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        color: 'inherit',
-                                        font: 'inherit',
-                                        padding: 'var(--spacing-xs) 0',
-                                        transition: 'color var(--transition-fast)'
-                                    }}
-                                    whileHover={{ color: 'var(--color-orange-glow)' }}
+                                    className="nav-link logout-btn"
+                                    whileHover={{ color: 'var(--color-orange-glow)', scale: 1.1 }}
+                                    title="تسجيل الخروج"
                                 >
-                                    تسجيل الخروج
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                        <polyline points="16 17 21 12 16 7" />
+                                        <line x1="21" y1="12" x2="9" y2="12" />
+                                    </svg>
                                 </motion.button>
                             ) : (
                                 <Link
@@ -245,10 +248,14 @@ export default function Navigation() {
                 </div>
             </div>
             {/* Overlay for mobile menu */}
-            {isMenuOpen && (
-                <div className="nav-overlay" onClick={toggleMenu}></div>
+            {(isMenuOpen || isDropdownOpen) && (
+                <div className="nav-overlay" onClick={() => {
+                    setIsMenuOpen(false)
+                    setIsDropdownOpen(false)
+                }}></div>
             )}
         </motion.nav>
     )
+
 
 }

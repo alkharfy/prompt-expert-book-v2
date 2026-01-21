@@ -26,7 +26,7 @@ type TabType = 'codes' | 'testimonials' | 'settings'
 
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<TabType>('codes')
-    
+
     // Verification Codes State
     const [records, setRecords] = useState<VerificationRecord[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -35,7 +35,8 @@ export default function AdminDashboard() {
     const [error, setError] = useState('')
     const [filter, setFilter] = useState<'all' | 'pending' | 'used'>('pending')
     const [copiedId, setCopiedId] = useState<string | null>(null)
-    
+    const [deletingId, setDeletingId] = useState<string | null>(null)
+
     // Testimonials State
     const [testimonials, setTestimonials] = useState<Testimonial[]>([])
     const [testimonialsLoading, setTestimonialsLoading] = useState(false)
@@ -48,7 +49,7 @@ export default function AdminDashboard() {
         rating: 5,
         photo_url: ''
     })
-    
+
     // Promo Settings State
     const [promo, setPromo] = useState<PromoSettings | null>(null)
     const [promoLoading, setPromoLoading] = useState(false)
@@ -63,7 +64,7 @@ export default function AdminDashboard() {
     const handleAdminLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
-        
+
         try {
             // التحقق من كلمة المرور عبر API Route
             const response = await fetch('/api/admin/verify', {
@@ -71,9 +72,9 @@ export default function AdminDashboard() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: adminPassword })
             })
-            
+
             const data = await response.json()
-            
+
             if (data.success && data.token) {
                 setIsAuthenticated(true)
                 setSessionToken(data.token)
@@ -153,7 +154,7 @@ export default function AdminDashboard() {
             return () => clearInterval(interval)
         }
     }, [isAuthenticated, filter, activeTab, fetchRecords])
-    
+
     // Fetch Testimonials
     const fetchTestimonials = useCallback(async () => {
         setTestimonialsLoading(true)
@@ -161,13 +162,13 @@ export default function AdminDashboard() {
         setTestimonials(data)
         setTestimonialsLoading(false)
     }, [])
-    
+
     useEffect(() => {
         if (isAuthenticated && activeTab === 'testimonials') {
             fetchTestimonials()
         }
     }, [isAuthenticated, activeTab, fetchTestimonials])
-    
+
     // Fetch Promo Settings
     const fetchPromoSettings = useCallback(async () => {
         setPromoLoading(true)
@@ -180,7 +181,7 @@ export default function AdminDashboard() {
         })
         setPromoLoading(false)
     }, [])
-    
+
     useEffect(() => {
         if (isAuthenticated && activeTab === 'settings') {
             fetchPromoSettings()
@@ -191,6 +192,38 @@ export default function AdminDashboard() {
         navigator.clipboard.writeText(code)
         setCopiedId(id)
         setTimeout(() => setCopiedId(null), 2000)
+    }
+
+    const handleDeleteRecord = async (userId: string, verificationCodeId: string) => {
+        if (!confirm('هل أنت متأكد من حذف هذا الكود؟ سيتم حذف بيانات المستخدم والسماح له بالتسجيل مرة أخرى بنفس البريد.')) {
+            return
+        }
+
+        setDeletingId(verificationCodeId)
+        try {
+            const response = await fetch('/api/admin/delete-pending-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token: sessionToken,
+                    userId,
+                    verificationCodeId
+                })
+            })
+
+            const data = await response.json()
+
+            if (data.success) {
+                // Refresh records
+                fetchRecords()
+            } else {
+                alert('فشل الحذف: ' + data.error)
+            }
+        } catch (err) {
+            alert('حدث خطأ في الاتصال بالسيرفر')
+        } finally {
+            setDeletingId(null)
+        }
     }
 
     const formatDate = (dateStr: string) => {
@@ -214,7 +247,7 @@ export default function AdminDashboard() {
         setIsAuthenticated(false)
         setAdminPassword('')
     }
-    
+
     // Testimonial handlers
     const handleTestimonialSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -228,7 +261,7 @@ export default function AdminDashboard() {
         setTestimonialForm({ name: '', title: '', content: '', rating: 5, photo_url: '' })
         fetchTestimonials()
     }
-    
+
     const handleEditTestimonial = (testimonial: Testimonial) => {
         setEditingTestimonial(testimonial)
         setTestimonialForm({
@@ -240,19 +273,19 @@ export default function AdminDashboard() {
         })
         setShowTestimonialForm(true)
     }
-    
+
     const handleDeleteTestimonial = async (id: string) => {
         if (confirm('هل أنت متأكد من حذف هذا التقييم؟')) {
             await deleteTestimonial(id)
             fetchTestimonials()
         }
     }
-    
+
     const handleToggleVisibility = async (id: string, isVisible: boolean) => {
         await toggleTestimonialVisibility(id, !isVisible)
         fetchTestimonials()
     }
-    
+
     // Promo handlers
     const handlePromoSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -267,7 +300,7 @@ export default function AdminDashboard() {
         }
         fetchPromoSettings()
     }
-    
+
     const handlePromoToggle = async () => {
         const result = await togglePromoActive(!promoForm.is_active)
         if (!result.success && result.error) {
@@ -285,9 +318,9 @@ export default function AdminDashboard() {
                 <div className="admin-login-card">
                     <h1 className="admin-title">🔐 لوحة الإدارة</h1>
                     <p className="admin-subtitle">أدخل كلمة المرور للوصول</p>
-                    
+
                     {error && <div className="auth-global-error">{error}</div>}
-                    
+
                     <form onSubmit={handleAdminLogin} className="admin-login-form">
                         <input
                             type="password"
@@ -314,21 +347,21 @@ export default function AdminDashboard() {
                         تسجيل الخروج
                     </button>
                 </div>
-                
+
                 <div className="admin-tabs">
-                    <button 
+                    <button
                         className={`tab-btn ${activeTab === 'codes' ? 'active' : ''}`}
                         onClick={() => setActiveTab('codes')}
                     >
                         🔢 أكواد التحقق
                     </button>
-                    <button 
+                    <button
                         className={`tab-btn ${activeTab === 'testimonials' ? 'active' : ''}`}
                         onClick={() => setActiveTab('testimonials')}
                     >
                         ⭐ شهادات العملاء
                     </button>
-                    <button 
+                    <button
                         className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
                         onClick={() => setActiveTab('settings')}
                     >
@@ -341,19 +374,19 @@ export default function AdminDashboard() {
                 <>
                     <div className="admin-controls">
                         <div className="filter-buttons">
-                            <button 
+                            <button
                                 className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
                                 onClick={() => setFilter('pending')}
                             >
                                 ⏳ في الانتظار
                             </button>
-                            <button 
+                            <button
                                 className={`filter-btn ${filter === 'used' ? 'active' : ''}`}
                                 onClick={() => setFilter('used')}
                             >
                                 ✅ تم الاستخدام
                             </button>
-                            <button 
+                            <button
                                 className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
                                 onClick={() => setFilter('all')}
                             >
@@ -406,13 +439,25 @@ export default function AdminDashboard() {
                                                 )}
                                             </td>
                                             <td>
-                                                <button
-                                                    onClick={() => copyCode(record.code, record.id)}
-                                                    className="btn btn-copy"
-                                                    disabled={record.is_used}
-                                                >
-                                                    {copiedId === record.id ? '✓ تم النسخ' : '📋 نسخ'}
-                                                </button>
+                                                <div className="admin-actions-flex">
+                                                    <button
+                                                        onClick={() => copyCode(record.code, record.id)}
+                                                        className="btn btn-copy"
+                                                        disabled={record.is_used}
+                                                    >
+                                                        {copiedId === record.id ? '✓ تم النسخ' : '📋 نسخ'}
+                                                    </button>
+                                                    {!record.is_used && (
+                                                        <button
+                                                            onClick={() => handleDeleteRecord(record.user_id, record.id)}
+                                                            className="btn btn-delete-small"
+                                                            disabled={deletingId === record.id}
+                                                            title="حذف هذا الحساب والسماح له بالتسجيل مرة أخرى"
+                                                        >
+                                                            {deletingId === record.id ? '...' : '🗑 حذف'}
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -437,12 +482,12 @@ export default function AdminDashboard() {
                     </div>
                 </>
             )}
-            
+
             {activeTab === 'testimonials' && (
                 <div className="testimonials-tab">
                     <div className="tab-header">
                         <h2>⭐ إدارة شهادات العملاء</h2>
-                        <button 
+                        <button
                             onClick={() => {
                                 setShowTestimonialForm(true)
                                 setEditingTestimonial(null)
@@ -453,7 +498,7 @@ export default function AdminDashboard() {
                             ➕ إضافة شهادة
                         </button>
                     </div>
-                    
+
                     {showTestimonialForm && (
                         <div className="form-card">
                             <h3>{editingTestimonial ? 'تعديل شهادة' : 'إضافة شهادة جديدة'}</h3>
@@ -464,7 +509,7 @@ export default function AdminDashboard() {
                                         <input
                                             type="text"
                                             value={testimonialForm.name}
-                                            onChange={(e) => setTestimonialForm({...testimonialForm, name: e.target.value})}
+                                            onChange={(e) => setTestimonialForm({ ...testimonialForm, name: e.target.value })}
                                             required
                                             className="auth-input"
                                         />
@@ -474,7 +519,7 @@ export default function AdminDashboard() {
                                         <input
                                             type="text"
                                             value={testimonialForm.title}
-                                            onChange={(e) => setTestimonialForm({...testimonialForm, title: e.target.value})}
+                                            onChange={(e) => setTestimonialForm({ ...testimonialForm, title: e.target.value })}
                                             required
                                             className="auth-input"
                                         />
@@ -484,7 +529,7 @@ export default function AdminDashboard() {
                                     <label>المحتوى</label>
                                     <textarea
                                         value={testimonialForm.content}
-                                        onChange={(e) => setTestimonialForm({...testimonialForm, content: e.target.value})}
+                                        onChange={(e) => setTestimonialForm({ ...testimonialForm, content: e.target.value })}
                                         required
                                         rows={3}
                                         className="auth-input"
@@ -498,7 +543,7 @@ export default function AdminDashboard() {
                                             min={1}
                                             max={5}
                                             value={testimonialForm.rating}
-                                            onChange={(e) => setTestimonialForm({...testimonialForm, rating: parseInt(e.target.value)})}
+                                            onChange={(e) => setTestimonialForm({ ...testimonialForm, rating: parseInt(e.target.value) })}
                                             className="auth-input"
                                         />
                                     </div>
@@ -507,7 +552,7 @@ export default function AdminDashboard() {
                                         <input
                                             type="url"
                                             value={testimonialForm.photo_url}
-                                            onChange={(e) => setTestimonialForm({...testimonialForm, photo_url: e.target.value})}
+                                            onChange={(e) => setTestimonialForm({ ...testimonialForm, photo_url: e.target.value })}
                                             className="auth-input"
                                         />
                                     </div>
@@ -516,8 +561,8 @@ export default function AdminDashboard() {
                                     <button type="submit" className="btn btn-primary">
                                         {editingTestimonial ? 'حفظ التعديلات' : 'إضافة'}
                                     </button>
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         onClick={() => setShowTestimonialForm(false)}
                                         className="btn btn-secondary"
                                     >
@@ -527,7 +572,7 @@ export default function AdminDashboard() {
                             </form>
                         </div>
                     )}
-                    
+
                     {testimonialsLoading ? (
                         <div className="admin-loading">
                             <div className="auth-loader"></div>
@@ -556,19 +601,19 @@ export default function AdminDashboard() {
                                     </div>
                                     <p className="testimonial-content">{t.content}</p>
                                     <div className="testimonial-actions">
-                                        <button 
+                                        <button
                                             onClick={() => handleToggleVisibility(t.id, t.is_visible)}
                                             className={`btn btn-sm ${t.is_visible ? 'btn-warning' : 'btn-success'}`}
                                         >
                                             {t.is_visible ? '👁 إخفاء' : '👁 إظهار'}
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleEditTestimonial(t)}
                                             className="btn btn-sm btn-secondary"
                                         >
                                             ✏️ تعديل
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleDeleteTestimonial(t.id)}
                                             className="btn btn-sm btn-danger"
                                         >
@@ -581,11 +626,11 @@ export default function AdminDashboard() {
                     )}
                 </div>
             )}
-            
+
             {activeTab === 'settings' && (
                 <div className="settings-tab">
                     <h2>⚙️ إعدادات العروض</h2>
-                    
+
                     {promoLoading ? (
                         <div className="admin-loading">
                             <div className="auth-loader"></div>
@@ -595,14 +640,14 @@ export default function AdminDashboard() {
                         <div className="settings-card">
                             <div className="promo-toggle">
                                 <span>حالة العرض الترويجي</span>
-                                <button 
+                                <button
                                     onClick={handlePromoToggle}
                                     className={`toggle-btn ${promoForm.is_active ? 'active' : ''}`}
                                 >
                                     {promoForm.is_active ? '✅ مفعّل' : '❌ معطّل'}
                                 </button>
                             </div>
-                            
+
                             <form onSubmit={handlePromoSubmit} className="promo-form">
                                 <div className="form-row">
                                     <div className="form-group">
@@ -612,7 +657,7 @@ export default function AdminDashboard() {
                                             min={1}
                                             max={90}
                                             value={promoForm.discount_percentage}
-                                            onChange={(e) => setPromoForm({...promoForm, discount_percentage: parseInt(e.target.value)})}
+                                            onChange={(e) => setPromoForm({ ...promoForm, discount_percentage: parseInt(e.target.value) })}
                                             className="auth-input"
                                         />
                                     </div>
@@ -621,7 +666,7 @@ export default function AdminDashboard() {
                                         <input
                                             type="date"
                                             value={promoForm.end_date}
-                                            onChange={(e) => setPromoForm({...promoForm, end_date: e.target.value})}
+                                            onChange={(e) => setPromoForm({ ...promoForm, end_date: e.target.value })}
                                             className="auth-input"
                                         />
                                     </div>
@@ -630,7 +675,7 @@ export default function AdminDashboard() {
                                     💾 حفظ التغييرات
                                 </button>
                             </form>
-                            
+
                             {promo && (
                                 <div className="promo-preview">
                                     <h4>معاينة العرض</h4>

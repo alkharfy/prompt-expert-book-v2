@@ -9,6 +9,7 @@ import Navigation from '@/components/Navigation';
 import Certificate, { AchievementsList } from '@/components/achievements/Certificate';
 import { achievementsData, AchievementDefinition } from '@/data/achievementsData';
 import { dbLogger } from '@/lib/logger';
+import { recalculateUserPoints } from '@/lib/gamification';
 
 type TabType = 'achievements' | 'certificate';
 
@@ -64,7 +65,7 @@ export default function AchievementsPage() {
       const completedExercises = exercisesData?.length || 0;
 
       // جلب بيانات الـ Gamification
-      const { data: gamificationData } = await supabase
+      let { data: gamificationData } = await supabase
         .from('user_gamification')
         .select('*')
         .eq('user_id', loadUserId)
@@ -75,6 +76,29 @@ export default function AchievementsPage() {
             total_reading_time_minutes?: number
           } | null
         };
+
+      // التحقق من عدم تطابق النقاط وتشغيل إعادة الحساب إذا لزم الأمر
+      if ((!gamificationData?.total_points || gamificationData.total_points === 0) && (completedChapters > 0 || completedExercises > 0)) {
+        dbLogger.info('Points mismatch detected, recalculating...', { userId: loadUserId });
+        await recalculateUserPoints(loadUserId);
+
+        // إعادة جلب البيانات
+        const { data: refreshedData } = await supabase
+          .from('user_gamification')
+          .select('*')
+          .eq('user_id', loadUserId)
+          .maybeSingle() as {
+            data: {
+              current_streak?: number;
+              total_points?: number;
+              total_reading_time_minutes?: number
+            } | null
+          };
+
+        if (refreshedData) {
+          gamificationData = refreshedData;
+        }
+      }
 
       const currentStreak = gamificationData?.current_streak || 0;
       const totalPoints = gamificationData?.total_points || 0;

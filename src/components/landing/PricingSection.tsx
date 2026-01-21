@@ -373,6 +373,39 @@ export default function PricingSection() {
                     .section-title {
                         font-size: 1.8rem;
                     }
+
+                    .amount {
+                        font-size: 2.5rem;
+                    }
+
+                    .currency {
+                        font-size: 1rem;
+                    }
+
+                    .original-price {
+                        font-size: 0.9rem;
+                        margin-left: 5px;
+                    }
+
+                    .plan-price {
+                        gap: 8px;
+                        flex-wrap: nowrap;
+                        justify-content: center;
+                    }
+
+                    .popular-badge {
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        padding: 4px 8px;
+                        font-size: 0.65rem;
+                        white-space: nowrap;
+                    }
+
+                    .plan-header {
+                        padding-top: 20px;
+                        margin-bottom: 20px;
+                    }
                 }
             `}</style>
         </section>

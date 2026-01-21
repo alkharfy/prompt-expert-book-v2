@@ -346,8 +346,10 @@ export default function Testimonials() {
 
                 @media (max-width: 768px) {
                     .stats-row {
-                        gap: 20px;
-                        flex-wrap: wrap;
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 30px;
+                        padding: 30px 20px;
                     }
 
                     .stat-divider {
@@ -355,7 +357,7 @@ export default function Testimonials() {
                     }
 
                     .stat-item {
-                        min-width: 80px;
+                        padding: 0;
                     }
                 }
 
@@ -372,8 +374,18 @@ export default function Testimonials() {
                         grid-template-columns: 1fr;
                     }
 
+                    .stats-row {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 20px;
+                        padding: 25px 15px;
+                    }
+
                     .stat-number {
-                        font-size: 2rem;
+                        font-size: 1.8rem;
+                    }
+
+                    .stat-label {
+                        font-size: 0.8rem;
                     }
                 }
             `}</style>

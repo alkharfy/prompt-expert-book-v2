@@ -223,6 +223,37 @@
     cursor: not-allowed;
 }
 
+.admin-actions-flex {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-delete-small {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: var(--font-primary);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+}
+
+.btn-delete-small:hover:not(:disabled) {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-delete-small:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .btn-sm {
     padding: 8px 16px;
     font-size: var(--font-size-sm);
