@@ -18,8 +18,8 @@ type UpsertTable = {
  * @returns false إذا كان التمرين مُسجلاً مسبقاً
  */
 async function tryRecordExerciseCompletion(
-    userId: string, 
-    exerciseId: string, 
+    userId: string,
+    exerciseId: string,
     exerciseType: string,
     pointsEarned: number
 ): Promise<boolean> {
@@ -27,11 +27,13 @@ async function tryRecordExerciseCompletion(
         // محاولة إدراج سجل جديد - إذا كان موجوداً مسبقاً سيفشل بسبب unique constraint
         // ونستخدم returning لمعرفة إذا تم الإدراج فعلاً
         const { data, error } = await (supabase
-            .from('exercise_progress') as unknown as { 
-                insert: (data: unknown) => { select: (columns: string) => Promise<{ 
-                    data: { id: string }[] | null; 
-                    error: { code?: string; message?: string } | null 
-                }> } 
+            .from('exercise_progress') as unknown as {
+                insert: (data: unknown) => {
+                    select: (columns: string) => Promise<{
+                        data: { id: string }[] | null;
+                        error: { code?: string; message?: string } | null
+                    }>
+                }
             })
             .insert({
                 user_id: userId,
@@ -42,7 +44,7 @@ async function tryRecordExerciseCompletion(
                 completed_at: new Date().toISOString()
             })
             .select('id')
-        
+
         // إذا كان هناك خطأ بسبب unique constraint (كود 23505)
         // فهذا يعني أن التمرين مُسجل مسبقاً
         if (error) {
@@ -53,7 +55,7 @@ async function tryRecordExerciseCompletion(
             dbLogger.error('Error recording exercise completion', error)
             return false
         }
-        
+
         // تم الإدراج بنجاح - التمرين جديد
         return data !== null && data.length > 0
     } catch (err) {
@@ -73,7 +75,7 @@ async function isExerciseAlreadyRecorded(userId: string, exerciseId: string): Pr
         .eq('user_id', userId)
         .eq('exercise_id', exerciseId)
         .maybeSingle() as { data: { is_completed: boolean; points_earned: number } | null; error: unknown }
-    
+
     return data?.is_completed === true && (data?.points_earned || 0) > 0
 }
 
@@ -81,7 +83,7 @@ async function isExerciseAlreadyRecorded(userId: string, exerciseId: string): Pr
  * تحديث إحصائيات التمارين للمستخدم
  */
 export async function updateExerciseStats(
-    userId: string, 
+    userId: string,
     exerciseType: 'quiz' | 'fill_blank' | 'prompt_builder',
     isCorrect: boolean,
     pointsEarned: number
@@ -100,9 +102,9 @@ export async function updateExerciseStats(
         }
 
         // 2. حساب الإحصائيات الجديدة
-        const stats = currentStats as { 
-            total_completed?: number; 
-            total_correct?: number; 
+        const stats = currentStats as {
+            total_completed?: number;
+            total_correct?: number;
             total_points?: number;
             quizzes_completed?: number;
             fill_blanks_completed?: number;
@@ -169,7 +171,7 @@ export async function updateGamification(
         // 2. حساب النقاط والمستوى الجديد
         const newTotalPoints = (gamData?.total_points || 0) + pointsEarned
         const newExercisesCompleted = (gamData?.exercises_completed || 0) + 1
-        
+
         // حساب المستوى (كل 100 نقطة = مستوى جديد)
         const newLevel = Math.floor(newTotalPoints / 100) + 1
         const pointsToNextLevel = 100 - (newTotalPoints % 100)
@@ -184,7 +186,7 @@ export async function updateGamification(
             const lastDate = new Date(lastActivityDate)
             const todayDate = new Date(today)
             const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24))
-            
+
             if (diffDays === 1) {
                 // تتابع يومي
                 currentStreak += 1
@@ -209,6 +211,8 @@ export async function updateGamification(
             longest_streak: longestStreak,
             last_activity_date: today,
             exercises_completed: newExercisesCompleted,
+            chapters_completed: (gamData as any)?.chapters_completed || 0,
+            total_reading_time_minutes: (gamData as any)?.total_reading_time_minutes || 0,
             updated_at: new Date().toISOString()
         }
 
@@ -259,17 +263,17 @@ export async function onExerciseComplete(
         await updateGamification(userId, pointsEarned, 'exercise_complete')
         return
     }
-    
+
     // استخدام العملية الذرية: محاولة تسجيل التمرين أولاً
     // إذا نجحت العملية، فالتمرين جديد ويمكن إضافة النقاط
     // إذا فشلت (التمرين موجود مسبقاً)، لا نضيف نقاط
     const wasNewlyRecorded = await tryRecordExerciseCompletion(
-        userId, 
-        exerciseId, 
-        exerciseType, 
+        userId,
+        exerciseId,
+        exerciseType,
         pointsEarned
     )
-    
+
     if (!wasNewlyRecorded) {
         dbLogger.debug(`Exercise ${exerciseId} was already recorded, skipping gamification update`)
         return
@@ -278,4 +282,48 @@ export async function onExerciseComplete(
     // تحديث الإحصائيات فقط إذا كان التمرين جديداً
     await updateExerciseStats(userId, exerciseType, isCorrect, pointsEarned)
     await updateGamification(userId, pointsEarned, 'exercise_complete')
+}
+
+/**
+ * مزامنة تقدم القراءة مع نظام الـ Gamification
+ */
+export async function syncReadingToGamification(
+    userId: string,
+    completedChaptersCount: number
+): Promise<void> {
+    try {
+        const { data: currentData } = await supabase
+            .from('user_gamification')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle() as { data: Record<string, unknown> | null }
+
+        const gamData = currentData as {
+            total_points?: number;
+            chapters_completed?: number;
+        } | null
+
+        const currentChapters = gamData?.chapters_completed || 0
+
+        // إذا كان هناك فصول جديدة مكتملة
+        if (completedChaptersCount > currentChapters) {
+            const newChapters = completedChaptersCount - currentChapters
+            const pointsEarned = newChapters * 50 // 50 نقطة لكل فصل
+
+            await updateGamification(userId, pointsEarned, 'chapter_complete')
+
+            // تحديث عدد الفصول بشكل صريح
+            await (supabase
+                .from('user_gamification') as unknown as UpsertTable)
+                .upsert({
+                    user_id: userId,
+                    chapters_completed: completedChaptersCount,
+                    updated_at: new Date().toISOString()
+                }, {
+                    onConflict: 'user_id'
+                })
+        }
+    } catch (error) {
+        dbLogger.error('Error in syncReadingToGamification', error)
+    }
 }

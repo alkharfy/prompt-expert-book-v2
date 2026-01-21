@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
 import { authSystem } from '@/lib/auth_system'
 import { dbLogger } from '@/lib/logger'
 
@@ -26,22 +25,15 @@ export default function BookmarkButton({ pageId, pageTitle, className = '' }: Bo
                 return
             }
 
-            const { data, error } = await supabase
-                .from('reading_progress')
-                .select('bookmarks')
-                .eq('user_id', userId)
-                .maybeSingle() as { data: { bookmarks?: unknown[] } | null; error: any }
-
-            if (error) {
-                dbLogger.error('Error checking bookmark status:', error)
+            const response = await fetch('/api/bookmarks')
+            if (!response.ok) {
                 setIsLoading(false)
                 return
             }
 
-            if (data?.bookmarks) {
-                const bookmarks = data.bookmarks as { id: string; title: string; date: string }[]
-                setIsBookmarked(bookmarks.some(b => b.id === pageId))
-            }
+            const data = await response.json()
+            const bookmarks = data.bookmarks || []
+            setIsBookmarked(bookmarks.some((b: { id: string }) => b.id === pageId))
         } catch (err) {
             dbLogger.error('Error checking bookmark:', err)
         } finally {
@@ -65,53 +57,30 @@ export default function BookmarkButton({ pageId, pageTitle, className = '' }: Bo
         setIsLoading(true)
 
         try {
-            // Get current bookmarks and page
-            const { data, error: fetchError } = await supabase
-                .from('reading_progress')
-                .select('bookmarks, current_page')
-                .eq('user_id', userId)
-                .maybeSingle() as { data: { bookmarks?: unknown[]; current_page?: number } | null; error: any }
+            const action = isBookmarked ? 'remove' : 'add'
 
-            let bookmarks = (data?.bookmarks as { id: string; title: string; date: string }[]) || []
-
-            if (isBookmarked) {
-                // Remove bookmark
-                bookmarks = bookmarks.filter(b => b.id !== pageId)
-                setToastMessage('تم إزالة الإشارة المرجعية')
-            } else {
-                // Add bookmark
-                bookmarks.push({
-                    id: pageId,
-                    title: pageTitle,
-                    date: new Date().toISOString()
+            const response = await fetch('/api/bookmarks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action,
+                    pageId,
+                    pageTitle
                 })
-                setToastMessage('تم حفظ الإشارة المرجعية')
-            }
+            })
 
-            // Use upsert to handle both insert and update cases
-            type UpsertTable = {
-                upsert: (data: Record<string, unknown>, options?: { onConflict?: string }) => Promise<{ error: { message: string } | null }>
-            }
-            const { error: upsertError } = await (supabase
-                .from('reading_progress') as unknown as UpsertTable)
-                .upsert({
-                    user_id: userId,
-                    bookmarks: bookmarks,
-                    current_page: data?.current_page || 1,
-                    total_pages: 89  // Updated: Actual total is 89 pages
-                }, {
-                    onConflict: 'user_id'
-                })
+            const data = await response.json()
 
-            if (upsertError) {
-                dbLogger.error('Error saving bookmark:', upsertError)
+            if (!response.ok) {
+                dbLogger.error('Error saving bookmark:', data.error)
                 setToastMessage('حدث خطأ في الحفظ')
                 setShowToast(true)
                 setTimeout(() => setShowToast(false), 2000)
                 return
             }
 
-            setIsBookmarked(!isBookmarked)
+            setIsBookmarked(data.isBookmarked)
+            setToastMessage(data.message)
             setShowToast(true)
             setTimeout(() => setShowToast(false), 2000)
         } catch (err) {
@@ -123,6 +92,7 @@ export default function BookmarkButton({ pageId, pageTitle, className = '' }: Bo
             setIsLoading(false)
         }
     }
+
 
     return (
         <>

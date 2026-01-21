@@ -115,7 +115,7 @@ class AuthSystem {
         if (isBcryptHash(storedHash)) {
             return await verifyPassword(password, storedHash)
         }
-        
+
         // للتوافق: فحص SHA-256 القديم
         const sha256Hash = await legacySha256Hash(password)
         return sha256Hash === storedHash
@@ -336,14 +336,14 @@ class AuthSystem {
                 .from('devices')
                 .select('*')
                 .eq('user_id', user.id)
-                .eq('is_active', true) as { 
-                    data: Array<{ 
-                        id: string; 
-                        device_id: string; 
-                        device_fingerprint: string; 
-                        device_info: any 
-                    }> | null; 
-                    error: any 
+                .eq('is_active', true) as {
+                    data: Array<{
+                        id: string;
+                        device_id: string;
+                        device_fingerprint: string;
+                        device_info: any
+                    }> | null;
+                    error: any
                 }
 
 
@@ -818,9 +818,9 @@ class AuthSystem {
     }
 
     /**
-     * Update reading progress for the current user
-     * @returns true if successful, false if failed
-     */
+ * Update reading progress for the current user
+ * @returns true if successful, false if failed
+ */
     async updateReadingProgress(pageNumber: number): Promise<boolean> {
         try {
             const userId = this.getCurrentUserId()
@@ -831,59 +831,26 @@ class AuthSystem {
 
             authLogger.debug(`Updating progress for user to page ${pageNumber}`)
 
-            // 1. Get current total pages (fallback to config)
-            let totalPages = TOTAL_BOOK_PAGES
-            const { data: currentProgress, error: fetchError } = await supabase
-                .from('reading_progress')
-                .select('current_page, total_pages')
-                .eq('user_id', userId)
-                .maybeSingle() as { data: { current_page?: number; total_pages?: number } | null; error: any }
+            // Use API route to bypass RLS
+            const response = await fetch('/api/reading-progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ current_page: pageNumber })
+            })
 
-            if (fetchError) {
-                authLogger.warn('Note fetching existing progress: ' + fetchError.message)
-            }
-
-            if (currentProgress && currentProgress.total_pages) {
-                totalPages = currentProgress.total_pages
-            }
-
-            // 2. Update current page (always save where the user is)
-            // But we don't necessarily want to treat it as "progress" if they jump around
-            // For now, we update it so "Resume Reading" works, but Roadmap checkmarks
-            // will now use the dedicated 'completed_chapters' column.
-
-            // 3. Upsert current page progress
-            // استخدام صيغة Supabase الصحيحة للـ upsert
-            const { error: upsertError } = await (supabase
-                .from('reading_progress') as unknown as SupabaseTable)
-                .upsert(
-                    {
-                        user_id: userId,
-                        current_page: pageNumber,
-                        total_pages: totalPages,
-                        last_read_time: new Date().toISOString(),
-                        bookmarks: [],
-                        completion_percentage: Math.round((pageNumber / totalPages) * 100),
-                        completed_chapters: []
-                    },
-                    { 
-                        onConflict: 'user_id'
-                    }
-                )
-
-            if (upsertError) {
-                authLogger.error('Error updating progress', { message: upsertError.message })
+            if (!response.ok) {
+                const errorData = await response.json()
+                authLogger.error('Error updating progress', { message: errorData.error })
                 return false
-            } else {
-                authLogger.debug(`Progress advanced: Page ${pageNumber}`)
-                return true
             }
+
+            authLogger.debug(`Progress advanced: Page ${pageNumber}`)
+            return true
         } catch (err) {
             authLogger.error('Error in updateReadingProgress', err)
             return false
         }
     }
-
     /**
      * Get reading progress for the current user
      */
@@ -900,30 +867,30 @@ class AuthSystem {
                 .from('reading_progress')
                 .select('current_page, total_pages, completion_percentage, completed_chapters')
                 .eq('user_id', userId)
-                .maybeSingle() as { 
-                    data: { 
-                        current_page?: number; 
-                        total_pages?: number; 
-                        completion_percentage?: number; 
-                        completed_chapters?: string[] 
-                    } | null; 
-                    error: any 
+                .maybeSingle() as {
+                    data: {
+                        current_page?: number;
+                        total_pages?: number;
+                        completion_percentage?: number;
+                        completed_chapters?: string[]
+                    } | null;
+                    error: any
                 }
 
             if (error || !data) return null
 
             // Map string array to number array for chapter indices
             let completedChapters = (data.completed_chapters || []).map((id: string) => parseInt(id))
-            
+
             // Auto-calculate completed chapters based on current page
             // This ensures progress is tracked even if user didn't click "Next" at end of chapter
             const currentPage = data.current_page || 1
             const calculatedChapters = this.calculateCompletedChapters(currentPage)
-            
+
             // Merge: keep manually marked + add calculated ones
             const allChapters = [...completedChapters, ...calculatedChapters]
             const mergedChapters = allChapters.filter((value, index, self) => self.indexOf(value) === index)
-            
+
             // If we calculated more chapters than stored, update the database
             if (mergedChapters.length > completedChapters.length) {
                 completedChapters = mergedChapters
@@ -960,7 +927,7 @@ class AuthSystem {
      */
     private calculateCompletedChapters(currentPage: number): number[] {
         const completed: number[] = []
-        
+
         // Chapter end pages (inclusive) - verified against bookData
         const chapterEndPages = [
             2,   // Intro ends at page 2 (2 pages)
@@ -973,14 +940,14 @@ class AuthSystem {
             66,  // Library ends at page 66 (8 pages) - was incorrectly 64
             84   // Appendix ends at page 84 (18 pages) - was incorrectly 70
         ]
-        
+
         for (let i = 0; i < chapterEndPages.length; i++) {
             // A chapter is completed if user has read past its last page
             if (currentPage > chapterEndPages[i]) {
                 completed.push(i)
             }
         }
-        
+
         return completed
     }
 

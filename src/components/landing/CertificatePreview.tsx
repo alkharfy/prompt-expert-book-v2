@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 export default function CertificatePreview() {
     return (
-        <section className="certificate-section">
+        <section className="landing-section certificate-section">
             <div className="container">
                 <div className="certificate-grid">
                     <motion.div
@@ -17,10 +17,10 @@ export default function CertificatePreview() {
                         <span className="section-badge">🎓 شهادة معتمدة</span>
                         <h2 className="section-title">احصل على شهادة إتمام</h2>
                         <p className="section-description">
-                            عند إتمامك للكتاب بنسبة 100%، تحصل على شهادة معتمدة من &quot;خبير البرومبتات&quot; 
+                            عند إتمامك للكتاب بنسبة 100%، تحصل على شهادة معتمدة من &quot;خبير البرومبتات&quot;
                             برقم فريد قابل للتحقق ورابط عام للمشاركة على LinkedIn ومنصات التواصل.
                         </p>
-                        
+
                         <ul className="certificate-features">
                             <li>
                                 <span className="feature-icon">✅</span>
@@ -91,7 +91,7 @@ export default function CertificatePreview() {
             <style jsx>{`
                 .certificate-section {
                     padding: 100px 0;
-                    background: linear-gradient(180deg, rgba(22, 33, 62, 0.98) 0%, rgba(26, 26, 46, 0.95) 100%);
+                    background: transparent;
                     overflow: hidden;
                 }
 

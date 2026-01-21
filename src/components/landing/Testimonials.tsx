@@ -88,7 +88,7 @@ export default function Testimonials() {
     }, [])
 
     return (
-        <section className="testimonials-section">
+        <section className="landing-section testimonials-section">
             <div className="container">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -116,7 +116,7 @@ export default function Testimonials() {
                         >
                             <div className="quote-icon">&quot;</div>
                             <p className="testimonial-content">{testimonial.content}</p>
-                            
+
                             <div className="testimonial-footer">
                                 <div className="testimonial-avatar">
                                     {testimonial.photo_url ? (
@@ -172,7 +172,7 @@ export default function Testimonials() {
             <style jsx>{`
                 .testimonials-section {
                     padding: 100px 0;
-                    background: linear-gradient(180deg, rgba(26, 26, 46, 0.95) 0%, rgba(15, 15, 35, 1) 100%);
+                    background: transparent;
                     position: relative;
                 }
 
@@ -304,21 +304,23 @@ export default function Testimonials() {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 40px;
-                    margin-top: 60px;
-                    padding: 30px;
-                    background: rgba(255, 107, 53, 0.08);
-                    border-radius: 20px;
+                    gap: 10px;
+                    margin: 80px auto 0;
+                    padding: 40px;
+                    background: rgba(255, 107, 53, 0.05);
+                    border-radius: 24px;
                     border: 1px solid rgba(255, 107, 53, 0.2);
+                    max-width: 1000px;
                 }
 
                 .stat-item {
                     text-align: center;
+                    padding: 0 20px;
                 }
 
                 .stat-number {
                     display: block;
-                    font-size: 2.5rem;
+                    font-size: 2.8rem;
                     font-weight: 800;
                     color: #FF6B35;
                     line-height: 1;

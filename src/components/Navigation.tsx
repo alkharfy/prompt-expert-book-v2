@@ -168,7 +168,7 @@ export default function Navigation() {
                                     className={`nav-link ${pathname === '/bookmarks' ? 'active' : ''}`}
                                     title="إشاراتي المرجعية"
                                 >
-                                    📑 إشاراتي
+                                    إشاراتي
                                 </Link>
                             </li>
                         )}
@@ -179,7 +179,7 @@ export default function Navigation() {
                                     className={`nav-link ${pathname === '/exercises' ? 'active' : ''}`}
                                     title="التمارين التفاعلية"
                                 >
-                                    🎯 التمارين
+                                    التمارين
                                 </Link>
                             </li>
                         )}
@@ -190,7 +190,7 @@ export default function Navigation() {
                                     className={`nav-link ${pathname === '/tools' ? 'active' : ''}`}
                                     title="صندوق الأدوات"
                                 >
-                                    🧰 الأدوات
+                                    الأدوات
                                 </Link>
                             </li>
                         )}
@@ -201,7 +201,7 @@ export default function Navigation() {
                                     className={`nav-link ${pathname === '/achievements' ? 'active' : ''}`}
                                     title="الإنجازات والشهادات"
                                 >
-                                    🏆 الإنجازات
+                                    الإنجازات
                                 </Link>
                             </li>
                         )}
@@ -211,7 +211,7 @@ export default function Navigation() {
                                 className={`nav-link ${pathname === '/leaderboard' ? 'active' : ''}`}
                                 title="لوحة المتصدرين"
                             >
-                                📊 المتصدرين
+                                المتصدرين
                             </Link>
                         </li>
                         <li>

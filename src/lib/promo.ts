@@ -33,6 +33,9 @@ export interface PricingPlan {
     duration: string
     features: string[]
     is_popular: boolean
+    description?: string
+    cta_link?: string
+    cta_text?: string
 }
 
 // Default promo settings (fallback)
@@ -55,7 +58,10 @@ const DEFAULT_PRICING_PLANS: PricingPlan[] = [
             'التمارين التفاعلية',
             'الوصول لمدة سنة'
         ],
-        is_popular: false
+        is_popular: false,
+        description: 'مثالية للمبتدئين الذين يريدون فهم أساسيات الهندسة الفورية.',
+        cta_link: '/register',
+        cta_text: 'ابدأ الآن'
     },
     {
         id: 'pro',
@@ -68,7 +74,10 @@ const DEFAULT_PRICING_PLANS: PricingPlan[] = [
             'شهادة إتمام معتمدة',
             'تحديثات مجانية مدى الحياة'
         ],
-        is_popular: true
+        is_popular: true,
+        description: 'الخيار الأفضل للمحترفين الباحثين عن نتائج حقيقية.',
+        cta_link: '/register',
+        cta_text: 'احصل على العرض'
     },
     {
         id: 'vip',
@@ -81,7 +90,10 @@ const DEFAULT_PRICING_PLANS: PricingPlan[] = [
             'دعم أولوية عبر WhatsApp',
             'وصول مبكر للمحتوى الجديد'
         ],
-        is_popular: false
+        is_popular: false,
+        description: 'تجربة حصرية مع دعم مباشر واستشارات مخصصة.',
+        cta_link: '/register',
+        cta_text: 'تواصل معنا'
     }
 ]
 

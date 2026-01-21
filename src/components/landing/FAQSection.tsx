@@ -30,7 +30,8 @@ export default function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(0)
 
     return (
-        <section className="faq-section">
+        <section className="landing-section landing-section-darker">
+            <div className="landing-glow" style={{ top: '30%', right: '10%' }} />
             <div className="container">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -54,7 +55,7 @@ export default function FAQSection() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
-                            className={`faq-item ${openIndex === index ? 'open' : ''}`}
+                            className={`faq-item glass-card ${openIndex === index ? 'open' : ''}`}
                         >
                             <button
                                 className="faq-question"
@@ -65,7 +66,7 @@ export default function FAQSection() {
                                     {openIndex === index ? '−' : '+'}
                                 </span>
                             </button>
-                            
+
                             <AnimatePresence>
                                 {openIndex === index && (
                                     <motion.div
@@ -84,31 +85,31 @@ export default function FAQSection() {
                 </div>
 
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.5 }}
-                    className="faq-cta"
+                    className="faq-cta glass-card"
                 >
-                    <p>لديك سؤال آخر؟</p>
-                    <a href="mailto:support@promptexpert.com" className="contact-link">
-                        تواصل معنا 📧
+                    <div className="faq-cta-content">
+                        <div className="faq-cta-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="28" height="28">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                <polyline points="22,6 12,13 2,6" />
+                            </svg>
+                        </div>
+                        <div className="faq-cta-text">
+                            <h3>لديك سؤال آخر؟</h3>
+                            <p>فريقنا مستعد للإجابة على جميع استفساراتك في أي وقت.</p>
+                        </div>
+                    </div>
+                    <a href="mailto:support@promptexpert.com" className="contact-btn">
+                        تواصل معنا الآن
                     </a>
                 </motion.div>
             </div>
 
             <style jsx>{`
-                .faq-section {
-                    padding: 100px 0;
-                    background: linear-gradient(180deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.98) 100%);
-                }
-
-                .container {
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 0 20px;
-                }
-
                 .section-header {
                     text-align: center;
                     margin-bottom: 50px;
@@ -131,6 +132,10 @@ export default function FAQSection() {
                     font-weight: 800;
                     color: white;
                     margin-bottom: 15px;
+                    background: linear-gradient(135deg, #fff 0%, #FF6B35 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
                 }
 
                 .section-subtitle {
@@ -141,19 +146,14 @@ export default function FAQSection() {
                 .faq-list {
                     display: flex;
                     flex-direction: column;
-                    gap: 15px;
+                    gap: 25px;
+                    max-width: 800px;
+                    margin: 0 auto;
                 }
 
                 .faq-item {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 16px;
                     overflow: hidden;
-                    transition: all 0.3s ease;
-                }
-
-                .faq-item:hover {
-                    border-color: rgba(255, 107, 53, 0.3);
+                    border-radius: 16px;
                 }
 
                 .faq-item.open {
@@ -167,11 +167,11 @@ export default function FAQSection() {
                     align-items: center;
                     justify-content: space-between;
                     gap: 20px;
-                    padding: 22px 25px;
+                    padding: 28px 32px;
                     background: none;
                     border: none;
                     color: white;
-                    font-size: 1.05rem;
+                    font-size: 1.1rem;
                     font-weight: 600;
                     text-align: right;
                     cursor: pointer;
@@ -214,36 +214,79 @@ export default function FAQSection() {
                 }
 
                 .faq-cta {
-                    text-align: center;
-                    margin-top: 50px;
-                    padding: 30px;
-                    background: rgba(255, 255, 255, 0.03);
-                    border-radius: 16px;
-                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    max-width: 850px;
+                    margin: 80px auto 0;
+                    padding: 25px 40px !important;
+                    gap: 30px;
+                    border: 1px solid rgba(255, 107, 53, 0.2) !important;
+                    background: rgba(255, 107, 53, 0.03) !important;
+                    text-align: right;
                 }
 
-                .faq-cta p {
-                    color: rgba(255, 255, 255, 0.7);
-                    margin-bottom: 10px;
+                .faq-cta-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
                 }
 
-                .contact-link {
+                .faq-cta-icon {
                     color: #FF6B35;
-                    font-weight: 600;
+                    background: rgba(255, 107, 53, 0.1);
+                    width: 60px;
+                    height: 60px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 16px;
+                    flex-shrink: 0;
+                    border: 1px solid rgba(255, 107, 53, 0.2);
+                }
+
+                .faq-cta-text h3 {
+                    color: white;
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    margin-bottom: 4px;
+                }
+
+                .faq-cta-text p {
+                    color: rgba(255, 255, 255, 0.6);
+                    font-size: 0.9rem;
+                    margin: 0;
+                }
+
+                .contact-btn {
+                    background: #FF6B35;
+                    color: white;
+                    padding: 12px 28px;
+                    border-radius: 12px;
+                    font-weight: 700;
                     text-decoration: none;
-                    font-size: 1.1rem;
                     transition: all 0.3s;
+                    white-space: nowrap;
+                    box-shadow: 0 10px 20px rgba(255, 107, 53, 0.2);
                 }
 
-                .contact-link:hover {
-                    color: #FF8C42;
+                .contact-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 15px 25px rgba(255, 107, 53, 0.3);
+                    background: #ff8558;
                 }
 
-                @media (max-width: 576px) {
-                    .faq-section {
-                        padding: 60px 0;
+                @media (max-width: 768px) {
+                    .faq-cta {
+                        flex-direction: column;
+                        text-align: center;
+                        padding: 30px 20px !important;
+                        gap: 20px;
                     }
-
+                    .faq-cta-content {
+                        flex-direction: column;
+                        gap: 15px;
+                    }
                     .section-title {
                         font-size: 1.8rem;
                     }

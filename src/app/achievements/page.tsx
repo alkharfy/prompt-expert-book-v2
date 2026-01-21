@@ -68,12 +68,12 @@ export default function AchievementsPage() {
         .from('user_gamification')
         .select('*')
         .eq('user_id', loadUserId)
-        .maybeSingle() as { 
-          data: { 
-            current_streak?: number; 
-            total_points?: number; 
-            total_reading_time_minutes?: number 
-          } | null 
+        .maybeSingle() as {
+          data: {
+            current_streak?: number;
+            total_points?: number;
+            total_reading_time_minutes?: number
+          } | null
         };
 
       const currentStreak = gamificationData?.current_streak || 0;
@@ -106,7 +106,7 @@ export default function AchievementsPage() {
       // التحقق من أهلية الشهادة (إتمام الكتاب)
       if (completedChapters >= 9) {
         setCertificateEligible(true);
-        
+
         // جلب أو إنشاء شهادة
         const { data: certData } = await supabase
           .from('certificates')
@@ -122,7 +122,7 @@ export default function AchievementsPage() {
         } else {
           // إنشاء شهادة جديدة
           const newCertId = `CERT-${Date.now().toString(36).toUpperCase()}-${loadUserId.substring(0, 4).toUpperCase()}`;
-          
+
           // الحصول على اسم المستخدم بأمان
           let userName = 'مستخدم';
           try {
@@ -130,7 +130,7 @@ export default function AchievementsPage() {
           } catch {
             // localStorage غير متوفر
           }
-          
+
           const { data: newCert } = await (supabase.from('certificates') as any).insert({
             user_id: loadUserId,
             user_name: userName,
@@ -209,6 +209,23 @@ export default function AchievementsPage() {
           if (achievement.id === 'bookmarks_10') {
             currentProgress = stats.bookmarksCount;
             isUnlocked = stats.bookmarksCount >= 10;
+          } else if (achievement.id === 'first_certificate') {
+            currentProgress = stats.completedChapters >= 9 ? 1 : 0;
+            isUnlocked = stats.completedChapters >= 9;
+          } else if (achievement.id === 'share_certificate') {
+            // يمكن تفعيلها يدوياً أو عبر تتبع المشاركة
+            currentProgress = localStorage.getItem('certificate_shared') === 'true' ? 1 : 0;
+            isUnlocked = currentProgress === 1;
+          } else if (achievement.id === 'use_all_tools') {
+            // تتبع استخدام الأدوات (يحتاج نظام تتبع أعمق)
+            const toolsUsed = JSON.parse(localStorage.getItem('tools_used') || '[]');
+            currentProgress = toolsUsed.length;
+            isUnlocked = toolsUsed.length >= achievement.requirement;
+          } else if (achievement.id === 'top_10') {
+            // سيتم تفعيلها عبر نظام الليدربورد
+            const isTop10 = localStorage.getItem('is_top_10') === 'true';
+            currentProgress = isTop10 ? 1 : 0;
+            isUnlocked = isTop10;
           }
           break;
       }
@@ -241,7 +258,7 @@ export default function AchievementsPage() {
       <div className="achievements-page">
         <div className="achievements-container">
           {/* Header */}
-          <motion.div 
+          <motion.div
             className="achievements-header"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -251,7 +268,7 @@ export default function AchievementsPage() {
           </motion.div>
 
           {/* ملخص الإنجازات */}
-          <motion.div 
+          <motion.div
             className="achievements-summary"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -370,7 +387,7 @@ export default function AchievementsPage() {
                 </div>
 
                 {/* قائمة الإنجازات */}
-                <AchievementsList 
+                <AchievementsList
                   achievements={achievements.filter(a => !a.secret || a.isUnlocked)}
                   filter={filter}
                 />
@@ -398,7 +415,7 @@ export default function AchievementsPage() {
 
           {/* رسالة للشهادة المغلقة */}
           {!certificateEligible && activeTab === 'achievements' && (
-            <motion.div 
+            <motion.div
               className="certificate-locked-message"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -409,7 +426,7 @@ export default function AchievementsPage() {
               <p>أكمل قراءة جميع فصول الكتاب للحصول على شهادة الإتمام</p>
               <div className="book-progress">
                 <div className="book-progress-bar">
-                  <div 
+                  <div
                     className="book-progress-fill"
                     style={{ width: `${(userStats.completedChapters / 9) * 100}%` }}
                   />

@@ -20,7 +20,7 @@ export default function BackgroundParticles() {
     if (particleCount === 0) return null
 
     return (
-        <div className="particles" style={{ zIndex: 0 }}>
+        <div className="particles" style={{ zIndex: -3 }}>
             {[...Array(particleCount)].map((_, i) => {
                 const size = 2 + Math.random() * 3 // Original size: 2px to 5px
                 const opacity = 0.3 + Math.random() * 0.4 // Original visibility

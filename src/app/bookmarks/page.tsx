@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { authSystem } from '@/lib/auth_system'
-import { supabase } from '@/lib/supabase'
 import { verifySession } from '@/lib/auth'
 import { dbLogger } from '@/lib/logger'
 
@@ -27,21 +26,19 @@ export default function BookmarksPage() {
             const userId = authSystem.getCurrentUserId()
             if (!userId) return
 
-            const { data, error } = await supabase
-                .from('reading_progress')
-                .select('bookmarks')
-                .eq('user_id', userId)
-                .maybeSingle() as { data: { bookmarks?: Bookmark[] } | null; error: Error | null }
-
-            if (error) {
-                dbLogger.error('Error fetching bookmarks:', error)
+            const response = await fetch('/api/bookmarks')
+            if (!response.ok) {
+                dbLogger.error('Error fetching bookmarks')
                 setIsLoading(false)
                 return
             }
 
-            if (data?.bookmarks && Array.isArray(data.bookmarks)) {
+            const data = await response.json()
+            const bookmarksList = data.bookmarks || []
+
+            if (Array.isArray(bookmarksList)) {
                 // Sort by date descending (newest first)
-                const sorted = [...data.bookmarks].sort((a: Bookmark, b: Bookmark) => 
+                const sorted = [...bookmarksList].sort((a: Bookmark, b: Bookmark) =>
                     new Date(b.date).getTime() - new Date(a.date).getTime()
                 )
                 setBookmarks(sorted)
@@ -70,19 +67,21 @@ export default function BookmarksPage() {
             const userId = authSystem.getCurrentUserId()
             if (!userId) return
 
-            const newBookmarks = bookmarks.filter(b => b.id !== bookmarkId)
-            
-            const { error } = await (supabase
-                .from('reading_progress') as any)
-                .update({ bookmarks: newBookmarks })
-                .eq('user_id', userId)
+            const response = await fetch('/api/bookmarks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'remove',
+                    pageId: bookmarkId
+                })
+            })
 
-            if (error) {
-                dbLogger.error('Error deleting bookmark:', error)
+            if (!response.ok) {
+                dbLogger.error('Error deleting bookmark')
                 return
             }
 
-            setBookmarks(newBookmarks)
+            setBookmarks(prev => prev.filter(b => b.id !== bookmarkId))
         } catch (err) {
             dbLogger.error('Error deleting bookmark:', err)
         }
@@ -92,12 +91,12 @@ export default function BookmarksPage() {
         // Parse bookmark ID to get path
         // Format: section-1-3 or intro-1 or library-2
         const parts = id.split('-')
-        
+
         // Validate parts array
         if (!parts || parts.length === 0) {
             return '/toc' // Fallback
         }
-        
+
         if (parts[0] === 'intro') {
             return `/read/intro/${parts[1] || '1'}`
         } else if (parts[0] === 'library') {
@@ -193,8 +192,8 @@ export default function BookmarksPage() {
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ duration: 0.4, delay: index * 0.05 }}
                                 >
-                                    <Link 
-                                        href={getBookmarkPath(bookmark.id)} 
+                                    <Link
+                                        href={getBookmarkPath(bookmark.id)}
                                         className="bookmark-item-content"
                                         style={{ textDecoration: 'none', flex: 1 }}
                                     >

@@ -27,7 +27,7 @@ export default function PricingSection() {
 
     if (isLoading) {
         return (
-            <section className="pricing-section">
+            <section className="landing-section landing-section-dark">
                 <div className="container">
                     <div className="loading">جاري التحميل...</div>
                 </div>
@@ -36,7 +36,8 @@ export default function PricingSection() {
     }
 
     return (
-        <section className="pricing-section" id="pricing">
+        <section id="pricing" className="landing-section landing-section-dark">
+            <div className="landing-glow" style={{ top: '20%', left: '10%' }} />
             <div className="container">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -45,10 +46,10 @@ export default function PricingSection() {
                     transition={{ duration: 0.6 }}
                     className="section-header"
                 >
-                    <span className="section-badge">💰 الأسعار</span>
-                    <h2 className="section-title">اختر الخطة المناسبة لك</h2>
+                    <span className="section-badge">💰 باقات الاشتراك</span>
+                    <h2 className="section-title">استثمر في مستقبلك</h2>
                     <p className="section-subtitle">
-                        استثمار بسيط لمهارة تدوم مدى الحياة
+                        اختر الخطة التي تناسب احتياجاتك وابدأ رحلة الاحتراف اليوم
                     </p>
                     {promo && (
                         <div className="promo-badge">
@@ -59,7 +60,7 @@ export default function PricingSection() {
 
                 <div className="pricing-grid">
                     {plans.map((plan, index) => {
-                        const discountedPrice = promo 
+                        const discountedPrice = promo
                             ? calculateDiscountedPrice(plan.price, promo.discount_percentage)
                             : plan.price
 
@@ -69,81 +70,62 @@ export default function PricingSection() {
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ delay: index * 0.15 }}
-                                className={`pricing-card ${plan.is_popular ? 'popular' : ''}`}
+                                transition={{ delay: index * 0.1 }}
+                                className={`pricing-card glass-card ${plan.is_popular ? 'popular' : ''}`}
                             >
                                 {plan.is_popular && (
-                                    <div className="popular-badge">⭐ الأكثر شيوعاً</div>
+                                    <div className="popular-badge">الأكثر شيوعاً ✨</div>
                                 )}
 
                                 <div className="plan-header">
                                     <h3 className="plan-name">{plan.name}</h3>
                                     <div className="plan-price">
+                                        <span className="amount">{discountedPrice}</span>
+                                        <span className="currency">ج.م</span>
                                         {promo && (
                                             <span className="original-price">{plan.price} ج.م</span>
                                         )}
-                                        <span className="current-price">
-                                            <span className="price-value">{discountedPrice}</span>
-                                            <span className="price-currency">ج.م</span>
-                                        </span>
-                                        <span className="price-duration">/ {plan.duration}</span>
                                     </div>
+                                    <p className="plan-desc">{plan.description}</p>
                                 </div>
 
                                 <ul className="plan-features">
-                                    {plan.features.map((feature, i) => (
-                                        <li key={i}>
-                                            <span className="feature-check">✓</span>
+                                    {plan.features.map((feature, fIndex) => (
+                                        <li key={fIndex}>
+                                            <span className="check-icon">✓</span>
                                             {feature}
                                         </li>
                                     ))}
                                 </ul>
 
-                                <Link 
-                                    href="/register" 
-                                    className={`plan-cta ${plan.is_popular ? 'cta-primary' : 'cta-secondary'}`}
+                                <Link
+                                    href={plan.cta_link || '/register'}
+                                    className={`cta-button ${plan.is_popular ? 'primary' : 'secondary'}`}
                                 >
-                                    ابدأ رحلتي الآن
+                                    {plan.cta_text || 'ابدأ رحلتي الآن'}
                                 </Link>
-
-                                {promo && (
-                                    <p className="savings-text">
-                                        وفّر {plan.price - discountedPrice} ج.م
-                                    </p>
-                                )}
                             </motion.div>
                         )
                     })}
                 </div>
 
+                {/* Guarantee */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.5 }}
-                    className="guarantee-section"
+                    className="guarantee-box glass-card"
                 >
                     <div className="guarantee-icon">🛡️</div>
-                    <div className="guarantee-content">
-                        <h4>ضمان استرداد الأموال 30 يوم</h4>
-                        <p>جرّب المحتوى بدون مخاطرة. إذا لم تكن راضياً، استرد أموالك كاملة.</p>
+                    <div className="guarantee-text">
+                        <h4>ضمان استرداد الأموال لمدة 30 يوماً</h4>
+                        <p>إذا لم تكن راضياً عن المحتوى، سنعيد لك مبلغك كاملاً بدون أسئلة.</p>
                     </div>
                 </motion.div>
             </div>
 
             <style jsx>{`
-                .pricing-section {
-                    padding: 100px 0;
-                    background: linear-gradient(180deg, rgba(15, 15, 35, 1) 0%, rgba(26, 26, 46, 0.95) 100%);
-                    position: relative;
-                }
-
-                .container {
-                    max-width: 1100px;
-                    margin: 0 auto;
-                    padding: 0 20px;
-                }
-
                 .section-header {
                     text-align: center;
                     margin-bottom: 60px;
@@ -166,6 +148,10 @@ export default function PricingSection() {
                     font-weight: 800;
                     color: white;
                     margin-bottom: 15px;
+                    background: linear-gradient(135deg, #fff 0%, #FF6B35 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
                 }
 
                 .section-subtitle {
@@ -192,48 +178,38 @@ export default function PricingSection() {
                 .pricing-grid {
                     display: grid;
                     grid-template-columns: repeat(3, 1fr);
-                    gap: 30px;
+                    gap: 40px;
                     align-items: stretch;
+                    margin-bottom: 60px;
                 }
 
                 .pricing-card {
-                    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 24px;
-                    padding: 40px 30px;
+                    padding: 60px 40px 50px;
                     display: flex;
                     flex-direction: column;
-                    position: relative;
-                    transition: all 0.3s ease;
-                }
-
-                .pricing-card:hover {
-                    transform: translateY(-5px);
                 }
 
                 .pricing-card.popular {
-                    border-color: #FF6B35;
-                    background: linear-gradient(145deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.02) 100%);
+                    border-color: var(--color-orange-primary);
+                    background: rgba(255, 107, 53, 0.05);
                     transform: scale(1.05);
-                    z-index: 1;
+                    z-index: 10;
                 }
-
+                
                 .pricing-card.popular:hover {
-                    transform: scale(1.05) translateY(-5px);
+                    transform: scale(1.08) translateY(-5px);
                 }
 
                 .popular-badge {
                     position: absolute;
-                    top: -12px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: linear-gradient(135deg, #FF6B35, #FF8C42);
+                    top: 20px;
+                    right: 20px;
+                    background: var(--color-orange-primary);
                     color: white;
-                    padding: 6px 20px;
+                    padding: 6px 15px;
                     border-radius: 20px;
-                    font-size: 0.85rem;
+                    font-size: 0.8rem;
                     font-weight: 700;
-                    white-space: nowrap;
                 }
 
                 .plan-header {
@@ -244,7 +220,7 @@ export default function PricingSection() {
                 }
 
                 .plan-name {
-                    font-size: 1.5rem;
+                    font-size: 1.3rem;
                     font-weight: 700;
                     color: white;
                     margin-bottom: 15px;
@@ -252,134 +228,125 @@ export default function PricingSection() {
 
                 .plan-price {
                     display: flex;
-                    flex-direction: column;
                     align-items: center;
+                    justify-content: center;
                     gap: 5px;
+                    margin-bottom: 15px;
+                }
+
+                .currency {
+                    font-size: 1.2rem;
+                    color: var(--color-orange-primary);
+                    font-weight: 700;
+                }
+
+                .amount {
+                    font-size: 3.5rem;
+                    font-weight: 800;
+                    color: white;
                 }
 
                 .original-price {
                     font-size: 1.1rem;
-                    color: rgba(255, 255, 255, 0.4);
+                    color: rgba(255, 255, 255, 0.3);
                     text-decoration: line-through;
+                    margin-left: 10px;
                 }
 
-                .current-price {
-                    display: flex;
-                    align-items: baseline;
-                    gap: 5px;
-                }
-
-                .price-value {
-                    font-size: 3rem;
-                    font-weight: 800;
-                    color: #FF6B35;
-                    line-height: 1;
-                }
-
-                .price-currency {
-                    font-size: 1.2rem;
-                    color: rgba(255, 255, 255, 0.7);
-                    font-weight: 600;
-                }
-
-                .price-duration {
-                    font-size: 0.9rem;
-                    color: rgba(255, 255, 255, 0.5);
+                .plan-desc {
+                    font-size: 0.95rem;
+                    color: rgba(255, 255, 255, 0.6);
+                    line-height: 1.6;
                 }
 
                 .plan-features {
                     list-style: none;
                     padding: 0;
-                    margin: 0 0 30px 0;
-                    flex: 1;
+                    margin: 0 0 40px 0;
+                    flex-grow: 1;
                 }
 
                 .plan-features li {
                     display: flex;
-                    align-items: flex-start;
-                    gap: 10px;
-                    padding: 10px 0;
+                    align-items: center;
+                    gap: 12px;
                     color: rgba(255, 255, 255, 0.8);
                     font-size: 0.95rem;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    margin-bottom: 15px;
+                    text-align: right;
                 }
 
-                .plan-features li:last-child {
-                    border-bottom: none;
-                }
-
-                .feature-check {
+                .check-icon {
                     color: #4CAF50;
                     font-weight: bold;
-                    flex-shrink: 0;
                 }
 
-                .plan-cta {
+                .cta-button {
                     display: block;
+                    width: 100%;
+                    padding: 16px;
+                    border-radius: 14px;
                     text-align: center;
-                    padding: 16px 30px;
-                    border-radius: 12px;
                     font-weight: 700;
-                    font-size: 1.1rem;
                     text-decoration: none;
-                    transition: all 0.3s ease;
+                    transition: all 0.3s;
                 }
 
-                .cta-primary {
-                    background: linear-gradient(135deg, #FF6B35, #FF8C42);
+                .cta-button.primary {
+                    background: var(--color-orange-primary);
                     color: white;
-                    box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+                    box-shadow: 0 10px 20px rgba(255, 107, 53, 0.3);
                 }
 
-                .cta-primary:hover {
+                .cta-button.primary:hover {
+                    background: var(--color-orange-glow);
                     transform: translateY(-2px);
-                    box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
+                    box-shadow: 0 15px 25px rgba(255, 107, 53, 0.4);
                 }
 
-                .cta-secondary {
-                    background: rgba(255, 255, 255, 0.1);
+                .cta-button.secondary {
+                    background: rgba(255, 255, 255, 0.05);
                     color: white;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
                 }
 
-                .cta-secondary:hover {
-                    background: rgba(255, 255, 255, 0.15);
-                    border-color: rgba(255, 107, 53, 0.5);
+                .cta-button.secondary:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: var(--color-orange-primary);
                 }
 
-                .savings-text {
-                    text-align: center;
-                    margin-top: 15px;
-                    font-size: 0.85rem;
-                    color: #4CAF50;
-                    font-weight: 600;
-                }
-
-                .guarantee-section {
+                .guarantee-box {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 25px;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
                     gap: 20px;
-                    margin-top: 60px;
-                    padding: 30px;
-                    background: rgba(76, 175, 80, 0.1);
-                    border: 1px solid rgba(76, 175, 80, 0.3);
-                    border-radius: 16px;
+                    background: rgba(76, 175, 80, 0.03);
+                    border-color: rgba(76, 175, 80, 0.1);
+                }
+                
+                .guarantee-box:hover {
+                    border-color: rgba(76, 175, 80, 0.3);
+                }
+
+                .guarantee-box::after {
+                    background: linear-gradient(90deg, #4CAF50, #81C784);
                 }
 
                 .guarantee-icon {
-                    font-size: 3rem;
+                    font-size: 2.5rem;
                 }
 
-                .guarantee-content h4 {
-                    color: white;
-                    font-size: 1.2rem;
+                .guarantee-text h4 {
+                    font-size: 1.1rem;
+                    color: #81C784;
                     margin-bottom: 5px;
                 }
 
-                .guarantee-content p {
-                    color: rgba(255, 255, 255, 0.7);
-                    font-size: 0.95rem;
+                .guarantee-text p {
+                    font-size: 0.9rem;
+                    color: rgba(255, 255, 255, 0.6);
                 }
 
                 .loading {
@@ -391,40 +358,20 @@ export default function PricingSection() {
                 @media (max-width: 992px) {
                     .pricing-grid {
                         grid-template-columns: 1fr;
-                        max-width: 400px;
-                        margin: 0 auto;
+                        max-width: 450px;
+                        margin-left: auto;
+                        margin-right: auto;
+                        gap: 40px;
                     }
-
+                    
                     .pricing-card.popular {
-                        transform: none;
-                        order: -1;
-                    }
-
-                    .pricing-card.popular:hover {
-                        transform: translateY(-5px);
+                        transform: scale(1);
                     }
                 }
 
                 @media (max-width: 576px) {
-                    .pricing-section {
-                        padding: 60px 0;
-                    }
-
                     .section-title {
                         font-size: 1.8rem;
-                    }
-
-                    .pricing-card {
-                        padding: 30px 20px;
-                    }
-
-                    .price-value {
-                        font-size: 2.5rem;
-                    }
-
-                    .guarantee-section {
-                        flex-direction: column;
-                        text-align: center;
                     }
                 }
             `}</style>

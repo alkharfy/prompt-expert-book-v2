@@ -2,34 +2,76 @@
 
 import { motion } from 'framer-motion'
 
+const SystemIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="12" r="6" />
+        <circle cx="12" cy="12" r="2" />
+    </svg>
+)
+
+const TemplatesIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+        <path d="M12 11h4" /><path d="M12 16h4" /><path d="M8 11h.01" /><path d="M8 16h.01" />
+    </svg>
+)
+
+const MappingIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6z" />
+        <path d="M9 3v15" /><path d="M15 6v15" />
+    </svg>
+)
+
+const WritingIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+    </svg>
+)
+
+const DebugIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+)
+
+const QualityIcon = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+)
+
 const features = [
     {
-        icon: '🎯',
+        icon: <SystemIcon />,
         title: 'نظام عمل ثابت',
         description: 'Pipeline واضح يعتمد على برومبتات قصيرة متسلسلة بدلاً من برومبت واحد مربك'
     },
     {
-        icon: '📋',
+        icon: <TemplatesIcon />,
         title: 'قوالب جاهزة للنسخ',
         description: '50+ قالب عملي لـ: المواقع، التطبيقات، المواصفات، المحتوى، والاختبار'
     },
     {
-        icon: '🗺️',
+        icon: <MappingIcon />,
         title: 'خرائط وتدفقات',
         description: 'تعلم بناء Sitemap و User Flow احترافي لأي مشروع'
     },
     {
-        icon: '✍️',
+        icon: <WritingIcon />,
         title: 'كتابة UX احترافية',
         description: 'Microcopy وصفحات بيع تحوّل الزوار إلى عملاء'
     },
     {
-        icon: '🔧',
+        icon: <DebugIcon />,
         title: 'برومبتات الإصلاح',
         description: 'Debug Prompts لتصحيح الأخطاء عندما تسوء النتائج'
     },
     {
-        icon: '✅',
+        icon: <QualityIcon />,
         title: 'قوائم فحص الجودة',
         description: 'Checklists للتأكد من الاتساق والقابلية للتنفيذ'
     }
@@ -56,7 +98,8 @@ const itemVariants = {
 
 export default function WhatYouLearn() {
     return (
-        <section className="what-you-learn-section">
+        <section className="landing-section landing-section-dark">
+            <div className="landing-glow" style={{ top: '10%', right: '5%' }} />
             <div className="container">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -82,40 +125,18 @@ export default function WhatYouLearn() {
                     {features.map((feature, index) => (
                         <motion.div
                             key={index}
-                            variants={itemVariants}
-                            className="feature-card"
+                            whileHover={{ y: -5 }}
+                            className="feature-card glass-card"
                         >
                             <div className="feature-icon">{feature.icon}</div>
-                            <h3 className="feature-title">{feature.title}</h3>
-                            <p className="feature-description">{feature.description}</p>
+                            <h3 className="feature-title" style={{ fontSize: '1.4rem', marginBottom: '15px', color: 'white' }}>{feature.title}</h3>
+                            <p className="feature-description" style={{ fontSize: '1.05rem', lineHeight: '1.7', color: 'rgba(255, 255, 255, 0.7)' }}>{feature.description}</p>
                         </motion.div>
                     ))}
                 </motion.div>
             </div>
 
             <style jsx>{`
-                .what-you-learn-section {
-                    padding: 100px 0;
-                    background: linear-gradient(180deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.98) 100%);
-                    position: relative;
-                }
-
-                .what-you-learn-section::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 1px;
-                    background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.3), transparent);
-                }
-
-                .container {
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    padding: 0 20px;
-                }
-
                 .section-header {
                     text-align: center;
                     margin-bottom: 60px;
@@ -151,87 +172,25 @@ export default function WhatYouLearn() {
                     margin: 0 auto;
                 }
 
-                .features-grid {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 30px;
-                }
-
-                .feature-card {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    border-radius: 20px;
-                    padding: 35px 30px;
-                    text-align: center;
-                    transition: all 0.3s ease;
-                    position: relative;
-                    overflow: hidden;
-                }
-
-                .feature-card::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 3px;
-                    background: linear-gradient(90deg, #FF6B35, #FF8C42);
-                    opacity: 0;
-                    transition: opacity 0.3s;
-                }
-
-                .feature-card:hover {
-                    transform: translateY(-5px);
-                    border-color: rgba(255, 107, 53, 0.3);
-                    background: rgba(255, 107, 53, 0.05);
-                }
-
-                .feature-card:hover::before {
-                    opacity: 1;
-                }
-
                 .feature-icon {
-                    font-size: 3rem;
-                    margin-bottom: 20px;
-                    display: inline-block;
+                    width: 65px;
+                    height: 65px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(255, 107, 53, 0.1);
+                    border-radius: 18px;
+                    margin: 0 auto 25px auto;
+                    color: #FF6B35;
+                    padding: 15px;
+                    border: 1px solid rgba(255, 107, 53, 0.2);
+                    transition: all 0.3s ease;
                 }
 
-                .feature-title {
-                    font-size: 1.2rem;
-                    font-weight: 700;
-                    color: white;
-                    margin-bottom: 12px;
-                }
-
-                .feature-description {
-                    font-size: 0.95rem;
-                    color: rgba(255, 255, 255, 0.6);
-                    line-height: 1.7;
-                }
-
-                @media (max-width: 992px) {
-                    .features-grid {
-                        grid-template-columns: repeat(2, 1fr);
-                    }
-                }
-
-                @media (max-width: 576px) {
-                    .what-you-learn-section {
-                        padding: 60px 0;
-                    }
-
-                    .section-title {
-                        font-size: 1.8rem;
-                    }
-
-                    .features-grid {
-                        grid-template-columns: 1fr;
-                        gap: 20px;
-                    }
-
-                    .feature-card {
-                        padding: 25px 20px;
-                    }
+                .feature-card:hover .feature-icon {
+                    background: rgba(255, 107, 53, 0.2);
+                    transform: scale(1.1);
+                    box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
                 }
             `}</style>
         </section>
