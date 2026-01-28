@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { verifyToken } from '@/lib/admin-session'
 
+export const dynamic = 'force-dynamic'
+
 // Create Supabase client with service role for admin operations
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-)
+function getSupabaseAdmin() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!url || !key) {
+        throw new Error('Missing Supabase environment variables for admin operations')
+    }
+    return createClient(url, key, { auth: { persistSession: false } })
+}
 
 /**
  * Delete a pending user registration (user who hasn't verified their code)
@@ -28,6 +33,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'بيانات ناقصة' }, { status: 400 })
         }
 
+        const supabaseAdmin = getSupabaseAdmin()
         // Check if the verification code is still pending (not used)
         const { data: codeData, error: codeError } = await supabaseAdmin
             .from('verification_codes')

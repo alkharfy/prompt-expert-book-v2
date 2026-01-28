@@ -261,7 +261,7 @@ export default function RoadmapPath() {
 
         const timer = setTimeout(moveRobotToInitial, 400)
         return () => clearTimeout(timer)
-    }, [robotPosition, pathD, isLoadingProgress])
+    }, [robotPosition, pathD, isLoadingProgress, isAnimating, robotControls])
 
     // Handle card click with animation
     const handleCardClick = async (index: number, href: string) => {

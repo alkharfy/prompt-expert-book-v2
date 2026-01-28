@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import Robot from '@/components/Robot'
@@ -162,11 +163,15 @@ export default function IntroPage() {
                                                 margin: '10px 0'
                                             }}
                                         >
-                                            <img
-                                                src={block.imageUrl}
-                                                alt={block.title || 'Lesson Image'}
-                                                style={{ width: '100%', height: 'auto', display: 'block' }}
-                                            />
+                                            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                                                <Image
+                                                    src={block.imageUrl || ''}
+                                                    alt={block.title || 'Lesson Image'}
+                                                    fill
+                                                    style={{ objectFit: 'cover' }}
+                                                    unoptimized
+                                                />
+                                            </div>
                                             {block.title && (
                                                 <div style={{
                                                     padding: '12px',

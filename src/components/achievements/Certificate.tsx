@@ -50,7 +50,7 @@ export default function Certificate({
   const handleDownload = async () => {
     if (isDownloading) return;
     setIsDownloading(true);
-    
+
     try {
       // استخدام html2canvas لتحويل الشهادة لصورة
       if (typeof window !== 'undefined') {
@@ -61,12 +61,12 @@ export default function Certificate({
             backgroundColor: '#0a0a0f',
             useCORS: true,
           });
-          
+
           const link = document.createElement('a');
           link.download = `certificate-${certificateId}.png`;
           link.href = canvas.toDataURL('image/png');
           link.click();
-          
+
           onDownload?.();
         }
       }
@@ -224,7 +224,7 @@ export default function Certificate({
             </>
           )}
         </motion.button>
-        
+
         <motion.button
           className="action-btn share-btn"
           onClick={handleShare}
@@ -233,7 +233,7 @@ export default function Certificate({
         >
           🔗 مشاركة
         </motion.button>
-        
+
         <motion.button
           className="action-btn copy-link-btn"
           onClick={handleCopyLink}
@@ -243,7 +243,7 @@ export default function Certificate({
           {copied ? '✓ تم النسخ!' : '📋 نسخ الرابط العام'}
         </motion.button>
       </div>
-      
+
       <div className="public-link-info">
         <p>رابط الشهادة العام:</p>
         <code>{getCertificateShareUrl(certificateId)}</code>
@@ -283,15 +283,15 @@ export function AchievementCard({
         {icon}
         {!isUnlocked && <span className="lock-badge">🔒</span>}
       </div>
-      
+
       <div className="achievement-info">
         <h4 className="achievement-title">{title}</h4>
         <p className="achievement-desc">{description}</p>
-        
+
         {!isUnlocked && (
           <div className="achievement-progress">
             <div className="progress-bar">
-              <div 
+              <div
                 className="progress-fill"
                 style={{ width: `${progress}%` }}
               />
@@ -299,14 +299,14 @@ export function AchievementCard({
             <span className="progress-text">{progress}%</span>
           </div>
         )}
-        
+
         {isUnlocked && unlockedAt && (
           <p className="achievement-date">
             تم فتحه في {new Intl.DateTimeFormat('ar-SA').format(unlockedAt)}
           </p>
         )}
       </div>
-      
+
       <div className="achievement-points">
         <span className="points-value">+{points}</span>
         <span className="points-label">نقطة</span>
@@ -321,7 +321,7 @@ interface Achievement {
   icon: string;
   title: string;
   description: string;
-  category: 'reading' | 'exercises' | 'streak' | 'special';
+  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions';
   points: number;
   requirement: number;
   currentProgress: number;
@@ -346,6 +346,7 @@ export function AchievementsList({ achievements, filter = 'all' }: AchievementsL
     exercises: { name: 'التمارين', icon: '🎯' },
     streak: { name: 'الاستمرارية', icon: '🔥' },
     special: { name: 'خاصة', icon: '⭐' },
+    missions: { name: 'المهمات', icon: '🧭' },
   };
 
   const groupedAchievements = filteredAchievements.reduce((acc, achievement) => {

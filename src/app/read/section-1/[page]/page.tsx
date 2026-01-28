@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
@@ -243,10 +244,12 @@ export default function Section1Page() {
                                 position: 'relative',
                                 background: 'rgba(0,0,0,0.3)'
                             }}>
-                                <img
-                                    src={currentPage.contentBlocks.find(b => b.type === 'image')?.imageUrl}
+                                <Image
+                                    src={currentPage.contentBlocks.find(b => b.type === 'image')?.imageUrl || ''}
                                     alt="Main Illustration"
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                    unoptimized
                                 />
                             </div>
                         </motion.div>
@@ -304,11 +307,15 @@ export default function Section1Page() {
                                                     margin: '10px 0'
                                                 }}
                                             >
-                                                <img
-                                                    src={block.imageUrl}
-                                                    alt={block.title || 'Lesson Image'}
-                                                    style={{ width: '100%', height: 'auto', display: 'block' }}
-                                                />
+                                                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                                                    <Image
+                                                        src={block.imageUrl || ''}
+                                                        alt={block.title || 'Lesson Image'}
+                                                        fill
+                                                        style={{ objectFit: 'cover' }}
+                                                        unoptimized
+                                                    />
+                                                </div>
                                                 {block.title && (
                                                     <div style={{
                                                         padding: '12px',
