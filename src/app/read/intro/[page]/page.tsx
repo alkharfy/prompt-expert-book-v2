@@ -84,9 +84,9 @@ export default function IntroPage() {
                 <div className="container" style={{ paddingBottom: '40px', maxWidth: '1400px' }}>
                     {/* Reading Actions Bar */}
                     <div className="reading-actions-bar">
-                        <BookmarkButton 
-                            pageId={`intro-${pageNum}`} 
-                            pageTitle={`المقدمة: ${currentPage.title}`} 
+                        <BookmarkButton
+                            pageId={`intro-${pageNum}`}
+                            pageTitle={`المقدمة: ${currentPage.title}`}
                         />
                     </div>
 
@@ -148,6 +148,38 @@ export default function IntroPage() {
                                                 {block.content}
                                             </p>
                                         </div>
+                                    )}
+                                    {block.type === 'image' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            whileInView={{ opacity: 1, scale: 1 }}
+                                            viewport={{ once: true }}
+                                            style={{
+                                                borderRadius: '16px',
+                                                overflow: 'hidden',
+                                                border: '1px solid rgba(255, 107, 53, 0.2)',
+                                                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                                                margin: '10px 0'
+                                            }}
+                                        >
+                                            <img
+                                                src={block.imageUrl}
+                                                alt={block.title || 'Lesson Image'}
+                                                style={{ width: '100%', height: 'auto', display: 'block' }}
+                                            />
+                                            {block.title && (
+                                                <div style={{
+                                                    padding: '12px',
+                                                    background: 'rgba(0,0,0,0.6)',
+                                                    color: '#fff',
+                                                    fontSize: '0.9rem',
+                                                    textAlign: 'center',
+                                                    borderTop: '1px solid rgba(255, 107, 53, 0.1)'
+                                                }}>
+                                                    {block.title}
+                                                </div>
+                                            )}
+                                        </motion.div>
                                     )}
                                     {block.type === 'card' && (
                                         <motion.div

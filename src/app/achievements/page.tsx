@@ -22,6 +22,19 @@ interface UserStats {
   bookmarksCount: number;
 }
 
+interface Achievement {
+  id: string;
+  icon: string;
+  title: string;
+  description: string;
+  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions';
+  points: number;
+  requirement: number;
+  currentProgress: number;
+  isUnlocked: boolean;
+  unlockedAt?: Date;
+}
+
 interface UserAchievement extends AchievementDefinition {
   currentProgress: number;
   isUnlocked: boolean;
@@ -227,6 +240,11 @@ export default function AchievementsPage() {
         case 'points':
           currentProgress = stats.totalPoints;
           isUnlocked = stats.totalPoints >= achievement.requirement;
+          break;
+        case 'mission_complete':
+          const claimedRewards = JSON.parse(localStorage.getItem('claimed_rewards') || '[]');
+          isUnlocked = claimedRewards.includes(achievement.id);
+          currentProgress = isUnlocked ? 1 : 0;
           break;
         case 'custom':
           // الإنجازات الخاصة تحتاج تتبع مخصص

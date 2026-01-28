@@ -6,10 +6,10 @@ export interface AchievementDefinition {
   icon: string;
   title: string;
   description: string;
-  category: 'reading' | 'exercises' | 'streak' | 'special';
+  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions';
   points: number;
   requirement: number;
-  requirementType: 'chapters' | 'exercises' | 'streak' | 'points' | 'time' | 'custom';
+  requirementType: 'chapters' | 'exercises' | 'streak' | 'points' | 'time' | 'custom' | 'mission_complete';
   secret?: boolean; // إنجازات سرية لا تظهر حتى تفتح
 }
 
@@ -286,6 +286,48 @@ export const achievementsData: AchievementDefinition[] = [
     requirement: 1,
     requirementType: 'custom',
     secret: true,
+  },
+
+  // ============ إنجازات المهمات ============
+  {
+    id: 'chap1_mission1',
+    icon: '🧭',
+    title: 'بوصلة المشروع',
+    description: 'قم بملء بطاقة المشروع (ورقة التعريف)',
+    category: 'missions',
+    points: 10,
+    requirement: 1,
+    requirementType: 'mission_complete',
+  },
+  {
+    id: 'chap1_game1',
+    icon: '🔍',
+    title: 'المحقق الذكي',
+    description: 'اكتشف العناصر الـ 5 الناقصة في برومبت علي',
+    category: 'missions',
+    points: 5,
+    requirement: 1,
+    requirementType: 'mission_complete',
+  },
+  {
+    id: 'chap1_mission2',
+    icon: '🚀',
+    title: 'قاذف البداية',
+    description: 'جرب برومبت الـ Kickoff مع مشروعك',
+    category: 'missions',
+    points: 10,
+    requirement: 1,
+    requirementType: 'mission_complete',
+  },
+  {
+    id: 'chap1_boss',
+    icon: '⚔️',
+    title: 'قاهر الوحوش',
+    description: 'حول البرومبت الضعيف إلى برومبت احترافي',
+    category: 'missions',
+    points: 20,
+    requirement: 1,
+    requirementType: 'mission_complete',
   },
 ];
 
