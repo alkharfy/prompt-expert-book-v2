@@ -30,6 +30,9 @@ export { unit3Data, unit3Info, unit3TotalPages } from './unit3Data';
 // استيراد الوحدة الرابعة (البرومبتات المتسلسلة وبناء المشاريع)
 export { unit4Data, unit4Info, unit4TotalPages } from './unit4Data';
 
+// استيراد الوحدة الخامسة (الجودة والتصحيح المتقدم)
+export { unit5Data, unit5Info, unit5TotalPages } from './unit5Data';
+
 export const introData: PageContent[] = [
     {
         id: 1,
