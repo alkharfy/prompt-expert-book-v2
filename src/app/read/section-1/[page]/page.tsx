@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import Robot from '@/components/Robot'
-import { section1 } from '@/data/bookData'
+import { unit1Data } from '@/data/unit1Data'
 import { useEffect, useState } from 'react'
 import { authSystem } from '@/lib/auth_system'
 import { verifySession } from '@/lib/auth'
@@ -28,8 +28,8 @@ export default function Section1Page() {
     const [claimedRewards, setClaimedRewards] = useState<string[]>([])
     const [showRewardCelebration, setShowRewardCelebration] = useState<string | null>(null)
 
-    const currentPage = section1[pageNum - 1]
-    const totalPages = section1.length
+    const currentPage = unit1Data[pageNum - 1]
+    const totalPages = unit1Data.length
     const isFirstPage = pageNum === 1
     const isLastPage = pageNum === totalPages
 
@@ -142,16 +142,97 @@ export default function Section1Page() {
         });
     };
 
+    // دالة تحويل الروابط
+    const formatLinks = (text: string): (string | JSX.Element)[] => {
+        if (!text) return [text];
+
+        const linkPatterns = [
+            { pattern: /chat\.openai\.com/g, url: 'https://chat.openai.com' },
+            { pattern: /claude\.ai/g, url: 'https://claude.ai' },
+            { pattern: /gemini\.google\.com/g, url: 'https://gemini.google.com' },
+            { pattern: /openai\.com/g, url: 'https://openai.com' },
+            { pattern: /anthropic\.com/g, url: 'https://anthropic.com' },
+        ];
+
+        let parts: (string | JSX.Element)[] = [text];
+        let keyCounter = 0;
+
+        for (const { pattern, url } of linkPatterns) {
+            const newParts: (string | JSX.Element)[] = [];
+            
+            for (const part of parts) {
+                if (typeof part !== 'string') {
+                    newParts.push(part);
+                    continue;
+                }
+
+                const regex = new RegExp(pattern.source, 'g');
+                let lastIndex = 0;
+                let match;
+
+                while ((match = regex.exec(part)) !== null) {
+                    if (match.index > lastIndex) {
+                        newParts.push(part.slice(lastIndex, match.index));
+                    }
+                    newParts.push(
+                        <a 
+                            key={`link-${keyCounter++}`}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                color: '#FF6B35',
+                                textDecoration: 'underline',
+                                fontWeight: 600
+                            }}
+                        >
+                            {match[0]}
+                        </a>
+                    );
+                    lastIndex = regex.lastIndex;
+                }
+                if (lastIndex < part.length) {
+                    newParts.push(part.slice(lastIndex));
+                }
+            }
+            
+            parts = newParts.length > 0 ? newParts : parts;
+        }
+
+        return parts;
+    };
+
     const formatDialogue = (text: string) => {
         if (!text) return text;
-        const parts = text.split(/(علي:|المعلّم:|علي|المعلّم)/g);
-        return parts.map((part, i) => {
-            if (part === 'علي:' || part === 'المعلّم:' || part === 'علي' || part === 'المعلّم') {
-                return <span key={i} style={{ color: '#FF6B35', fontWeight: 'bold' }}>{part}</span>;
+        
+        // أولاً تحويل الروابط
+        const linkedParts = formatLinks(text);
+        
+        // ثم تنسيق أسماء الشخصيات
+        const finalParts: (string | JSX.Element)[] = [];
+        let keyCounter = 100;
+        
+        for (const part of linkedParts) {
+            if (typeof part !== 'string') {
+                finalParts.push(part);
+                continue;
             }
-            // Apply enhanced formatting to the rest of the text
-            return formatEnhancedText(part);
-        });
+            
+            const nameParts = part.split(/(سارة:|أحمد:)/g);
+            for (const namePart of nameParts) {
+                if (namePart === 'سارة:' || namePart === 'أحمد:') {
+                    finalParts.push(
+                        <span key={`name-${keyCounter++}`} style={{ color: '#FF6B35', fontWeight: 'bold' }}>
+                            {namePart}
+                        </span>
+                    );
+                } else {
+                    finalParts.push(namePart);
+                }
+            }
+        }
+        
+        return finalParts;
     };
 
     return (

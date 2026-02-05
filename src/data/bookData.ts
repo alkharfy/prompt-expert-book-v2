@@ -17,6 +17,19 @@
     }[];
 }
 
+// استيراد الوحدة الأولى المحدثة (أحمد وسارة)
+// يمكن استخدام unit1Data بدلاً من section1 في الإصدار الجديد
+export { unit1Data, unit1Info, unit1TotalPages } from './unit1Data';
+
+// استيراد الوحدة الثانية (أدواتك وبيئة العمل)
+export { unit2Data, unit2Info, unit2TotalPages } from './unit2Data';
+
+// استيراد الوحدة الثالثة (إطار GOLDS والتقنيات المتقدمة)
+export { unit3Data, unit3Info, unit3TotalPages } from './unit3Data';
+
+// استيراد الوحدة الرابعة (البرومبتات المتسلسلة وبناء المشاريع)
+export { unit4Data, unit4Info, unit4TotalPages } from './unit4Data';
+
 export const introData: PageContent[] = [
     {
         id: 1,

@@ -1,11 +1,12 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import Robot from '@/components/Robot'
-import { section2 } from '@/data/bookData'
+import { unit2Data } from '@/data/unit2Data'
 import { useEffect, useState } from 'react'
 import { authSystem } from '@/lib/auth_system'
 import { verifySession } from '@/lib/auth'
@@ -14,6 +15,7 @@ import ReadingPagination from '@/components/reading/ReadingPagination'
 import CopyButton from '@/components/reading/CopyButton'
 import BookmarkButton from '@/components/reading/BookmarkButton'
 import ScrollProgress from '@/components/reading/ScrollProgress'
+import GlossaryTerm, { GLOSSARY_PATTERNS } from '@/components/reading/GlossaryTerm'
 
 export default function Section2Page() {
     const params = useParams()
@@ -23,8 +25,8 @@ export default function Section2Page() {
     const [isAuthed, setIsAuthed] = useState(false)
     const [isLockOverlayOpen, setIsLockOverlayOpen] = useState(false)
 
-    const currentPage = section2[pageNum - 1]
-    const totalPages = section2.length
+    const currentPage = unit2Data[pageNum - 1]
+    const totalPages = unit2Data.length
     const isFirstPage = pageNum === 1
     const isLastPage = pageNum === totalPages
 
@@ -77,6 +79,132 @@ export default function Section2Page() {
             router.push('/read/section-1/11')
         }
     }
+
+    // دالة تحويل الروابط والنصوص والمصطلحات التقنية
+    const formatTextWithLinks = (text: string): (string | JSX.Element)[] => {
+        if (!text) return [text];
+
+        // قائمة الروابط المعروفة
+        const linkPatterns = [
+            { pattern: /chat\.openai\.com/g, url: 'https://chat.openai.com' },
+            { pattern: /claude\.ai/g, url: 'https://claude.ai' },
+            { pattern: /gemini\.google\.com/g, url: 'https://gemini.google.com' },
+            { pattern: /openai\.com/g, url: 'https://openai.com' },
+            { pattern: /anthropic\.com/g, url: 'https://anthropic.com' },
+        ];
+
+        // تقسيم النص وإضافة الروابط
+        let parts: (string | JSX.Element)[] = [text];
+        let keyCounter = 0;
+
+        // معالجة كل نمط للروابط
+        for (const { pattern, url } of linkPatterns) {
+            const newParts: (string | JSX.Element)[] = [];
+            
+            for (const part of parts) {
+                if (typeof part !== 'string') {
+                    newParts.push(part);
+                    continue;
+                }
+
+                const regex = new RegExp(pattern.source, 'g');
+                let lastIndex = 0;
+                let match;
+
+                while ((match = regex.exec(part)) !== null) {
+                    // النص قبل الرابط
+                    if (match.index > lastIndex) {
+                        newParts.push(part.slice(lastIndex, match.index));
+                    }
+                    // الرابط نفسه
+                    newParts.push(
+                        <a 
+                            key={`link-${keyCounter++}`}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                color: '#FF6B35',
+                                textDecoration: 'underline',
+                                fontWeight: 600,
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {match[0]}
+                        </a>
+                    );
+                    lastIndex = regex.lastIndex;
+                }
+                // النص بعد آخر رابط
+                if (lastIndex < part.length) {
+                    newParts.push(part.slice(lastIndex));
+                } else if (lastIndex === 0) {
+                    newParts.push(part);
+                }
+            }
+            
+            parts = newParts;
+        }
+
+        // معالجة المصطلحات التقنية
+        for (const { termId, patterns } of GLOSSARY_PATTERNS) {
+            const newParts: (string | JSX.Element)[] = [];
+            
+            for (const part of parts) {
+                if (typeof part !== 'string') {
+                    newParts.push(part);
+                    continue;
+                }
+
+                // إنشاء regex للبحث عن جميع أنماط المصطلح
+                const patternRegex = new RegExp(`(${patterns.join('|')})`, 'gi');
+                const segments = part.split(patternRegex);
+                
+                for (const segment of segments) {
+                    if (!segment) continue;
+                    
+                    // التحقق إذا كان هذا الجزء هو أحد أنماط المصطلح
+                    const isGlossaryTerm = patterns.some(p => 
+                        segment.toLowerCase() === p.toLowerCase()
+                    );
+                    
+                    if (isGlossaryTerm) {
+                        newParts.push(
+                            <GlossaryTerm key={`glossary-${keyCounter++}`} termId={termId} displayText={segment} />
+                        );
+                    } else {
+                        newParts.push(segment);
+                    }
+                }
+            }
+            
+            parts = newParts;
+        }
+
+        // تنسيق أسماء الشخصيات
+        const finalParts: (string | JSX.Element)[] = [];
+        for (const part of parts) {
+            if (typeof part !== 'string') {
+                finalParts.push(part);
+                continue;
+            }
+
+            const nameParts = part.split(/(سارة:|أحمد:)/g);
+            for (const namePart of nameParts) {
+                if (namePart === 'سارة:' || namePart === 'أحمد:') {
+                    finalParts.push(
+                        <span key={`name-${keyCounter++}`} style={{ color: '#FF6B35', fontWeight: 'bold' }}>
+                            {namePart}
+                        </span>
+                    );
+                } else if (namePart) {
+                    finalParts.push(namePart);
+                }
+            }
+        }
+
+        return finalParts;
+    };
 
     return (
         <>
@@ -157,7 +285,7 @@ export default function Section2Page() {
                                                 fontWeight: index === 0 ? 600 : 400,
                                                 whiteSpace: 'pre-line'
                                             }}>
-                                                {block.content}
+                                                {formatTextWithLinks(block.content)}
                                             </p>
                                         </div>
                                     )}
@@ -199,7 +327,7 @@ export default function Section2Page() {
                                                 marginBottom: block.items ? '24px' : '0',
                                                 whiteSpace: 'pre-line'
                                             }}>
-                                                {block.content}
+                                                {formatTextWithLinks(block.content)}
                                             </p>
 
                                             {block.items && (
@@ -247,6 +375,42 @@ export default function Section2Page() {
                                                 <pre><code>{block.code}</code></pre>
                                             </div>
                                         </div>
+                                    )}
+                                    {block.type === 'image' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            whileInView={{ opacity: 1, scale: 1 }}
+                                            viewport={{ once: true }}
+                                            style={{
+                                                borderRadius: '16px',
+                                                overflow: 'hidden',
+                                                border: '1px solid rgba(255, 107, 53, 0.2)',
+                                                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                                                margin: '10px 0'
+                                            }}
+                                        >
+                                            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                                                <Image
+                                                    src={block.imageUrl || ''}
+                                                    alt={block.title || 'Lesson Image'}
+                                                    fill
+                                                    style={{ objectFit: 'cover' }}
+                                                    unoptimized
+                                                />
+                                            </div>
+                                            {block.title && (
+                                                <div style={{
+                                                    padding: '12px',
+                                                    background: 'rgba(0,0,0,0.6)',
+                                                    color: '#fff',
+                                                    fontSize: '0.9rem',
+                                                    textAlign: 'center',
+                                                    borderTop: '1px solid rgba(255, 107, 53, 0.1)'
+                                                }}>
+                                                    {block.title}
+                                                </div>
+                                            )}
+                                        </motion.div>
                                     )}
                                 </div>
                             ))}

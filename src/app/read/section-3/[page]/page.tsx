@@ -1,11 +1,12 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import Robot from '@/components/Robot'
-import { section3 } from '@/data/bookData'
+import { unit3Data } from '@/data/unit3Data'
 import { useEffect, useState } from 'react'
 import { authSystem } from '@/lib/auth_system'
 import { verifySession } from '@/lib/auth'
@@ -14,6 +15,7 @@ import ReadingPagination from '@/components/reading/ReadingPagination'
 import CopyButton from '@/components/reading/CopyButton'
 import BookmarkButton from '@/components/reading/BookmarkButton'
 import ScrollProgress from '@/components/reading/ScrollProgress'
+import GlossaryTerm, { GLOSSARY_PATTERNS } from '@/components/reading/GlossaryTerm'
 
 export default function Section3Page() {
     const params = useParams()
@@ -23,8 +25,8 @@ export default function Section3Page() {
     const [isAuthed, setIsAuthed] = useState(false)
     const [isLockOverlayOpen, setIsLockOverlayOpen] = useState(false)
 
-    const currentPage = section3[pageNum - 1]
-    const totalPages = section3.length
+    const currentPage = unit3Data[pageNum - 1]
+    const totalPages = unit3Data.length
     const isFirstPage = pageNum === 1
     const isLastPage = pageNum === totalPages
 
@@ -38,9 +40,9 @@ export default function Section3Page() {
             setIsLockOverlayOpen(true)
         }
 
-        // Save progress (Intro: 2 + Section 1: 11 + Section 2: 6 = 19 pages total before Section 3)
+        // Save progress (Intro: 2 + Section 1: 11 + Section 2: 15 = 28 pages total before Section 3)
         if (authed) {
-            authSystem.updateReadingProgress(19 + pageNum).catch(err => {
+            authSystem.updateReadingProgress(28 + pageNum).catch(err => {
                 console.error('Failed to save progress:', err)
             })
         }
@@ -71,10 +73,131 @@ export default function Section3Page() {
         if (!isFirstPage) {
             router.push(`/read/section-3/${pageNum - 1}`)
         } else {
-            // Navigate back to last page of Section 2 (6 pages)
-            router.push('/read/section-2/6')
+            // Navigate back to last page of Section 2 (15 pages)
+            router.push('/read/section-2/15')
         }
     }
+
+    // دالة تحويل الروابط والنصوص والمصطلحات التقنية
+    const formatTextWithLinks = (text: string): (string | JSX.Element)[] => {
+        if (!text) return [text];
+
+        // قائمة الروابط المعروفة
+        const linkPatterns = [
+            { pattern: /chat\.openai\.com/g, url: 'https://chat.openai.com' },
+            { pattern: /claude\.ai/g, url: 'https://claude.ai' },
+            { pattern: /gemini\.google\.com/g, url: 'https://gemini.google.com' },
+            { pattern: /openai\.com/g, url: 'https://openai.com' },
+            { pattern: /anthropic\.com/g, url: 'https://anthropic.com' },
+        ];
+
+        // تقسيم النص وإضافة الروابط
+        let parts: (string | JSX.Element)[] = [text];
+        let keyCounter = 0;
+
+        // معالجة كل نمط للروابط
+        for (const { pattern, url } of linkPatterns) {
+            const newParts: (string | JSX.Element)[] = [];
+            
+            for (const part of parts) {
+                if (typeof part !== 'string') {
+                    newParts.push(part);
+                    continue;
+                }
+
+                const regex = new RegExp(pattern.source, 'g');
+                let lastIndex = 0;
+                let match;
+
+                while ((match = regex.exec(part)) !== null) {
+                    if (match.index > lastIndex) {
+                        newParts.push(part.slice(lastIndex, match.index));
+                    }
+                    newParts.push(
+                        <a 
+                            key={`link-${keyCounter++}`}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                color: '#FF6B35',
+                                textDecoration: 'underline',
+                                fontWeight: 600,
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {match[0]}
+                        </a>
+                    );
+                    lastIndex = regex.lastIndex;
+                }
+                if (lastIndex < part.length) {
+                    newParts.push(part.slice(lastIndex));
+                } else if (lastIndex === 0) {
+                    newParts.push(part);
+                }
+            }
+            
+            parts = newParts;
+        }
+
+        // معالجة المصطلحات التقنية
+        for (const { termId, patterns } of GLOSSARY_PATTERNS) {
+            const newParts: (string | JSX.Element)[] = [];
+            
+            for (const part of parts) {
+                if (typeof part !== 'string') {
+                    newParts.push(part);
+                    continue;
+                }
+
+                const patternRegex = new RegExp(`(${patterns.join('|')})`, 'gi');
+                const segments = part.split(patternRegex);
+                
+                for (const segment of segments) {
+                    if (!segment) continue;
+                    
+                    const isGlossaryTerm = patterns.some(p => 
+                        segment.toLowerCase() === p.toLowerCase()
+                    );
+                    
+                    if (isGlossaryTerm) {
+                        newParts.push(
+                            <GlossaryTerm key={`glossary-${keyCounter++}`} termId={termId} displayText={segment} />
+                        );
+                    } else {
+                        newParts.push(segment);
+                    }
+                }
+            }
+            
+            parts = newParts;
+        }
+
+        // تنسيق أسماء الشخصيات
+        const finalParts: (string | JSX.Element)[] = [];
+        for (const part of parts) {
+            if (typeof part !== 'string') {
+                finalParts.push(part);
+                continue;
+            }
+
+            const nameParts = part.split(/(سارة:|أحمد:)/g);
+            for (const namePart of nameParts) {
+                if (namePart === 'سارة:' || namePart === 'أحمد:') {
+                    finalParts.push(
+                        <span key={`name-${keyCounter++}`} style={{ color: '#FF6B35', fontWeight: 'bold' }}>
+                            {namePart}
+                        </span>
+                    );
+                } else if (namePart) {
+                    finalParts.push(namePart);
+                }
+            }
+        }
+
+        return finalParts;
+    };
 
     return (
         <>
@@ -136,55 +259,60 @@ export default function Section3Page() {
                                 <div key={index}>
                                     {block.type === 'text' && (
                                         <div style={{
-                                            padding: '16px 24px',
-                                            background: 'rgba(255, 255, 255, 0.02)',
-                                            borderRadius: '12px',
-                                            borderRight: '4px solid #FF6B35'
+                                            padding: '20px 0',
+                                            borderRight: index === 0 ? '4px solid #FF6B35' : 'none',
+                                            paddingRight: index === 0 ? '20px' : '0'
                                         }}>
-                                            {block.title && <h4 style={{ color: '#FF6B35', marginBottom: '8px' }}>{block.title}</h4>}
                                             <p style={{
-                                                fontSize: '1.1rem',
-                                                lineHeight: '1.8',
-                                                color: '#d0d0d0',
-                                                margin: 0,
+                                                fontSize: '1.15rem',
+                                                lineHeight: '1.7',
+                                                color: index === 0 ? '#fff' : '#b0b0b0',
+                                                fontWeight: index === 0 ? 600 : 400,
                                                 whiteSpace: 'pre-line'
                                             }}>
-                                                {block.content}
+                                                {formatTextWithLinks(block.content)}
                                             </p>
                                         </div>
                                     )}
                                     {block.type === 'card' && (
                                         <motion.div
-                                            className="card card-glow"
+                                            className="card card-glow responsive-card"
                                             style={{
-                                                padding: '24px',
-                                                background: 'rgba(255, 107, 53, 0.04)',
-                                                border: '1px solid rgba(255, 107, 53, 0.15)',
+                                                background: 'rgba(255, 107, 53, 0.03)',
+                                                border: '1px solid rgba(255, 107, 53, 0.1)',
                                                 borderRadius: '16px',
+                                                position: 'relative',
+                                                overflow: 'hidden'
                                             }}
-                                            whileHover={{ y: -5, background: 'rgba(255, 107, 53, 0.06)' }}
+                                            whileHover={{ y: -5, background: 'rgba(255, 107, 53, 0.05)' }}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
                                                 <div style={{
-                                                    width: '28px',
-                                                    height: '28px',
+                                                    width: '32px',
+                                                    height: '32px',
                                                     borderRadius: '50%',
-                                                    background: '#FF6B35',
+                                                    background: 'linear-gradient(135deg, #FF6B35, #FF8C42)',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    fontSize: '0.9rem',
-                                                    fontWeight: 'bold',
-                                                    color: '#fff'
+                                                    fontSize: '1rem',
+                                                    fontWeight: '900',
+                                                    color: '#fff',
+                                                    flexShrink: 0
                                                 }}>
-                                                    ✦
+                                                    {index + 1}
                                                 </div>
-                                                <h3 style={{ fontSize: '1.3rem', margin: 0, color: '#FFB800' }}>
+                                                <h3 style={{ fontSize: '1.4rem', margin: 0, color: '#FF6B35' }}>
                                                     {block.title}
                                                 </h3>
                                             </div>
-                                            <p style={{ fontSize: '1.05rem', color: '#fff', margin: 0, lineHeight: '1.6', whiteSpace: 'pre-line' }}>
-                                                {block.content}
+                                            <p className="responsive-indent" style={{
+                                                fontSize: '1.05rem',
+                                                color: '#d0d0d0',
+                                                marginBottom: block.items ? '24px' : '0',
+                                                whiteSpace: 'pre-line'
+                                            }}>
+                                                {formatTextWithLinks(block.content)}
                                             </p>
 
                                             {block.items && (
@@ -226,23 +354,51 @@ export default function Section3Page() {
                                     )}
                                     {block.type === 'code' && (
                                         <div className="code-block-wrapper" style={{ marginTop: '10px' }}>
-                                            {block.title && <h3 style={{ color: '#FF6B35', marginBottom: '12px', fontSize: '1.4rem' }}>{block.title}</h3>}
-                                            <div className="code-block" style={{ margin: 0, padding: '24px', paddingTop: '50px', position: 'relative' }}>
+                                            {block.title && <h3 style={{ color: '#FF6B35', marginBottom: '12px', fontSize: '1.2rem' }}>{block.title}</h3>}
+                                            <div className="code-block" style={{ margin: 0, paddingTop: '50px', position: 'relative' }}>
                                                 <CopyButton text={block.code || ''} />
-                                                <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}><code style={{ color: '#FFB800' }}>{block.code}</code></pre>
-                                                {block.content && (
-                                                    <div style={{
-                                                        marginTop: '16px',
-                                                        paddingTop: '16px',
-                                                        borderTop: '1px solid rgba(255,107,53,0.2)',
-                                                        fontSize: '0.9rem',
-                                                        color: '#888'
-                                                    }}>
-                                                        {block.content}
-                                                    </div>
-                                                )}
+                                                <pre><code>{block.code}</code></pre>
                                             </div>
+                                            {block.content && (
+                                                <p style={{ color: '#FFB800', marginTop: '10px', fontSize: '0.9rem' }}>✦ {block.content}</p>
+                                            )}
                                         </div>
+                                    )}
+                                    {block.type === 'image' && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            whileInView={{ opacity: 1, scale: 1 }}
+                                            viewport={{ once: true }}
+                                            style={{
+                                                borderRadius: '16px',
+                                                overflow: 'hidden',
+                                                border: '1px solid rgba(255, 107, 53, 0.2)',
+                                                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                                                margin: '10px 0'
+                                            }}
+                                        >
+                                            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                                                <Image
+                                                    src={block.imageUrl || ''}
+                                                    alt={block.title || 'Lesson Image'}
+                                                    fill
+                                                    style={{ objectFit: 'cover' }}
+                                                    unoptimized
+                                                />
+                                            </div>
+                                            {block.title && (
+                                                <div style={{
+                                                    padding: '12px',
+                                                    background: 'rgba(0,0,0,0.6)',
+                                                    color: '#fff',
+                                                    fontSize: '0.9rem',
+                                                    textAlign: 'center',
+                                                    borderTop: '1px solid rgba(255, 107, 53, 0.1)'
+                                                }}>
+                                                    {block.title}
+                                                </div>
+                                            )}
+                                        </motion.div>
                                     )}
                                 </div>
                             ))}
@@ -280,10 +436,9 @@ export default function Section3Page() {
                                     </div>
                                     <div style={{ fontSize: '12px', color: '#FF6B35', fontFamily: 'monospace' }}>
                                         {`{
-  "section": 3,
-  "status": "In Progress...",
-  "theme": "UX Design",
-  "ai_mode": "Expert"
+  "framework": "GOLDS",
+  "level": "Intermediate",
+  "status": "Mastering..."
 }`}
                                     </div>
                                 </motion.div>

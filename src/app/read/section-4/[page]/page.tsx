@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import Robot from '@/components/Robot'
-import { section4 } from '@/data/bookData'
+import { unit4Data } from '@/data/bookData'
 import { useEffect, useState } from 'react'
 import { authSystem } from '@/lib/auth_system'
 import { verifySession } from '@/lib/auth'
@@ -23,8 +23,8 @@ export default function Section4Page() {
     const [isAuthed, setIsAuthed] = useState(false)
     const [isLockOverlayOpen, setIsLockOverlayOpen] = useState(false)
 
-    const currentPage = section4[pageNum - 1]
-    const totalPages = section4.length
+    const currentPage = unit4Data[pageNum - 1]
+    const totalPages = unit4Data.length
     const isFirstPage = pageNum === 1
     const isLastPage = pageNum === totalPages
 
