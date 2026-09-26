@@ -21,7 +21,8 @@ import { alertMoneyPath } from '@/lib/alert'
  * purchase (tab closed) is NOT reported to Google Ads here (that requires the
  * Google Ads offline-conversions API + OAuth — owner setup). Documented, not silent.
  *
- * Schedule every ~15 min via Vercel Cron. Auth: Bearer CRON_SECRET.
+ * Scheduled daily at 01:00 UTC for Vercel Hobby compatibility.
+ * Auth: Bearer CRON_SECRET. Pending payments remain eligible until resolved.
  */
 export async function GET(request: NextRequest) {
   try {
