@@ -1,0 +1,653 @@
+/* ============================================
+   Subscription Gate Modal — Premium Design
+   ============================================
+   نافذة منبثقة احترافية بتصميم عصري
+   Glass morphism + Gradient + Smooth animations
+   ============================================ */
+
+/* ── Backdrop ── */
+.sgm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              backdrop-filter 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              -webkit-backdrop-filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1rem;
+}
+
+.sgm-backdrop.sgm-visible {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Modal Container ── */
+.sgm-modal {
+  position: relative;
+  width: 100%;
+  max-width: 780px;
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: linear-gradient(
+    170deg,
+    rgba(20, 20, 30, 0.97) 0%,
+    rgba(12, 12, 20, 0.98) 50%,
+    rgba(8, 8, 16, 0.99) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  padding: 2.5rem 2rem 2rem;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+
+  /* Entry animation */
+  opacity: 0;
+  transform: translateY(40px) scale(0.95);
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sgm-modal.sgm-modal-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Custom scrollbar */
+.sgm-modal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sgm-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sgm-modal::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 53, 0.3);
+  border-radius: 4px;
+}
+
+/* ── Decorative Glows ── */
+.sgm-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+  opacity: 0.15;
+}
+
+.sgm-glow-1 {
+  top: -50px;
+  right: -30px;
+  width: 200px;
+  height: 200px;
+  background: #FF6B35;
+}
+
+.sgm-glow-2 {
+  bottom: -40px;
+  left: -40px;
+  width: 180px;
+  height: 180px;
+  background: #A855F7;
+}
+
+/* ── Close Button ── */
+.sgm-close {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  z-index: 2;
+}
+
+.sgm-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+/* ── Header ── */
+.sgm-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.sgm-lock-icon {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.sgm-feature-icon {
+  font-size: 3.5rem;
+  display: block;
+  animation: sgm-bounce 2s ease infinite;
+}
+
+.sgm-lock-circle {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.15), rgba(168, 85, 247, 0.15));
+  border: 2px solid rgba(255, 107, 53, 0.25);
+  border-radius: 50%;
+  color: #FF6B35;
+  animation: sgm-pulse 2.5s ease infinite;
+}
+
+.sgm-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.sgm-subtitle {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.sgm-highlight {
+  color: #FF6B35;
+  font-weight: 700;
+}
+
+.sgm-highlight-subtle {
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+/* ── Plans Grid ── */
+.sgm-plans {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+.sgm-plans-double {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sgm-plans-single {
+  grid-template-columns: 1fr;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Plan Card ── */
+.sgm-plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 1.5rem 1rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+  overflow: hidden;
+  font-family: inherit;
+  color: inherit;
+}
+
+.sgm-plan-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: var(--plan-gradient);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  z-index: 0;
+}
+
+.sgm-plan-card:hover:not(.sgm-plan-disabled) {
+  border-color: var(--plan-color);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3),
+              0 0 30px color-mix(in srgb, var(--plan-color) 15%, transparent);
+}
+
+.sgm-plan-card:hover:not(.sgm-plan-disabled)::before {
+  opacity: 0.08;
+}
+
+.sgm-plan-card.sgm-plan-selected {
+  border-color: var(--plan-color);
+  box-shadow: 0 0 0 1px var(--plan-color),
+              0 8px 30px rgba(0, 0, 0, 0.3),
+              0 0 40px color-mix(in srgb, var(--plan-color) 20%, transparent);
+}
+
+.sgm-plan-card.sgm-plan-selected::before {
+  opacity: 0.12;
+}
+
+.sgm-plan-card.sgm-plan-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+/* Popular tag */
+.sgm-popular-tag {
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #FF6B35, #FFB800);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 3px 12px;
+  border-radius: 0 0 10px 10px;
+  letter-spacing: 0.03em;
+  z-index: 1;
+}
+
+/* Plan content wrapper */
+.sgm-plan-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Plan icon */
+.sgm-plan-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Plan name */
+.sgm-plan-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Plan price */
+.sgm-plan-price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.sgm-price-value {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--plan-color);
+  line-height: 1;
+}
+
+.sgm-price-old {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: line-through;
+  margin-left: 0.3rem;
+}
+
+.sgm-price-unit {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+}
+
+.sgm-price-label {
+  width: 100%;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.15rem;
+}
+
+/* Plan features list */
+.sgm-plan-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.sgm-plan-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.3rem 0;
+  text-align: right;
+  direction: rtl;
+}
+
+.sgm-check {
+  color: var(--plan-color);
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* Selected indicator */
+.sgm-plan-selected-indicator {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  color: var(--plan-color);
+  z-index: 2;
+  animation: sgm-pop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Actions ── */
+.sgm-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+.sgm-cta-button {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 50%, #FFB800 100%);
+  background-size: 200% 200%;
+  animation: sgm-gradient-shift 3s ease infinite;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.35);
+  font-family: inherit;
+}
+
+.sgm-cta-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255, 107, 53, 0.5);
+}
+
+.sgm-cta-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.sgm-cta-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sgm-back-button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s;
+  font-family: inherit;
+}
+
+.sgm-back-button:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Security Badge ── */
+.sgm-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1.25rem;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.72rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Animations ── */
+@keyframes sgm-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes sgm-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.3); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 107, 53, 0.15); }
+}
+
+@keyframes sgm-pop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes sgm-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ============================================
+   Responsive — Tablet
+   ============================================ */
+@media (max-width: 768px) {
+  .sgm-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .sgm-modal {
+    max-height: 92vh;
+    max-height: 92dvh;
+    border-radius: 28px 28px 0 0;
+    padding: 2rem 1.25rem 1.75rem;
+    transform: translateY(100%);
+    max-width: 100%;
+  }
+
+  .sgm-modal.sgm-modal-visible {
+    transform: translateY(0);
+  }
+
+  .sgm-title {
+    font-size: 1.45rem;
+  }
+
+  .sgm-subtitle {
+    font-size: 0.88rem;
+  }
+
+  .sgm-plans {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .sgm-plans-double,
+  .sgm-plans-single {
+    max-width: 100%;
+  }
+
+  .sgm-plan-card {
+    flex-direction: row;
+    text-align: right;
+    padding: 1rem 1.25rem;
+    gap: 1rem;
+    direction: rtl;
+  }
+
+  .sgm-plan-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .sgm-plan-content {
+    flex: 1;
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  .sgm-plan-name {
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .sgm-plan-price {
+    justify-content: flex-start;
+    margin-bottom: 0.5rem;
+  }
+
+  .sgm-price-value {
+    font-size: 1.6rem;
+  }
+
+  .sgm-plan-features {
+    display: none;
+  }
+
+  .sgm-plan-selected-indicator {
+    top: 50%;
+    right: auto;
+    left: 0.75rem;
+    transform: translateY(-50%);
+  }
+
+  .sgm-popular-tag {
+    top: auto;
+    bottom: -1px;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .sgm-cta-button {
+    font-size: 0.95rem;
+    padding: 0.9rem 1.5rem;
+    border-radius: 14px;
+  }
+
+  .sgm-feature-icon {
+    font-size: 2.8rem;
+  }
+
+  .sgm-lock-circle {
+    width: 60px;
+    height: 60px;
+  }
+
+  .sgm-lock-circle svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* ============================================
+   Responsive — Small Mobile
+   ============================================ */
+@media (max-width: 380px) {
+  .sgm-modal {
+    padding: 1.5rem 1rem 1.5rem;
+  }
+
+  .sgm-title {
+    font-size: 1.25rem;
+  }
+
+  .sgm-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .sgm-plan-card {
+    padding: 0.85rem 1rem;
+  }
+
+  .sgm-price-value {
+    font-size: 1.4rem;
+  }
+
+  .sgm-cta-button {
+    font-size: 0.9rem;
+    padding: 0.85rem 1.25rem;
+  }
+}
+
+/* ============================================
+   Responsive — Large Desktop
+   ============================================ */
+@media (min-width: 1200px) {
+  .sgm-modal {
+    max-width: 850px;
+    padding: 3rem 2.5rem 2.5rem;
+  }
+
+  .sgm-title {
+    font-size: 2rem;
+  }
+
+  .sgm-plan-card {
+    padding: 2rem 1.5rem 1.5rem;
+  }
+
+  .sgm-price-value {
+    font-size: 2.5rem;
+  }
+}

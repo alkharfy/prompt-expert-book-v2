@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: 'إنشاء حساب | خبير التوجيهات الذكية',
-    description: 'أنشئ حساباً جديداً لتبدأ رحلتك في احتراف الأوامر الذكية للذكاء الاصطناعي.',
+    title: 'إنشاء حساب | PromptMaster',
+    description: 'أنشئ حساباً جديداً وابدأ رحلتك لتصبح PromptMaster في هندسة البرومبت والذكاء الاصطناعي.',
 }
 
 export default function RegisterLayout({

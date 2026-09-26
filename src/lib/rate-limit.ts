@@ -1,25 +1,68 @@
 /**
- * Simple in-memory rate limiter
- * يحد من عدد الطلبات لكل IP خلال فترة زمنية محددة
+ * Rate limiter with Upstash Redis (production) + in-memory fallback (dev/cold-start)
+ *
+ * Production: Uses Upstash Redis for consistent rate limiting across serverless instances.
+ * Fallback:   In-memory Map if UPSTASH_REDIS_REST_URL is not configured.
+ *
+ * Required env vars for Redis mode:
+ *   UPSTASH_REDIS_REST_URL
+ *   UPSTASH_REDIS_REST_TOKEN
  */
+
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
+// ─── Redis-backed rate limiter (shared across serverless instances) ───────────
+
+let redis: Redis | null = null
+let useRedis = false
+
+try {
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+        redis = new Redis({
+            url: process.env.UPSTASH_REDIS_REST_URL,
+            token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        })
+        useRedis = true
+    }
+} catch {
+    // Fallback to in-memory silently
+}
+
+/**
+ * Create an Upstash Ratelimit instance for a given config.
+ * Cached per unique (maxRequests, windowSeconds) pair.
+ */
+const ratelimitCache = new Map<string, Ratelimit>()
+function getUpstashLimiter(maxRequests: number, windowSeconds: number): Ratelimit {
+    const key = `${maxRequests}:${windowSeconds}`
+    let limiter = ratelimitCache.get(key)
+    if (!limiter && redis) {
+        limiter = new Ratelimit({
+            redis,
+            limiter: Ratelimit.slidingWindow(maxRequests, `${windowSeconds} s`),
+            analytics: false,
+            prefix: 'rl',
+        })
+        ratelimitCache.set(key, limiter)
+    }
+    return limiter!
+}
+
+// ─── In-memory fallback (resets on cold start) ──────────────────────────────
 
 interface RateLimitEntry {
     count: number
     resetTime: number
 }
 
-// تخزين الطلبات لكل IP
 const rateLimitStore = new Map<string, RateLimitEntry>()
 
-// متغير للتحكم في interval التنظيف
 let cleanupInterval: ReturnType<typeof setInterval> | null = null
 
-/**
- * بدء تنظيف القيم القديمة (يُستدعى تلقائياً عند أول استخدام)
- */
 function startCleanup(): void {
     if (cleanupInterval) return
-    
+
     cleanupInterval = setInterval(() => {
         const now = Date.now()
         const keysToDelete: string[] = []
@@ -30,31 +73,20 @@ function startCleanup(): void {
         })
         keysToDelete.forEach(key => rateLimitStore.delete(key))
     }, 5 * 60 * 1000)
-    
-    // لا يمنع إغلاق العملية
+
     if (cleanupInterval.unref) {
         cleanupInterval.unref()
     }
 }
 
-/**
- * إيقاف التنظيف (للاختبارات أو إغلاق التطبيق)
- */
-export function stopRateLimitCleanup(): void {
-    if (cleanupInterval) {
-        clearInterval(cleanupInterval)
-        cleanupInterval = null
-    }
-}
-
-export interface RateLimitConfig {
+interface RateLimitConfig {
     /** عدد الطلبات المسموحة */
     maxRequests: number
     /** فترة النافذة الزمنية بالثواني */
     windowSeconds: number
 }
 
-export interface RateLimitResult {
+interface RateLimitResult {
     /** هل مسموح بالطلب */
     allowed: boolean
     /** عدد الطلبات المتبقية */
@@ -66,21 +98,22 @@ export interface RateLimitResult {
 }
 
 /**
- * فحص rate limit لـ IP معين
+ * Check rate limit — uses Redis if configured, otherwise in-memory fallback.
+ * The API is synchronous for in-memory and returns a Promise-compatible result.
+ * For Redis mode, call checkRateLimitAsync() instead for true distributed limiting.
  */
 export function checkRateLimit(
     identifier: string,
     config: RateLimitConfig = { maxRequests: 10, windowSeconds: 60 }
 ): RateLimitResult {
-    // بدء التنظيف التلقائي عند أول استخدام
+    // In-memory fallback (same as before — best-effort on serverless)
     startCleanup()
-    
+
     const now = Date.now()
     const windowMs = config.windowSeconds * 1000
 
     let entry = rateLimitStore.get(identifier)
 
-    // إذا لم يكن هناك سجل أو انتهت النافذة الزمنية
     if (!entry || entry.resetTime < now) {
         entry = {
             count: 1,
@@ -95,10 +128,8 @@ export function checkRateLimit(
         }
     }
 
-    // زيادة العداد
     entry.count++
 
-    // فحص إذا تجاوز الحد
     if (entry.count > config.maxRequests) {
         const retryAfter = Math.ceil((entry.resetTime - now) / 1000)
         return {
@@ -117,10 +148,45 @@ export function checkRateLimit(
 }
 
 /**
+ * Async rate limit check — uses Upstash Redis when available, in-memory fallback otherwise.
+ * Preferred for API routes where `await` is available.
+ */
+export async function checkRateLimitAsync(
+    identifier: string,
+    config: RateLimitConfig = { maxRequests: 10, windowSeconds: 60 }
+): Promise<RateLimitResult> {
+    // Try Redis first
+    if (useRedis && redis) {
+        try {
+            const limiter = getUpstashLimiter(config.maxRequests, config.windowSeconds)
+            const result = await limiter.limit(identifier)
+            return {
+                allowed: result.success,
+                remaining: result.remaining,
+                resetTime: result.reset,
+                retryAfter: result.success ? undefined : Math.ceil((result.reset - Date.now()) / 1000),
+            }
+        } catch {
+            // Redis error — fall through to in-memory
+        }
+    }
+
+    // Fallback to synchronous in-memory
+    return checkRateLimit(identifier, config)
+}
+
+/**
  * الحصول على IP من الطلب
+ * يفضل x-vercel-forwarded-for على Vercel (لا يمكن تزويره)
  */
 export function getClientIP(request: Request): string {
-    // Try different headers for IP
+    // Prefer Vercel's trusted header (cannot be spoofed by clients)
+    const vercelForwardedFor = request.headers.get('x-vercel-forwarded-for')
+    if (vercelForwardedFor) {
+        return vercelForwardedFor.split(',')[0].trim()
+    }
+
+    // Fallback to standard x-forwarded-for (trusted on known proxies)
     const forwardedFor = request.headers.get('x-forwarded-for')
     if (forwardedFor) {
         return forwardedFor.split(',')[0].trim()
@@ -141,21 +207,34 @@ export function getClientIP(request: Request): string {
 export const RATE_LIMITS = {
     // Admin login: 5 محاولات كل 15 دقيقة
     ADMIN_LOGIN: { maxRequests: 5, windowSeconds: 15 * 60 },
-    
+
     // User login: 10 محاولات كل 5 دقائق
-    USER_LOGIN: { maxRequests: 10, windowSeconds: 5 * 60 },
     LOGIN: { maxRequests: 10, windowSeconds: 5 * 60 },
-    
+
     // Registration: 3 محاولات كل ساعة
-    REGISTRATION: { maxRequests: 3, windowSeconds: 60 * 60 },
     REGISTER: { maxRequests: 3, windowSeconds: 60 * 60 },
-    
+
     // Verification code: 5 محاولات كل 10 دقائق
     VERIFY_CODE: { maxRequests: 5, windowSeconds: 10 * 60 },
-    
-    // API general: 100 طلب كل دقيقة
-    API_GENERAL: { maxRequests: 100, windowSeconds: 60 },
-    
-    // Password reset: 3 محاولات كل ساعة
-    PASSWORD_RESET: { maxRequests: 3, windowSeconds: 60 * 60 }
+
+    // Chat AI: 30 رسالة كل 24 ساعة لكل مستخدم
+    CHAT: { maxRequests: 30, windowSeconds: 24 * 60 * 60 },
+
+    // Hospital Diagnose: 10 تشخيصات كل 24 ساعة
+    HOSPITAL_DIAGNOSE: { maxRequests: 10, windowSeconds: 24 * 60 * 60 },
+
+    // Promo code validate: 5 محاولات كل دقيقة لكل IP
+    PROMO_VALIDATE: { maxRequests: 5, windowSeconds: 60 },
+
+    // Payment create-session: 5 محاولات كل ساعة لكل مستخدم
+    PAYMENT_CREATE: { maxRequests: 5, windowSeconds: 60 * 60 },
+
+    // Payment verify: 10 محاولات كل دقيقة لكل مستخدم
+    PAYMENT_VERIFY: { maxRequests: 10, windowSeconds: 60 },
+
+    // Payment activate: 10 محاولات كل دقيقة لكل مستخدم
+    PAYMENT_ACTIVATE: { maxRequests: 10, windowSeconds: 60 },
+
+    // Payment process-callback: 5 محاولات كل دقيقة لكل مستخدم
+    PAYMENT_CALLBACK: { maxRequests: 20, windowSeconds: 60 },
 }

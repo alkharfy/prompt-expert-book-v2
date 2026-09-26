@@ -1,0 +1,357 @@
+/* =====================================================
+   Chapter Recaps — المرحلة 4
+   ===================================================== */
+
+.chapter-recap {
+    margin-top: 40px;
+    padding: 32px 20px;
+    background: linear-gradient(180deg, rgba(255,107,53,0.05) 0%, transparent 100%);
+    border-top: 2px solid rgba(255,107,53,0.3);
+    border-radius: 16px 16px 0 0;
+}
+
+.recap-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.recap-celebration-emoji {
+    font-size: 48px;
+    margin-bottom: 12px;
+    animation: recapBounce 0.6s ease-out;
+}
+
+@keyframes recapBounce {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.recap-title {
+    color: #FF6B35;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.recap-section {
+    margin-bottom: 24px;
+}
+
+.recap-section-title {
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    margin: 20px 0 16px;
+    letter-spacing: 1px;
+}
+
+.recap-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recap-card {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 16px;
+    transition: border-color 0.2s;
+}
+
+.recap-card:hover {
+    border-color: rgba(255,107,53,0.3);
+}
+
+.recap-card-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,107,53,0.1);
+    border-radius: 8px;
+}
+
+.recap-card-content {
+    flex: 1;
+}
+
+.recap-card-title {
+    color: #e0e0e0;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 4px;
+}
+
+.recap-card-desc {
+    color: #999;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.recap-pro-tip {
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 20px 0;
+}
+
+.recap-pro-tip-header {
+    color: #FF6B35;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.recap-pro-tip-text {
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.recap-quote {
+    border-right: 3px solid #FF6B35;
+    margin: 20px 0;
+    padding: 12px 16px;
+    background: rgba(255,107,53,0.05);
+    border-radius: 0 8px 8px 0;
+}
+
+.recap-quote p {
+    color: #ddd;
+    font-size: 15px;
+    font-style: italic;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.recap-quote cite {
+    color: #888;
+    font-size: 12px;
+    display: block;
+    margin-top: 8px;
+}
+
+.recap-stats {
+    margin: 24px 0;
+}
+
+.recap-stats-grid {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+}
+
+.recap-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.recap-stat-icon {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.recap-stat-num {
+    font-size: 24px;
+    font-weight: 700;
+    color: #FF6B35;
+}
+
+.recap-stat-label {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+}
+
+.recap-next-teaser {
+    margin: 24px 0;
+}
+
+.recap-teaser-text {
+    text-align: center;
+    color: #bbb;
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+.recap-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+}
+
+.recap-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.recap-btn-primary {
+    background: #FF6B35;
+    color: #fff;
+}
+
+.recap-btn-primary:hover {
+    background: #e55a2b;
+    transform: translateY(-1px);
+}
+
+.recap-btn-secondary {
+    background: rgba(255,107,53,0.12);
+    color: #FF6B35;
+    border: 1px solid rgba(255,107,53,0.3);
+}
+
+.recap-btn-secondary:hover {
+    background: rgba(255,107,53,0.2);
+}
+
+/* Quick Recap Button */
+.quick-recap-btn {
+    background: rgba(255,107,53,0.1);
+    color: #FF6B35;
+    border: 1px solid rgba(255,107,53,0.25);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+}
+
+.quick-recap-btn:hover {
+    background: rgba(255,107,53,0.18);
+    border-color: rgba(255,107,53,0.4);
+}
+
+/* Quick Recap Modal */
+.quick-recap-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 999;
+}
+
+.quick-recap-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #111;
+    border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 1000;
+    padding: 0;
+}
+
+.quick-recap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: sticky;
+    top: 0;
+    background: #111;
+    z-index: 1;
+}
+
+.quick-recap-header h3 {
+    color: #FF6B35;
+    font-size: 16px;
+    margin: 0;
+}
+
+.quick-recap-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.quick-recap-close:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+}
+
+.quick-recap-content {
+    padding: 16px 20px;
+}
+
+.quick-recap-dismiss {
+    display: block;
+    width: calc(100% - 40px);
+    margin: 0 20px 16px;
+    background: #FF6B35;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+}
+
+.quick-recap-dismiss:hover {
+    background: #e55a2b;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .chapter-recap {
+        padding: 24px 16px;
+    }
+
+    .recap-title {
+        font-size: 18px;
+    }
+
+    .recap-stats-grid {
+        gap: 20px;
+    }
+
+    .recap-stat-num {
+        font-size: 20px;
+    }
+
+    .recap-actions {
+        flex-direction: column;
+    }
+
+    .recap-btn {
+        width: 100%;
+        text-align: center;
+    }
+}

@@ -1,0 +1,611 @@
+/* Hero Section */
+.hero-section {
+  min-height: calc(100vh - var(--header-h, 80px));
+  position: relative;
+  overflow-x: hidden;
+  /* Only hide horizontal overflow for floating assets */
+  overflow-y: visible;
+  background: transparent;
+  /* Let body and particles show through */
+  display: flex;
+  align-items: center;
+  padding-top: 0;
+}
+
+.hero-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - var(--header-h, 80px));
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: var(--spacing-2xl);
+  align-items: center;
+  width: 100%;
+}
+
+.hero-text-container {
+  z-index: 2;
+  max-width: 720px;
+  width: 100%;
+}
+
+.hero-title {
+  font-size: clamp(32px, 5vw, 88px);
+  line-height: 1.1;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-bottom: var(--spacing-md);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.hero-description {
+  font-size: clamp(14px, 1.2vw, 20px);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xl);
+  max-width: 600px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.hero-actions .btn {
+  font-size: clamp(14px, 1vw, 18px);
+  padding-inline: clamp(16px, 2vw, 28px);
+  padding-block: clamp(10px, 1.2vw, 16px);
+}
+
+.hero-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.robot-glow-bg {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.15) 0%, transparent 70%);
+  filter: blur(60px);
+  z-index: -1;
+}
+
+/* Floating Assets */
+.floating-assets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.floating-asset {
+  position: absolute;
+  filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.2));
+}
+
+.asset-cube {
+  top: 15%;
+  left: 5%;
+  width: 180px;
+  height: 180px;
+}
+
+.asset-gear {
+  bottom: 15%;
+  right: 5%;
+  width: 200px;
+  height: 200px;
+}
+
+.code-window-card {
+  position: absolute;
+  top: 25%;
+  left: 15%;
+  width: 220px;
+  height: 150px;
+  background: rgba(26, 26, 26, 0.4);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  backdrop-filter: blur(12px);
+  padding: var(--spacing-md);
+  z-index: 1;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+  .hero-grid {
+    gap: var(--spacing-xl);
+  }
+
+  .asset-cube,
+  .asset-gear {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: var(--spacing-xl);
+    width: 100%;
+  }
+
+  .hero-text-container {
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .hero-image-container {
+    order: 1;
+    margin-bottom: 0;
+    width: 100%;
+    max-width: 320px;
+    margin-inline: auto;
+  }
+
+  .hero-actions {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .floating-asset {
+    opacity: 0.5;
+  }
+
+  .code-window-card {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding-top: 0;
+  }
+
+  .hero-image-container {
+    max-width: 260px;
+  }
+
+  .hero-title {
+    font-size: clamp(22px, 7vw, 32px);
+    line-height: 1.25;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .floating-assets {
+    display: none;
+  }
+}
+
+/* Lesson Page Layout */
+.lesson-grid {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 60px;
+  align-items: start;
+}
+
+.lesson-sidebar {
+  position: sticky;
+  top: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.chapter-title {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  margin: 0 0 16px 0;
+  background: linear-gradient(to bottom, #fff 40%, #FF6B35);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+@media (max-width: 1024px) {
+  .lesson-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-sidebar {
+    position: relative;
+    top: 0;
+    order: -1;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+    width: 100%;
+  }
+
+  .chapter-title {
+    font-size: clamp(1.75rem, 6vw, 2.5rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .lesson-nav-footer {
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+}
+
+.robot-container {
+  perspective: 1000px;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto !important;
+}
+
+/* New Responsive Grids */
+.read-layout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+  gap: 40px;
+  align-items: start;
+}
+
+.toc-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 60px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+
+  .read-layout-grid,
+  .toc-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    /* Reduced gap from 40px/60px */
+  }
+
+  .read-layout-grid>*:nth-child(2),
+  .toc-grid>*:nth-child(2) {
+    order: -1;
+    /* Sidebar on top for mobile */
+  }
+}
+
+/* Responsive Content Classes */
+.responsive-card {
+  padding: var(--spacing-lg);
+}
+
+.responsive-indent {
+  margin-right: 48px;
+  /* RTL indentation */
+}
+
+@media (max-width: 768px) {
+  .responsive-card {
+    padding: var(--spacing-sm);
+    /* 16px */
+  }
+
+  .responsive-indent {
+    margin-right: 0;
+    /* Remove indentation on mobile to save space */
+  }
+
+  .chapter-title {
+    font-size: 1.8rem !important;
+    /* Force smaller title */
+  }
+
+  /* Reading page content improvements for mobile */
+  .read-layout-grid {
+    gap: 16px;
+  }
+
+  .lesson-sidebar {
+    gap: 20px;
+  }
+
+  .lesson-sidebar .robot-container {
+    max-width: 200px !important;
+    margin: 0 auto;
+  }
+
+  /* Hide floating code card on mobile */
+  .floating-code-card {
+    display: none !important;
+  }
+
+  /* Content blocks */
+  .read-layout-grid>div:first-child {
+    gap: 16px !important;
+  }
+
+  /* Code blocks */
+  .code-block {
+    padding: 16px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .code-block pre,
+  .code-block code {
+    font-size: 0.75rem !important;
+    line-height: 1.5 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .chapter-title {
+    font-size: 1.4rem !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* Reading page description */
+  .read-layout-grid p {
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Cards on reading page */
+  .card.card-glow {
+    padding: 14px !important;
+  }
+
+  .card.card-glow h3 {
+    font-size: 1.1rem !important;
+  }
+
+  .card.card-glow p {
+    font-size: 0.9rem !important;
+  }
+
+  /* Text blocks */
+  .read-layout-grid>div>div[style*="borderRight"] {
+    padding: 12px 16px !important;
+  }
+
+  .read-layout-grid>div>div[style*="borderRight"] p {
+    font-size: 0.95rem !important;
+  }
+
+  /* Sidebar tip box */
+  .lesson-sidebar>div:last-child {
+    padding: 16px !important;
+  }
+
+  .lesson-sidebar>div:last-child h4 {
+    font-size: 1rem !important;
+  }
+
+  .lesson-sidebar>div:last-child p {
+    font-size: 0.85rem !important;
+  }
+
+  /* Reading navigation */
+  .reading-nav-container {
+    margin-top: 40px !important;
+  }
+
+  .nav-buttons-row {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .reading-nav-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 12px 20px !important;
+  }
+
+  .pagination-dots {
+    order: -1;
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 16px;
+    /* User requested 16px-20px */
+  }
+}
+
+/* Reading Content Mobile Improvements */
+@media (max-width: 768px) {
+
+  /* Details/Summary (Accordion) */
+  details summary {
+    padding: 10px 14px !important;
+    font-size: 0.9rem !important;
+  }
+
+  details>div {
+    padding: 0 14px 14px 14px !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Hide Robot on very small screens for reading pages */
+  .lesson-sidebar>div:first-child {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .chapter-title {
+    font-size: 1.2rem !important;
+  }
+
+  .read-layout-grid p,
+  .card.card-glow p {
+    font-size: 0.85rem !important;
+  }
+
+  .code-block pre,
+  .code-block code {
+    font-size: 0.7rem !important;
+  }
+}
+
+/* Navigation Actions Responsive */
+.nav-buttons-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 650px;
+  gap: 20px;
+}
+
+.nav-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 34px;
+  min-width: 170px;
+}
+
+.nav-action-btn-next {
+  padding: 14px 44px;
+  min-width: 210px;
+  box-shadow: 0 10px 25px rgba(255, 107, 53, 0.25);
+}
+
+@media (max-width: 600px) {
+  .nav-buttons-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .nav-action-btn,
+  .nav-action-btn-next {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* TOC Card Specifics */
+.toc-card-content {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  position: relative;
+}
+
+.toc-card-number {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--color-orange-primary), var(--color-orange-glow));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  min-width: 80px;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+
+.toc-card-info {
+  flex: 1;
+  min-width: 0;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.toc-card-title {
+  font-size: clamp(1.2rem, 4vw, 1.5rem);
+  margin-bottom: 4px;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.toc-card-desc {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+
+
+@media (max-width: 480px) {
+  .toc-card-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding-top: 8px;
+  }
+
+  .toc-card-number {
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    width: 100%;
+    margin-bottom: 4px;
+  }
+
+  .toc-card-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+}
+
+@media (max-width: 600px) {
+  .card {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .card .text,
+  .card button {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+}
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Fix for floating cards on mobile */
+@media (max-width: 900px) {
+  .floating-code-card {
+    position: relative !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 20px auto !important;
+    z-index: 1 !important;
+    transform: none !important;
+  }
+}

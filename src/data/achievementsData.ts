@@ -6,10 +6,10 @@ export interface AchievementDefinition {
   icon: string;
   title: string;
   description: string;
-  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions';
+  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions' | 'notes' | 'social';
   points: number;
   requirement: number;
-  requirementType: 'chapters' | 'exercises' | 'streak' | 'points' | 'time' | 'custom' | 'mission_complete';
+  requirementType: 'chapters' | 'exercises' | 'streak' | 'points' | 'time' | 'custom' | 'mission_complete' | 'notes_count' | 'notes_sections' | 'shares';
   secret?: boolean; // إنجازات سرية لا تظهر حتى تفتح
 }
 
@@ -185,6 +185,26 @@ export const achievementsData: AchievementDefinition[] = [
 
   // ============ إنجازات خاصة ============
   {
+    id: 'prompt_doctor',
+    icon: '🏥',
+    title: 'طبيب البرومبتات',
+    description: 'أكمل 5 تحديات في مستشفى البرومبتات',
+    category: 'exercises',
+    points: 200,
+    requirement: 5,
+    requirementType: 'custom',
+  },
+  {
+    id: 'prompt_surgeon',
+    icon: '🩺',
+    title: 'جراح البرومبتات',
+    description: 'أكمل جميع تحديات مستشفى البرومبتات بنجاح',
+    category: 'exercises',
+    points: 400,
+    requirement: 8,
+    requirementType: 'custom',
+  },
+  {
     id: 'points_500',
     icon: '⭐',
     title: 'نجم صاعد',
@@ -290,6 +310,36 @@ export const achievementsData: AchievementDefinition[] = [
 
   // ============ إنجازات المهمات ============
   {
+    id: 'project_started',
+    icon: '🚀',
+    title: 'انطلاقة',
+    description: 'ابدأ أول مشروع ممتد',
+    category: 'missions',
+    points: 50,
+    requirement: 1,
+    requirementType: 'mission_complete',
+  },
+  {
+    id: 'project_half',
+    icon: '⚡',
+    title: 'نصف الطريق',
+    description: 'أكمل 4 مراحل من المشروع الممتد',
+    category: 'missions',
+    points: 150,
+    requirement: 4,
+    requirementType: 'mission_complete',
+  },
+  {
+    id: 'project_complete',
+    icon: '🏆',
+    title: 'مهندس برومبتات',
+    description: 'أكمل المشروع الممتد بالكامل (7 مراحل)',
+    category: 'missions',
+    points: 500,
+    requirement: 7,
+    requirementType: 'mission_complete',
+  },
+  {
     id: 'chap1_mission1',
     icon: '🧭',
     title: 'بوصلة المشروع',
@@ -329,28 +379,131 @@ export const achievementsData: AchievementDefinition[] = [
     requirement: 1,
     requirementType: 'mission_complete',
   },
+
+  // ============ إنجازات المهام اليومية ============
+  {
+    id: 'first_mission',
+    icon: '🌅',
+    title: 'البداية',
+    description: 'أكمل أول مهمة يومية',
+    category: 'missions',
+    points: 20,
+    requirement: 1,
+    requirementType: 'mission_complete',
+  },
+  {
+    id: 'all_clear_3',
+    icon: '🎯',
+    title: 'ملتزم',
+    description: 'أكمل كل المهام اليومية 3 أيام متتالية',
+    category: 'missions',
+    points: 100,
+    requirement: 3,
+    requirementType: 'mission_complete',
+  },
+  {
+    id: 'all_clear_7',
+    icon: '💪',
+    title: 'محارب',
+    description: 'أكمل كل المهام اليومية 7 أيام متتالية',
+    category: 'missions',
+    points: 200,
+    requirement: 7,
+    requirementType: 'mission_complete',
+  },
+  {
+    id: 'all_clear_30',
+    icon: '👑',
+    title: 'أسطوري',
+    description: 'أكمل كل المهام اليومية 30 يوم',
+    category: 'missions',
+    points: 500,
+    requirement: 30,
+    requirementType: 'mission_complete',
+  },
+
+  // ============ إنجازات الملاحظات والتظليل ============
+  {
+    id: 'first_note',
+    icon: '📝',
+    title: 'المدوّن',
+    description: 'أنشئ أول ملاحظة أو تظليل',
+    category: 'notes',
+    points: 20,
+    requirement: 1,
+    requirementType: 'notes_count',
+  },
+  {
+    id: 'note_taker',
+    icon: '✍️',
+    title: 'دارس',
+    description: 'أنشئ 10 ملاحظات أو تظليلات',
+    category: 'notes',
+    points: 50,
+    requirement: 10,
+    requirementType: 'notes_count',
+  },
+  {
+    id: 'scholar',
+    icon: '🎯',
+    title: 'باحث',
+    description: 'أنشئ 50 ملاحظة أو تظليل',
+    category: 'notes',
+    points: 150,
+    requirement: 50,
+    requirementType: 'notes_count',
+  },
+  {
+    id: 'notes_5_sections',
+    icon: '📚',
+    title: 'شامل',
+    description: 'أضف ملاحظات في 5 فصول مختلفة',
+    category: 'notes',
+    points: 100,
+    requirement: 5,
+    requirementType: 'notes_sections',
+  },
+
+  // ============ إنجازات المشاركة الاجتماعية ============
+  {
+    id: 'first_share',
+    icon: '📢',
+    title: 'مؤثر',
+    description: 'شارك إنجازك لأول مرة',
+    category: 'social',
+    points: 30,
+    requirement: 1,
+    requirementType: 'shares',
+  },
+  {
+    id: 'share_5',
+    icon: '🌟',
+    title: 'سفير',
+    description: 'شارك 5 مرات',
+    category: 'social',
+    points: 75,
+    requirement: 5,
+    requirementType: 'shares',
+  },
+  {
+    id: 'share_10',
+    icon: '📣',
+    title: 'ناشر',
+    description: 'شارك 10 مرات',
+    category: 'social',
+    points: 150,
+    requirement: 10,
+    requirementType: 'shares',
+  },
+  {
+    id: 'share_certificate',
+    icon: '🎓',
+    title: 'خريج فخور',
+    description: 'شارك شهادتك على السوشيال',
+    category: 'social',
+    points: 50,
+    requirement: 1,
+    requirementType: 'shares',
+    secret: true,
+  },
 ];
-
-// تجميع الإنجازات حسب الفئة
-export const achievementsByCategory = achievementsData.reduce((acc, achievement) => {
-  if (!acc[achievement.category]) {
-    acc[achievement.category] = [];
-  }
-  acc[achievement.category].push(achievement);
-  return acc;
-}, {} as Record<string, AchievementDefinition[]>);
-
-// الحصول على إنجاز بالـ ID
-export const getAchievementById = (id: string): AchievementDefinition | undefined => {
-  return achievementsData.find(a => a.id === id);
-};
-
-// حساب إجمالي النقاط المتاحة من الإنجازات
-export const totalAchievementPoints = achievementsData.reduce((sum, a) => sum + a.points, 0);
-
-// عدد الإنجازات
-export const totalAchievements = achievementsData.length;
-
-// الإنجازات غير السرية
-export const visibleAchievements = achievementsData.filter(a => !a.secret);
-export const secretAchievements = achievementsData.filter(a => a.secret);

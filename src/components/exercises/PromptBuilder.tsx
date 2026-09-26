@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
+import { supabaseProxy as supabase } from '@/lib/supabase_proxy'
 import { authSystem } from '@/lib/auth_system'
 import { onExerciseComplete } from '@/lib/gamification'
 import { dbLogger } from '@/lib/logger'

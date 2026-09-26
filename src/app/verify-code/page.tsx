@@ -5,17 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import AuthCard from '@/components/auth/AuthCard'
 import AuthInput from '@/components/auth/AuthInput'
 import Navigation from '@/components/Navigation'
-import { supabase } from '@/lib/supabase'
 import { authSystem } from '@/lib/auth_system'
 import { authLogger } from '@/lib/logger'
-import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 import '@/app/auth.css'
 
 function VerifyCodeContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const userId = searchParams.get('uid')
-    
+
     const [code, setCode] = useState('')
     const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(false)
@@ -34,57 +32,27 @@ function VerifyCodeContent() {
             return
         }
 
-        // Rate limiting لمنع تخمين الكود
-        const rateLimitResult = checkRateLimit(`verify-code:${userId}`, RATE_LIMITS.VERIFY_CODE)
-        if (!rateLimitResult.allowed) {
-            setError(`تم تجاوز عدد المحاولات. حاول مجدداً بعد ${rateLimitResult.retryAfter} ثانية`)
-            return
-        }
-
         setIsLoading(true)
 
         try {
-            // Verify the code from database
-            const { data: verificationData, error: verifyError } = await supabase
-                .from('verification_codes')
-                .select('*')
-                .eq('user_id', userId)
-                .eq('code', code)
-                .eq('is_used', false)
-                .single() as { data: { created_at: string; id: string } | null; error: any }
+            // Verify code via server-side API route (uses service_role, bypasses RLS)
+            const response = await fetch('/api/auth/verify-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, code }),
+            })
 
-            if (verifyError || !verificationData) {
-                setError('الكود غير صحيح أو منتهي الصلاحية')
+            const result = await response.json()
+
+            if (!result.ok) {
+                setError(result.error || 'حدث خطأ غير متوقع')
                 setIsLoading(false)
                 return
             }
 
-            // Check if code is expired (24 hours)
-            const createdAt = new Date(verificationData.created_at)
-            const now = new Date()
-            const hoursDiff = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
-            
-            if (hoursDiff > 24) {
-                setError('انتهت صلاحية الكود، يرجى التواصل مع الدعم')
-                setIsLoading(false)
-                return
-            }
+            // Login the user automatically (callerVerified=true because code was verified server-side above)
+            const loginResult = await authSystem.loginWithUserId(userId, true)
 
-            // Mark code as used
-            await (supabase
-                .from('verification_codes') as any)
-                .update({ is_used: true, used_at: new Date().toISOString() })
-                .eq('id', verificationData.id)
-
-            // Activate user account
-            await (supabase
-                .from('users') as any)
-                .update({ is_verified: true, is_active: true })
-                .eq('id', userId)
-
-            // Login the user automatically
-            const loginResult = await authSystem.loginWithUserId(userId)
-            
             if (loginResult.ok) {
                 router.push('/toc')
             } else {
@@ -107,7 +75,7 @@ function VerifyCodeContent() {
                 title="تفعيل الحساب"
                 subtitle="أدخل الكود السري للمتابعة"
             >
-                {error && <div className="auth-global-error">{error}</div>}
+                {error && <div className="auth-global-error" role="alert">{error}</div>}
 
                 <form className="auth-form" onSubmit={handleSubmit}>
                     <div className="verify-code-info">

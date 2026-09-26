@@ -8,6 +8,7 @@ import Navigation from '@/components/Navigation';
 import PromptGenerator from '@/components/tools/PromptGenerator';
 import PromptAnalyzer from '@/components/tools/PromptAnalyzer';
 import ResponseComparator from '@/components/tools/ResponseComparator';
+import FeatureGate from '@/components/FeatureGate';
 
 type ToolType = 'generator' | 'analyzer' | 'comparator';
 
@@ -79,7 +80,8 @@ export default function ToolsPage() {
   return (
     <>
       <Navigation />
-      <div className="tools-page">
+      <FeatureGate feature="tools">
+        <div className="tools-page">
         <div className="tools-container">
           {/* Header */}
           <div className="tools-header">
@@ -179,6 +181,7 @@ export default function ToolsPage() {
           )}
         </div>
       </div>
+      </FeatureGate>
     </>
   );
 }

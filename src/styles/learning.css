@@ -1,0 +1,1015 @@
+/* =====================================================
+   التمارين التفاعلية - Interactive Exercises
+   ===================================================== */
+
+/* صفحة التمارين الرئيسية */
+.exercises-page {
+  min-height: 100vh;
+  padding: 120px 20px 60px;
+  background: var(--color-bg-darker);
+}
+
+.exercises-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.exercises-header h1 {
+  font-size: 2.5rem;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.exercises-header p {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+}
+
+/* بطاقة الإحصائيات */
+.stats-card {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  padding: 30px;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 107, 53, 0.05));
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  border-radius: var(--radius-lg);
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.stat-icon {
+  font-size: 1.8rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-orange-primary);
+}
+
+.stat-label {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+/* شبكة الأقسام */
+.sections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.section-card {
+  background: var(--color-bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+}
+
+.section-card:hover {
+  border-color: var(--color-orange-primary);
+  box-shadow: 0 10px 40px rgba(255, 107, 53, 0.15);
+}
+
+.section-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.section-card h3 {
+  font-size: 1.3rem;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.section-meta {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+.section-progress {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.section-progress .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-orange-primary), var(--color-orange-glow));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.section-card .progress-text {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.section-complete-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  font-size: 1.2rem;
+}
+
+/* Specialization highlight for section cards */
+.section-card.spec-highlight {
+  border-color: rgba(255, 107, 53, 0.3);
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.06) 0%, var(--color-bg-card) 100%);
+}
+
+.spec-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 107, 53, 0.15);
+  color: #FF6B35;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.read-chapter-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--color-accent, #ff6b35);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.read-chapter-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* قسم التمارين */
+.exercises-section {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.back-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--color-text-secondary);
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  margin-bottom: 30px;
+  transition: all var(--transition-fast);
+}
+
+.back-btn:hover {
+  border-color: var(--color-orange-primary);
+  color: var(--color-orange-primary);
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.section-icon-large {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.section-header h2 {
+  font-size: 2rem;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.section-header p {
+  color: var(--color-text-secondary);
+}
+
+.exercises-list {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* مكون Quiz */
+.quiz-container,
+.fill-blank-container,
+.prompt-builder-container {
+  background: var(--color-bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 30px;
+}
+
+.quiz-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.quiz-type-badge {
+  background: rgba(255, 107, 53, 0.15);
+  color: var(--color-orange-primary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.quiz-completed-badge {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+.quiz-points {
+  margin-right: auto;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.quiz-question {
+  font-size: 1.3rem;
+  color: var(--color-text-primary);
+  margin-bottom: 25px;
+  line-height: 1.7;
+}
+
+/* خيارات الاختبار */
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: right;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+  transition: all var(--transition-fast);
+}
+
+.quiz-option:hover:not(:disabled) {
+  border-color: var(--color-orange-primary);
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.quiz-option.selected {
+  border-color: var(--color-orange-primary);
+  background: rgba(255, 107, 53, 0.1);
+}
+
+.quiz-option.correct {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.quiz-option.incorrect {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.quiz-option:disabled {
+  cursor: default;
+}
+
+.option-letter {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.option-text {
+  flex: 1;
+}
+
+.option-icon {
+  font-size: 1.3rem;
+}
+
+/* زر التحقق */
+.quiz-submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--color-orange-primary), var(--color-orange-glow));
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.quiz-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+}
+
+.quiz-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* نتيجة الاختبار */
+.quiz-result {
+  margin-top: 25px;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.quiz-result.correct {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.quiz-result.incorrect {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.result-icon {
+  font-size: 1.5rem;
+}
+
+.result-text {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.quiz-result.correct .result-text {
+  color: #22c55e;
+}
+
+.quiz-result.incorrect .result-text {
+  color: #f59e0b;
+}
+
+.result-explanation {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+.retry-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.retry-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--color-orange-primary);
+}
+
+/* مكون Fill in Blank */
+.fill-blank-text {
+  font-size: 1.2rem;
+  line-height: 2.2;
+  color: var(--color-text-primary);
+  margin-bottom: 25px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+}
+
+.fill-blank-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 5px;
+}
+
+.fill-blank-input {
+  min-width: 120px;
+  padding: 8px 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 107, 53, 0.4);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.fill-blank-input:focus {
+  outline: none;
+  border-color: var(--color-orange-primary);
+  background: rgba(255, 107, 53, 0.1);
+}
+
+.fill-blank-input.correct {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.fill-blank-input.incorrect {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.correct-answer-hint {
+  color: #22c55e;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.hint-section {
+  margin-bottom: 20px;
+}
+
+.hint-toggle {
+  background: none;
+  border: none;
+  color: var(--color-orange-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 5px 0;
+}
+
+.hint-text {
+  margin-top: 10px;
+  padding: 15px;
+  background: rgba(255, 184, 0, 0.1);
+  border: 1px solid rgba(255, 184, 0, 0.3);
+  border-radius: var(--radius-sm);
+  color: #fbbf24;
+  font-size: 0.95rem;
+}
+
+/* مكون Prompt Builder */
+.prompt-builder-description {
+  color: var(--color-text-secondary);
+  margin-bottom: 25px;
+  line-height: 1.7;
+}
+
+.prompt-progress-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-bottom: 30px;
+  position: relative;
+  overflow: visible;
+}
+
+.prompt-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-orange-primary), var(--color-orange-glow));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.prompt-progress-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+/* Step Indicators */
+.step-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.step-indicator {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.step-indicator.active {
+  border-color: var(--color-orange-primary);
+  color: var(--color-orange-primary);
+  background: rgba(255, 107, 53, 0.1);
+}
+
+.step-indicator.filled {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+/* Prompt Step */
+.prompt-step {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 25px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.step-header {
+  margin-bottom: 15px;
+}
+
+.step-number {
+  display: inline-block;
+  background: rgba(255, 107, 53, 0.2);
+  color: var(--color-orange-primary);
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+}
+
+.step-label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.step-label .required {
+  color: #ef4444;
+  margin-right: 5px;
+}
+
+.prompt-input {
+  width: 100%;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color var(--transition-fast);
+}
+
+.prompt-input:focus {
+  outline: none;
+  border-color: var(--color-orange-primary);
+}
+
+.prompt-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.example-toggle {
+  background: none;
+  border: none;
+  color: var(--color-orange-glow);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 15px;
+  padding: 5px 0;
+}
+
+.example-box {
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(255, 184, 0, 0.1);
+  border: 1px solid rgba(255, 184, 0, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.example-label {
+  display: block;
+  color: #fbbf24;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.example-box p {
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.use-example-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 184, 0, 0.2);
+  border: 1px solid rgba(255, 184, 0, 0.4);
+  border-radius: var(--radius-sm);
+  color: #fbbf24;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.use-example-btn:hover {
+  background: rgba(255, 184, 0, 0.3);
+}
+
+/* Step Navigation */
+.step-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+  gap: 15px;
+}
+
+.nav-btn {
+  padding: 12px 25px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.nav-btn:hover:not(:disabled) {
+  border-color: var(--color-orange-primary);
+  color: var(--color-orange-primary);
+}
+
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.step-navigation .quiz-submit-btn {
+  flex: 1;
+  max-width: 250px;
+}
+
+/* Generated Prompt Section */
+.generated-prompt-section {
+  margin-top: 30px;
+}
+
+.generated-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.generated-header h4 {
+  font-size: 1.3rem;
+  color: var(--color-text-primary);
+}
+
+.points-earned {
+  background: linear-gradient(135deg, var(--color-orange-primary), var(--color-orange-glow));
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.generated-prompt-box {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-radius: var(--radius-md);
+  padding: 25px;
+  position: relative;
+}
+
+.generated-prompt-text {
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  margin: 0;
+  direction: rtl;
+}
+
+.copy-prompt-btn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  padding: 10px 20px;
+  background: var(--color-orange-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.copy-prompt-btn:hover {
+  background: var(--color-orange-glow);
+}
+
+.copy-prompt-btn.copied {
+  background: #22c55e;
+}
+
+.example-output-section {
+  margin-top: 25px;
+  padding: 20px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-md);
+}
+
+.example-output-section h5 {
+  color: #22c55e;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.example-output-text {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+/* Login Prompt */
+.login-prompt {
+  text-align: center;
+  padding: 60px 30px;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  max-width: 400px;
+  margin: 100px auto;
+}
+
+.login-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.login-prompt h2 {
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.login-prompt p {
+  color: var(--color-text-secondary);
+  margin-bottom: 25px;
+}
+
+.login-btn {
+  padding: 14px 40px;
+  background: linear-gradient(135deg, var(--color-orange-primary), var(--color-orange-glow));
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+}
+
+/* Loading */
+.quiz-loading,
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 40px;
+  color: var(--color-text-secondary);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 107, 53, 0.2);
+  border-top-color: var(--color-orange-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .exercises-page {
+    padding: 100px 15px 40px;
+  }
+
+  .exercises-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .stats-card {
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .sections-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quiz-container,
+  .fill-blank-container,
+  .prompt-builder-container {
+    padding: 20px;
+  }
+
+  .quiz-question {
+    font-size: 1.1rem;
+  }
+
+  .quiz-option {
+    padding: 14px 15px;
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+
+  .option-letter {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    font-size: 0.95rem;
+  }
+
+  .fill-blank-text {
+    font-size: 1rem;
+    line-height: 2;
+  }
+
+  .fill-blank-input {
+    min-width: 80px;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+
+  .step-indicators {
+    gap: 10px;
+  }
+
+  .step-indicator {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 0.9rem;
+  }
+
+  .step-navigation {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .step-navigation .quiz-submit-btn {
+    max-width: 100%;
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .section-card {
+    padding: 22px;
+  }
+
+  .section-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .section-meta {
+    font-size: 0.8rem;
+  }
+
+  .back-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  .quiz-submit-btn {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .generated-prompt-box {
+    padding: 15px;
+    padding-top: 50px;
+  }
+
+  .copy-prompt-btn {
+    top: 10px;
+    left: 10px;
+    padding: 8px 15px;
+    font-size: 0.8rem;
+  }
+}
+
+/* شاشات أصغر (هواتف صغيرة) */
+@media (max-width: 400px) {
+  .sections-grid {
+    gap: 14px;
+  }
+
+  .section-card {
+    padding: 18px;
+  }
+
+  .section-icon {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+  }
+
+  .stats-card {
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .step-indicators {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .prompt-builder-container textarea {
+    min-height: 100px;
+    font-size: 0.95rem;
+  }
+}

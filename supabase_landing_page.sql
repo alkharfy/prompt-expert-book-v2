@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS certificates (
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     certificate_id VARCHAR(20) UNIQUE NOT NULL, -- مثل: CERT-2026-ABC123
     user_name VARCHAR(150) NOT NULL,
-    course_name VARCHAR(200) DEFAULT 'خبير البرومبتات: بناء المواقع والتطبيقات بالذكاء الاصطناعي',
+    course_name VARCHAR(200) DEFAULT 'PromptMaster: بناء المواقع والتطبيقات بالذكاء الاصطناعي',
     issued_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     completion_percentage INTEGER DEFAULT 100,
     is_public BOOLEAN DEFAULT true,

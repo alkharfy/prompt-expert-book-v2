@@ -1,0 +1,916 @@
+/* =====================================================
+   مستشفى البرومبتات - Prompt Hospital
+   ===================================================== */
+
+/* الصفحة الرئيسية */
+.hospital-page {
+  min-height: 100vh;
+  padding: 120px 20px 60px;
+  background: var(--color-bg-darker);
+}
+
+.hospital-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header */
+.hospital-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.hospital-header h1 {
+  font-size: 2.5rem;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.hospital-header p {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+}
+
+/* التبويبات */
+.hospital-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.hospital-tab {
+  padding: 14px 28px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.hospital-tab:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.hospital-tab.active {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-color: transparent;
+  color: white;
+}
+
+/* =====================================================
+   العيادة الذكية - PromptDiagnoser
+   ===================================================== */
+
+.diagnoser-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* نموذج الاستقبال */
+.admission-form {
+  background: var(--color-bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: 30px;
+}
+
+.admission-form h2 {
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.admission-textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.8;
+  resize: vertical;
+  direction: rtl;
+  transition: border-color var(--transition-fast);
+}
+
+.admission-textarea:focus {
+  outline: none;
+  border-color: #ef4444;
+}
+
+.admission-textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.admission-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  gap: 15px;
+}
+
+.model-select {
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.model-select option {
+  background: #1a1a1a;
+}
+
+.char-count {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.admit-btn {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.admit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+}
+
+.admit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* حالة التحميل */
+.diagnosing-state {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.diagnosing-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.diagnosing-state h3 {
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+  margin-bottom: 10px;
+}
+
+.diagnosing-state p {
+  color: var(--color-text-secondary);
+}
+
+.pulse-bar {
+  width: 200px;
+  height: 4px;
+  background: rgba(239, 68, 68, 0.2);
+  border-radius: 2px;
+  margin: 25px auto 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.pulse-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #ef4444, transparent);
+  animation: pulse-slide 1.5s infinite;
+}
+
+@keyframes pulse-slide {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
+
+/* التقرير الطبي */
+.medical-report {
+  background: var(--color-bg-card);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-xl);
+  padding: 30px;
+  position: relative;
+}
+
+.medical-report::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ef4444, #22c55e);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.report-header {
+  text-align: center;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.report-header h2 {
+  font-size: 1.6rem;
+  color: var(--color-text-primary);
+  margin-bottom: 5px;
+}
+
+.report-header p {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+/* العلامات الحيوية */
+.report-section {
+  margin-bottom: 25px;
+}
+
+.report-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2rem;
+  color: var(--color-text-primary);
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.vital-signs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.vital-sign-card {
+  text-align: center;
+  padding: 15px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vital-sign-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.vital-sign-name {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* الأعراض */
+.symptoms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.symptom-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: var(--radius-sm);
+  color: #fca5a5;
+  font-size: 0.95rem;
+}
+
+/* الأمراض */
+.diseases-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.disease-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 20px;
+  color: #fca5a5;
+  font-size: 0.9rem;
+}
+
+/* التشخيص */
+.diagnosis-card {
+  padding: 20px;
+  background: rgba(234, 179, 8, 0.08);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  line-height: 1.8;
+}
+
+/* الوصفة العلاجية */
+.prescription-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prescription-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 15px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  border-radius: var(--radius-sm);
+  color: #86efac;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.prescription-number {
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34, 197, 94, 0.2);
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #22c55e;
+}
+
+/* البرومبت المعالج */
+.healed-prompt-section {
+  padding: 20px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 2px solid rgba(34, 197, 94, 0.25);
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+.healed-prompt-label {
+  position: absolute;
+  top: -12px;
+  right: 15px;
+  background: var(--color-bg-card);
+  padding: 0 10px;
+  font-size: 0.85rem;
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.healed-prompt-text {
+  color: var(--color-text-primary);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  direction: rtl;
+}
+
+.healed-prompt-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.copy-healed-btn,
+.new-patient-btn {
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+}
+
+.copy-healed-btn {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.copy-healed-btn:hover {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+.new-patient-btn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.new-patient-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* ملاحظات الطبيب */
+.doctor-notes {
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border-right: 3px solid var(--color-text-muted);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  line-height: 1.8;
+}
+
+/* خطأ */
+.diagnosis-error {
+  text-align: center;
+  padding: 30px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: #fca5a5;
+}
+
+.diagnosis-error button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--radius-sm);
+  color: white;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* =====================================================
+   تحديات العلاج - PromptChallenges
+   ===================================================== */
+
+/* شبكة التحديات */
+.challenges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 15px;
+}
+
+.challenge-card {
+  padding: 25px;
+  background: var(--color-bg-card);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.challenge-card:hover {
+  border-color: rgba(239, 68, 68, 0.4);
+  transform: translateY(-3px);
+}
+
+.challenge-card.completed {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.challenge-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.challenge-card-icon {
+  font-size: 2rem;
+}
+
+.challenge-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.challenge-card-desc {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.challenge-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.difficulty-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.difficulty-easy {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.difficulty-medium {
+  background: rgba(234, 179, 8, 0.15);
+  color: #eab308;
+}
+
+.difficulty-hard {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.challenge-points {
+  font-size: 0.9rem;
+  color: #ffb800;
+  font-weight: 600;
+}
+
+.challenge-completed-badge {
+  font-size: 0.85rem;
+  color: #22c55e;
+}
+
+/* عرض التحدي النشط */
+.active-challenge {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.back-to-challenges {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: all var(--transition-fast);
+}
+
+.back-to-challenges:hover {
+  border-color: var(--color-text-secondary);
+}
+
+.challenge-header {
+  margin-bottom: 25px;
+}
+
+.challenge-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.5rem;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.challenge-description {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.challenge-diseases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+/* البرومبت المريض */
+.sick-prompt-display {
+  padding: 20px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px dashed rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: #fca5a5;
+  font-family: inherit;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  position: relative;
+  margin-bottom: 20px;
+  direction: rtl;
+}
+
+.sick-prompt-label {
+  position: absolute;
+  top: -12px;
+  right: 15px;
+  background: var(--color-bg-darker);
+  padding: 0 8px;
+  font-size: 0.85rem;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* حقل إدخال الحل */
+.fix-textarea {
+  width: 100%;
+  min-height: 180px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.8;
+  resize: vertical;
+  direction: rtl;
+  transition: border-color var(--transition-fast);
+  margin-bottom: 15px;
+}
+
+.fix-textarea:focus {
+  outline: none;
+  border-color: #22c55e;
+}
+
+.fix-textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* التلميحات */
+.hints-section {
+  margin-bottom: 20px;
+}
+
+.hints-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  border-radius: var(--radius-sm);
+  color: #eab308;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.hints-toggle:hover {
+  background: rgba(234, 179, 8, 0.2);
+}
+
+.hints-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hint-item {
+  padding: 10px 15px;
+  background: rgba(234, 179, 8, 0.08);
+  border-radius: var(--radius-sm);
+  color: #fde68a;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* أزرار التحدي */
+.challenge-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.submit-fix-btn {
+  flex: 1;
+  padding: 14px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border: none;
+  border-radius: var(--radius-md);
+  color: white;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.submit-fix-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+}
+
+.submit-fix-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.show-ideal-btn {
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.show-ideal-btn:hover {
+  border-color: var(--color-text-secondary);
+}
+
+/* نتائج التقييم */
+.scoring-result {
+  margin-top: 25px;
+  padding: 25px;
+  background: var(--color-bg-card);
+  border: 2px solid;
+  border-radius: var(--radius-xl);
+}
+
+.scoring-result.passed {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.scoring-result.failed {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.score-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.score-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.score-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+
+.score-label {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  display: block;
+  margin-top: 5px;
+}
+
+.score-points {
+  font-size: 1.1rem;
+  color: #ffb800;
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+/* معايير التقييم */
+.criteria-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.criterion-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+}
+
+.criterion-status {
+  font-size: 1.2rem;
+}
+
+.criterion-info {
+  flex: 1;
+}
+
+.criterion-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+}
+
+.criterion-desc {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.criterion-weight {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  min-width: 40px;
+  text-align: left;
+}
+
+/* البرومبت المثالي */
+.ideal-prompt-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: var(--radius-md);
+  position: relative;
+}
+
+.ideal-prompt-label {
+  position: absolute;
+  top: -12px;
+  right: 15px;
+  background: var(--color-bg-card);
+  padding: 0 10px;
+  font-size: 0.85rem;
+  color: #a855f7;
+  font-weight: 600;
+}
+
+.ideal-prompt-text {
+  color: var(--color-text-primary);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  direction: rtl;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hospital-page {
+    padding: 100px 15px 40px;
+  }
+
+  .hospital-header h1 {
+    font-size: 2rem;
+  }
+
+  .hospital-tabs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hospital-tab {
+    text-align: center;
+  }
+
+  .admission-form,
+  .medical-report {
+    padding: 20px;
+  }
+
+  .vital-signs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .challenges-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .challenge-actions {
+    flex-direction: column;
+  }
+
+  .admission-meta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .healed-prompt-actions {
+    flex-direction: column;
+  }
+}

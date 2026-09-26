@@ -5,9 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import { useEffect, useState, useCallback } from 'react'
-import { authSystem } from '@/lib/auth_system'
 import { verifySession } from '@/lib/auth'
 import { dbLogger } from '@/lib/logger'
+import { getBookmarks, toggleBookmark } from '@/actions/bookmarks'
 
 interface Bookmark {
     id: string
@@ -23,18 +23,12 @@ export default function BookmarksPage() {
 
     const fetchBookmarks = useCallback(async () => {
         try {
-            const userId = authSystem.getCurrentUserId()
-            if (!userId) return
-
-            const response = await fetch('/api/bookmarks')
-            if (!response.ok) {
-                dbLogger.error('Error fetching bookmarks')
+            const { bookmarks: bookmarksList, error } = await getBookmarks()
+            if (error) {
+                dbLogger.error('Error fetching bookmarks:', error)
                 setIsLoading(false)
                 return
             }
-
-            const data = await response.json()
-            const bookmarksList = data.bookmarks || []
 
             if (Array.isArray(bookmarksList)) {
                 // Sort by date descending (newest first)
@@ -64,20 +58,10 @@ export default function BookmarksPage() {
 
     const deleteBookmark = async (bookmarkId: string) => {
         try {
-            const userId = authSystem.getCurrentUserId()
-            if (!userId) return
+            const result = await toggleBookmark('remove', bookmarkId)
 
-            const response = await fetch('/api/bookmarks', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'remove',
-                    pageId: bookmarkId
-                })
-            })
-
-            if (!response.ok) {
-                dbLogger.error('Error deleting bookmark')
+            if (!result.success) {
+                dbLogger.error('Error deleting bookmark:', result.message)
                 return
             }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useId } from 'react'
 
 interface ProgressCircleProps {
     percentage: number
@@ -13,6 +14,7 @@ export default function ProgressCircle({
     size = 32,
     strokeWidth = 3
 }: ProgressCircleProps) {
+    const gradientId = useId()
     const radius = (size - strokeWidth) / 2
     const circumference = radius * 2 * Math.PI
     const offset = circumference - (percentage / 100) * circumference
@@ -39,7 +41,7 @@ export default function ProgressCircle({
                     cy={size / 2}
                     r={radius}
                     fill="none"
-                    stroke="url(#progressGradient)"
+                    stroke={`url(#${gradientId})`}
                     strokeWidth={strokeWidth}
                     strokeLinecap="round"
                     strokeDasharray={circumference}
@@ -53,7 +55,7 @@ export default function ProgressCircle({
                     }}
                 />
                 <defs>
-                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#FF6B35" />
                         <stop offset="100%" stopColor="#FFB800" />
                     </linearGradient>

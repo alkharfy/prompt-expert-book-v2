@@ -31,3 +31,11 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# Claude temporary directories
+tmpclaude-*
+nul
+
+# Local Supabase CLI metadata and editor MCP settings
+/supabase/.temp/
+/.vscode/mcp.json

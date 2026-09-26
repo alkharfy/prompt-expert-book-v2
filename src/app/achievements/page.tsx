@@ -6,10 +6,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { authSystem } from '@/lib/auth_system';
 import { supabase } from '@/lib/supabase';
 import Navigation from '@/components/Navigation';
+import FeatureGate from '@/components/FeatureGate';
 import Certificate, { AchievementsList } from '@/components/achievements/Certificate';
 import { achievementsData, AchievementDefinition } from '@/data/achievementsData';
 import { dbLogger } from '@/lib/logger';
 import { recalculateUserPoints } from '@/lib/gamification';
+import { getOrCreateCertificate } from '@/actions/certificates';
+import ShareButton from '@/components/sharing/ShareButton';
 
 type TabType = 'achievements' | 'certificate';
 
@@ -27,7 +30,7 @@ interface Achievement {
   icon: string;
   title: string;
   description: string;
-  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions';
+  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions' | 'notes' | 'social';
   points: number;
   requirement: number;
   currentProgress: number;
@@ -62,9 +65,119 @@ export default function AchievementsPage() {
     completionDate: Date;
     certificateId: string;
   } | null>(null);
+  const [nameError, setNameError] = useState('');
+
+  const calculateAchievements = useCallback((stats: UserStats, claimedRewards: string[]): UserAchievement[] => {
+    return achievementsData.map(achievement => {
+      let currentProgress = 0;
+      let isUnlocked = false;
+
+      switch (achievement.requirementType) {
+        case 'chapters':
+          currentProgress = stats.completedChapters;
+          isUnlocked = stats.completedChapters >= achievement.requirement;
+          break;
+        case 'exercises':
+          currentProgress = stats.completedExercises;
+          isUnlocked = stats.completedExercises >= achievement.requirement;
+          break;
+        case 'streak':
+          currentProgress = stats.currentStreak;
+          isUnlocked = stats.currentStreak >= achievement.requirement;
+          break;
+        case 'points':
+          currentProgress = stats.totalPoints;
+          isUnlocked = stats.totalPoints >= achievement.requirement;
+          break;
+        case 'mission_complete':
+          // المكافآت المطالب بها تُجلب من الخادم (بدلاً من localStorage)
+          isUnlocked = claimedRewards.includes(achievement.id);
+          currentProgress = isUnlocked ? 1 : 0;
+          break;
+        case 'custom':
+          if (achievement.id === 'bookmarks_10') {
+            currentProgress = stats.bookmarksCount;
+            isUnlocked = stats.bookmarksCount >= 10;
+          } else if (achievement.id === 'first_certificate') {
+            currentProgress = stats.completedChapters >= 9 ? 1 : 0;
+            isUnlocked = stats.completedChapters >= 9;
+          } else if (achievement.id === 'share_certificate') {
+            // يُتحقق عبر الخادم (مُخزن كـ reward_id = 'certificate_shared')
+            isUnlocked = claimedRewards.includes('certificate_shared');
+            currentProgress = isUnlocked ? 1 : 0;
+          } else if (achievement.id === 'use_all_tools') {
+            // الأدوات المستخدمة تُتبع كـ reward_ids فردية (tool_*)
+            const toolsClaimed = claimedRewards.filter(r => r.startsWith('tool_'));
+            currentProgress = toolsClaimed.length;
+            isUnlocked = toolsClaimed.length >= achievement.requirement;
+          } else if (achievement.id === 'top_10') {
+            // يُتحقق عبر الخادم (مُخزن كـ reward_id = 'is_top_10')
+            isUnlocked = claimedRewards.includes('is_top_10');
+            currentProgress = isUnlocked ? 1 : 0;
+          }
+          break;
+      }
+
+      return {
+        ...achievement,
+        currentProgress,
+        isUnlocked,
+        unlockedAt: isUnlocked ? new Date() : undefined,
+      };
+    });
+  }, []);
 
   const loadUserStats = useCallback(async (loadUserId: string) => {
     try {
+      // جلب المكافآت المطالب بها من الخادم
+      let claimedRewards: string[] = [];
+      try {
+        const claimedRes = await fetch('/api/achievements/claimed');
+        if (claimedRes.ok) {
+          const claimedData = await claimedRes.json();
+          claimedRewards = claimedData.rewards || [];
+        }
+
+        // مزامنة بيانات localStorage القديمة إلى الخادم (مرة واحدة)
+        const localClaimed = JSON.parse(localStorage.getItem('claimed_rewards') || '[]');
+        const localCertShared = localStorage.getItem('certificate_shared') === 'true';
+        const localToolsUsed = JSON.parse(localStorage.getItem('tools_used') || '[]');
+        const localIsTop10 = localStorage.getItem('is_top_10') === 'true';
+
+        const toSync: string[] = [];
+        for (const id of localClaimed) {
+          if (!claimedRewards.includes(id)) toSync.push(id);
+        }
+        if (localCertShared && !claimedRewards.includes('certificate_shared')) {
+          toSync.push('certificate_shared');
+        }
+        for (const tool of localToolsUsed) {
+          const toolId = `tool_${tool}`;
+          if (!claimedRewards.includes(toolId)) toSync.push(toolId);
+        }
+        if (localIsTop10 && !claimedRewards.includes('is_top_10')) {
+          toSync.push('is_top_10');
+        }
+
+        if (toSync.length > 0) {
+          await fetch('/api/achievements/claimed', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rewardIds: toSync }),
+          });
+          claimedRewards = [...claimedRewards, ...toSync];
+          // تنظيف localStorage بعد المزامنة الناجحة
+          localStorage.removeItem('claimed_rewards');
+          localStorage.removeItem('certificate_shared');
+          localStorage.removeItem('tools_used');
+          localStorage.removeItem('is_top_10');
+        }
+      } catch {
+        // fallback: قراءة من localStorage إذا فشل الاتصال بالخادم
+        const localClaimed = JSON.parse(localStorage.getItem('claimed_rewards') || '[]');
+        claimedRewards = localClaimed;
+      }
+
       // جلب تقدم القراءة
       const progressData = await authSystem.getDetailedProgress();
       const completedChapters = progressData?.completedChapters?.length || 0;
@@ -130,64 +243,37 @@ export default function AchievementsPage() {
         completedExercises,
         currentStreak,
         totalPoints,
-        readingTime: gamificationData?.total_reading_time_minutes || 0,
+        // تقدير وقت القراءة: ~4 دقائق لكل صفحة مقروءة
+        readingTime: (progressData?.currentPage || 0) * 4,
         bookmarksCount,
       };
 
       setUserStats(stats);
 
-      // حساب حالة الإنجازات
-      const userAchievements = calculateAchievements(stats);
+      // حساب حالة الإنجازات (باستخدام بيانات الخادم بدلاً من localStorage)
+      const userAchievements = calculateAchievements(stats, claimedRewards);
       setAchievements(userAchievements);
 
       // التحقق من أهلية الشهادة (إتمام الكتاب)
       if (completedChapters >= 9) {
         setCertificateEligible(true);
 
-        // جلب أو إنشاء شهادة
-        const { data: certData } = await supabase
-          .from('certificates')
-          .select('*')
-          .eq('user_id', loadUserId)
-          .single() as { data: { issued_at?: string; id?: string } | null };
+        // إنشاء أو جلب الشهادة من السيرفر (محمي من التلاعب)
+        const certResult = await getOrCreateCertificate();
 
-        if (certData) {
+        if (certResult.success && certResult.certificateId) {
           setCertificateData({
-            completionDate: new Date(certData.issued_at || new Date()),
-            certificateId: certData.id || '',
+            completionDate: new Date(certResult.issuedAt || new Date()),
+            certificateId: certResult.certificateId,
           });
-        } else {
-          // إنشاء شهادة جديدة
-          const newCertId = `CERT-${Date.now().toString(36).toUpperCase()}-${loadUserId.substring(0, 4).toUpperCase()}`;
-
-          // الحصول على اسم المستخدم بأمان
-          let userName = 'مستخدم';
-          try {
-            userName = localStorage?.getItem('user_name') || 'مستخدم';
-          } catch {
-            // localStorage غير متوفر
-          }
-
-          const { data: newCert } = await (supabase.from('certificates') as any).insert({
-            user_id: loadUserId,
-            user_name: userName,
-            course_name: 'خبير البرومبتات',
-            issued_at: new Date().toISOString(),
-            is_visible: true,
-          }).select().single() as { data: { id?: string } | null };
-
-          if (newCert) {
-            setCertificateData({
-              completionDate: new Date(),
-              certificateId: newCert.id || '',
-            });
-          }
+        } else if (certResult.error) {
+          setNameError(certResult.error);
         }
       }
     } catch (error) {
       dbLogger.error('Error loading user stats:', error);
     }
-  }, []);
+  }, [calculateAchievements]);
 
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
@@ -219,68 +305,6 @@ export default function AchievementsPage() {
     checkAuthAndLoadData();
   }, [router, loadUserStats]);
 
-  const calculateAchievements = (stats: UserStats): UserAchievement[] => {
-    return achievementsData.map(achievement => {
-      let currentProgress = 0;
-      let isUnlocked = false;
-
-      switch (achievement.requirementType) {
-        case 'chapters':
-          currentProgress = stats.completedChapters;
-          isUnlocked = stats.completedChapters >= achievement.requirement;
-          break;
-        case 'exercises':
-          currentProgress = stats.completedExercises;
-          isUnlocked = stats.completedExercises >= achievement.requirement;
-          break;
-        case 'streak':
-          currentProgress = stats.currentStreak;
-          isUnlocked = stats.currentStreak >= achievement.requirement;
-          break;
-        case 'points':
-          currentProgress = stats.totalPoints;
-          isUnlocked = stats.totalPoints >= achievement.requirement;
-          break;
-        case 'mission_complete':
-          const claimedRewards = JSON.parse(localStorage.getItem('claimed_rewards') || '[]');
-          isUnlocked = claimedRewards.includes(achievement.id);
-          currentProgress = isUnlocked ? 1 : 0;
-          break;
-        case 'custom':
-          // الإنجازات الخاصة تحتاج تتبع مخصص
-          if (achievement.id === 'bookmarks_10') {
-            currentProgress = stats.bookmarksCount;
-            isUnlocked = stats.bookmarksCount >= 10;
-          } else if (achievement.id === 'first_certificate') {
-            currentProgress = stats.completedChapters >= 9 ? 1 : 0;
-            isUnlocked = stats.completedChapters >= 9;
-          } else if (achievement.id === 'share_certificate') {
-            // يمكن تفعيلها يدوياً أو عبر تتبع المشاركة
-            currentProgress = localStorage.getItem('certificate_shared') === 'true' ? 1 : 0;
-            isUnlocked = currentProgress === 1;
-          } else if (achievement.id === 'use_all_tools') {
-            // تتبع استخدام الأدوات (يحتاج نظام تتبع أعمق)
-            const toolsUsed = JSON.parse(localStorage.getItem('tools_used') || '[]');
-            currentProgress = toolsUsed.length;
-            isUnlocked = toolsUsed.length >= achievement.requirement;
-          } else if (achievement.id === 'top_10') {
-            // سيتم تفعيلها عبر نظام الليدربورد
-            const isTop10 = localStorage.getItem('is_top_10') === 'true';
-            currentProgress = isTop10 ? 1 : 0;
-            isUnlocked = isTop10;
-          }
-          break;
-      }
-
-      return {
-        ...achievement,
-        currentProgress,
-        isUnlocked,
-        unlockedAt: isUnlocked ? new Date() : undefined,
-      };
-    });
-  };
-
   const unlockedCount = achievements.filter(a => a.isUnlocked).length;
   const totalCount = achievements.filter(a => !a.secret || a.isUnlocked).length;
   const progressPercentage = Math.round((unlockedCount / totalCount) * 100);
@@ -297,7 +321,8 @@ export default function AchievementsPage() {
   return (
     <>
       <Navigation />
-      <div className="achievements-page">
+      <FeatureGate feature="gamification">
+        <div className="achievements-page">
         <div className="achievements-container">
           {/* Header */}
           <motion.div
@@ -378,6 +403,25 @@ export default function AchievementsPage() {
                 <span className="stat-label">نقطة</span>
               </div>
             </div>
+
+            {/* Share progress button */}
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <ShareButton
+                type="weekly"
+                data={{
+                  type: 'weekly',
+                  title: 'تقدمي في PromptMaster',
+                  subtitle: `${unlockedCount} إنجاز من ${totalCount}`,
+                  icon: '🏆',
+                  stats: [
+                    { label: 'فصل', value: userStats.completedChapters },
+                    { label: 'تمرين', value: userStats.completedExercises },
+                    { label: 'نقطة', value: userStats.totalPoints },
+                  ],
+                }}
+                label="📤 شارك تقدمك"
+              />
+            </div>
           </motion.div>
 
           {/* Tabs */}
@@ -453,6 +497,29 @@ export default function AchievementsPage() {
                 />
               </motion.div>
             )}
+
+            {activeTab === 'certificate' && nameError && !certificateData && (
+              <motion.div
+                key="name-error"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="certificate-locked-message"
+              >
+                <span className="lock-icon">✏️</span>
+                <h4>الاسم غير مكتمل</h4>
+                <p>{nameError}</p>
+                <p style={{ marginTop: '10px', color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>
+                  يمكنك تعديل اسمك من صفحة الملف الشخصي
+                </p>
+                <button
+                  className="action-btn"
+                  onClick={() => router.push('/profile')}
+                  style={{ marginTop: '15px', background: 'rgba(255,107,53,0.2)', border: '1px solid #FF6B35', color: '#FF6B35', padding: '10px 25px', borderRadius: '8px', cursor: 'pointer' }}
+                >
+                  تعديل الملف الشخصي
+                </button>
+              </motion.div>
+            )}
           </AnimatePresence>
 
           {/* رسالة للشهادة المغلقة */}
@@ -479,6 +546,7 @@ export default function AchievementsPage() {
           )}
         </div>
       </div>
+      </FeatureGate>
     </>
   );
 }

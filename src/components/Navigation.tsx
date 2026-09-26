@@ -1,21 +1,30 @@
 'use client'
 
 import Link from 'next/link'
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { authSystem } from '@/lib/auth_system'
 import ProgressCircle from '@/components/ProgressCircle'
-import { supabase } from '@/lib/supabase'
-import { TOTAL_BOOK_PAGES } from '@/lib/config'
+import SearchDialog from '@/components/SearchDialog'
+import { useSubscription } from '@/context/SubscriptionContext'
 
 export default function Navigation() {
     const pathname = usePathname()
     const router = useRouter()
     const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const [hasPaid, setHasPaid] = useState(true) // Default to true to avoid flashing button
     const [readingProgress, setReadingProgress] = useState(0)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+    const [isSearchOpen, setIsSearchOpen] = useState(false)
+
+    // New: Subscription system integration (parallel mode)
+    const { currentPlan, hasFeature, isLoading: subLoading } = useSubscription()
+
+    // Derive hasPaid from subscription context
+    const hasPaidFromSub = !subLoading && !!currentPlan
+    const effectiveHasPaid = hasPaidFromSub || hasPaid
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
     const toggleDropdown = (e: React.MouseEvent) => {
@@ -28,6 +37,7 @@ export default function Navigation() {
 
     useEffect(() => {
         // Close menus on route change
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting UI state on route navigation
         setIsMenuOpen(false)
         setIsDropdownOpen(false)
     }, [pathname])
@@ -37,46 +47,94 @@ export default function Navigation() {
             if (isDropdownOpen) {
                 setIsDropdownOpen(false)
             }
+            if (isMenuOpen && headerRef.current && !headerRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false)
+            }
         }
         document.addEventListener('click', handleClickOutside)
         return () => document.removeEventListener('click', handleClickOutside)
-    }, [isDropdownOpen])
+    }, [isDropdownOpen, isMenuOpen])
 
+    // Re-verify session and reading progress on every route change
     useEffect(() => {
-        // ... existing useEffect logic ...
-        // Verify session with database
         const verifyUserSession = async () => {
             const userId = authSystem.getCurrentUserId()
             if (userId) {
                 const result = await authSystem.verifySession()
                 if (!result.valid) {
-                    window.location.reload()
+                     
+                    setIsLoggedIn(false)
+                    return
                 }
-                setIsLoggedIn(result.valid)
+                 
+                setIsLoggedIn(true)
+                 
+                setHasPaid(result.hasPaid ?? false)
+
+                // If verify-session says not paid, try activation API as fallback
+                if (!result.hasPaid) {
+                    try {
+                        const activateRes = await fetch('/api/payment/activate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({})
+                        })
+                        const activateData = await activateRes.json()
+                        if (activateData.success && activateData.hasPaid) {
+                             
+                            setHasPaid(true)
+                        }
+                    } catch { /* silent */ }
+                }
             } else {
+                 
                 setIsLoggedIn(false)
+                 
+                setHasPaid(true)
             }
         }
 
         verifyUserSession()
 
-        // Fetch reading progress
         const fetchProgress = async () => {
             const data = await authSystem.getDetailedProgress()
             if (data) {
-                // Calculate percentage based on completed chapters (9 total chapters in roadmap)
-                const TOTAL_CHAPTERS = 9
+                const TOTAL_CHAPTERS = 10
                 const percentage = Math.min((data.completedChapters.length / TOTAL_CHAPTERS) * 100, 100)
+                 
                 setReadingProgress(Math.round(percentage))
             }
         }
         fetchProgress()
+    }, [pathname])
 
+    // Periodic re-verification + header height observer (mount only)
+    useEffect(() => {
+        const verifyUserSession = async () => {
+            const userId = authSystem.getCurrentUserId()
+            if (userId) {
+                const result = await authSystem.verifySession()
+                setIsLoggedIn(result.valid)
+                if (result.valid) {
+                    setHasPaid(result.hasPaid ?? false)
+                }
+            }
+        }
+
+        // Re-verify session every 15 minutes (debounce cache in authSystem handles duplicates)
         const intervalId = setInterval(() => {
             if (authSystem.getCurrentUserId()) {
                 verifyUserSession()
             }
-        }, 10000)
+        }, 15 * 60 * 1000)
+
+        // Also re-verify when tab becomes visible again
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && authSystem.getCurrentUserId()) {
+                verifyUserSession()
+            }
+        }
+        document.addEventListener('visibilitychange', handleVisibilityChange)
 
         if (!headerRef.current) return
 
@@ -93,19 +151,45 @@ export default function Navigation() {
 
         return () => {
             clearInterval(intervalId)
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
             resizeObserver.disconnect()
             window.removeEventListener('resize', updateHeaderHeight)
         }
     }, [])
 
     const handleLogout = async () => {
+        // Call server-side logout to properly clear httpOnly cookies
+        try {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+        } catch { /* continue with client-side cleanup */ }
         await authSystem.logout()
         setIsLoggedIn(false)
         router.push('/')
         router.refresh()
     }
 
+    const closeSearch = useCallback(() => setIsSearchOpen(false), [])
+
+    // Helper: Check if feature is locked (new subscription system)
+    const isFeatureLocked = useCallback((feature: string): boolean => {
+        if (subLoading || !currentPlan) return false // Fallback during loading or no subscription
+        return !hasFeature(feature as any)
+    }, [subLoading, currentPlan, hasFeature])
+
+    // Ctrl+K / Cmd+K to open search
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault()
+                setIsSearchOpen((prev) => !prev)
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [])
+
     return (
+        <>
         <motion.nav
             ref={headerRef}
             className={`nav ${isMenuOpen ? 'menu-open' : ''}`}
@@ -127,14 +211,25 @@ export default function Navigation() {
                         </button>
                     )}
                     <Link href="/" className="nav-logo">
-                        خبير التوجيهات الذكية
+                        PromptMaster
                     </Link>
+                    <button
+                        onClick={() => setIsSearchOpen(true)}
+                        className="nav-search-btn"
+                        aria-label="البحث في المحتوى (Ctrl+K)"
+                        title="بحث (Ctrl+K)"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="M21 21l-4.35-4.35" />
+                        </svg>
+                    </button>
                 </div>
 
                 <button
                     className={`nav-toggle ${isMenuOpen ? 'active' : ''}`}
                     onClick={toggleMenu}
-                    aria-label="Toggle Menu"
+                    aria-label="فتح القائمة"
                 >
                     <span></span>
                     <span></span>
@@ -160,12 +255,37 @@ export default function Navigation() {
                                 <ProgressCircle percentage={readingProgress} size={28} strokeWidth={3} />
                             </div>
                         </li>
+
+                        {isLoggedIn && !effectiveHasPaid && (
+                            <li>
+                                <Link
+                                    href="/payment"
+                                    className="nav-link payment-highlight-btn"
+                                >
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '6px' }}>
+                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                                    </svg>
+                                    أكمل الدفع
+                                </Link>
+                            </li>
+                        )}
+
                         <li>
                             <Link
                                 href="/toc"
                                 className={`nav-link ${pathname === '/toc' ? 'active' : ''}`}
                             >
                                 الفهرس
+                            </Link>
+                        </li>
+
+                        <li>
+                            <Link
+                                href="/blog"
+                                className={`nav-link ${pathname === '/blog' || pathname.startsWith('/blog/') ? 'active' : ''}`}
+                            >
+                                ✍️ المدونة
                             </Link>
                         </li>
 
@@ -184,11 +304,45 @@ export default function Navigation() {
                                     <li>
                                         <Link href="/exercises" className={`dropdown-link ${pathname === '/exercises' ? 'active' : ''}`}>
                                             التمارين التفاعلية
+                                            {isFeatureLocked('exercises') && (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            )}
                                         </Link>
                                     </li>
                                     <li>
                                         <Link href="/tools" className={`dropdown-link ${pathname === '/tools' ? 'active' : ''}`}>
                                             صندوق الأدوات
+                                            {isFeatureLocked('tools') && (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            )}
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/prompt-hospital" className={`dropdown-link ${pathname === '/prompt-hospital' ? 'active' : ''}`}>
+                                            مستشفى البرومبتات
+                                            {isFeatureLocked('tools') && (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            )}
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/running-project" className={`dropdown-link ${pathname === '/running-project' ? 'active' : ''}`}>
+                                            المشروع الممتد
+                                            {isFeatureLocked('tools') && (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            )}
                                         </Link>
                                     </li>
                                     <li>
@@ -197,16 +351,91 @@ export default function Navigation() {
                                         </Link>
                                     </li>
                                     <li>
+                                        <Link href="/notes" className={`dropdown-link ${pathname === '/notes' ? 'active' : ''}`}>
+                                            📝 ملاحظاتي
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/my-plan" className={`dropdown-link ${pathname === '/my-plan' ? 'active' : ''}`}>
+                                            📅 خطتي
+                                        </Link>
+                                    </li>
+                                    <li>
                                         <Link href="/achievements" className={`dropdown-link ${pathname === '/achievements' ? 'active' : ''}`}>
                                             الإنجازات والشهادات
+                                            {isFeatureLocked('gamification') && (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            )}
                                         </Link>
                                     </li>
                                     <li>
                                         <Link href="/leaderboard" className={`dropdown-link ${pathname === '/leaderboard' ? 'active' : ''}`}>
                                             لوحة المتصدرين
+                                            {isFeatureLocked('gamification') && (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            )}
                                         </Link>
                                     </li>
+
+                                    {/* مكتبة المصادر */}
+                                    <li>
+                                        <Link href="/resources" className={`dropdown-link ${pathname === '/resources' ? 'active' : ''}`}>
+                                            📚 مكتبة المصادر
+                                            {isFeatureLocked('resources') && (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            )}
+                                        </Link>
+                                    </li>
+                                    {/* تحديثات AI */}
+                                    <li>
+                                        <Link href="/ai-updates" className={`dropdown-link ${pathname === '/ai-updates' ? 'active' : ''}`}>
+                                            🔔 تحديثات AI
+                                            {isFeatureLocked('ai_updates') && (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            )}
+                                        </Link>
+                                    </li>
+                                    {/* المجتمع */}
+                                    <li>
+                                        <Link href="/community" className={`dropdown-link ${pathname === '/community' ? 'active' : ''}`}>
+                                            المجتمع
+                                        </Link>
+                                    </li>
+
+                                    {/* عرض الباقة الحالية */}
+                                    {currentPlan && !subLoading && (
+                                        <li style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', opacity: 0.7, borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '0.5rem' }}>
+                                            <strong>باقتك:</strong>{' '}
+                                            {currentPlan === 'basic' ? 'أساسية' :
+                                             currentPlan === 'pro' ? 'احترافية' :
+                                             'مميزة'}
+                                        </li>
+                                    )}
                                 </ul>
+                            </li>
+                        )}
+
+                        {isLoggedIn && (
+                            <li>
+                                <Link
+                                    href="/profile#referral"
+                                    className="nav-link referral-nav-link"
+                                    title="ادعو صديقك واكسب خصم"
+                                >
+                                    🎁
+                                </Link>
                             </li>
                         )}
 
@@ -228,6 +457,7 @@ export default function Navigation() {
                                     className="nav-link logout-btn"
                                     whileHover={{ color: 'var(--color-orange-glow)', scale: 1.1 }}
                                     title="تسجيل الخروج"
+                                    aria-label="تسجيل الخروج"
                                 >
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -247,14 +477,17 @@ export default function Navigation() {
                     </ul>
                 </div>
             </div>
-            {/* Overlay for mobile menu */}
-            {(isMenuOpen || isDropdownOpen) && (
-                <div className="nav-overlay" onClick={() => {
-                    setIsMenuOpen(false)
-                    setIsDropdownOpen(false)
-                }}></div>
-            )}
+            <SearchDialog isOpen={isSearchOpen} onClose={closeSearch} />
         </motion.nav>
+
+        {/* Overlay for mobile menu - outside motion.nav to avoid transform stacking context */}
+        {(isMenuOpen || isDropdownOpen) && (
+            <div className="nav-overlay" onClick={() => {
+                setIsMenuOpen(false)
+                setIsDropdownOpen(false)
+            }}></div>
+        )}
+        </>
     )
 
 

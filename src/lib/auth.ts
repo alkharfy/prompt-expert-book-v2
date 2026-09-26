@@ -9,14 +9,13 @@ import { authLogger } from './logger'
 export function verifySession(): boolean {
     if (typeof window === 'undefined') return false;
 
-    // Check for auth cookies from our custom auth system
-    const { sessionToken, deviceId, userId } = getAuthCookies();
+    // Check for userId cookie (non-httpOnly, readable from JS)
+    // Note: sessionToken is httpOnly (set by server) so we can't read it from document.cookie
+    // This is a quick client-side check — full verification happens via authSystem.verifySession()
+    const { userId } = getAuthCookies();
 
-    const isValid = !!(sessionToken && deviceId && userId);
+    const isValid = !!userId;
     authLogger.debug('Session verification', { isValid });
 
-    // If all three cookies exist, consider the session valid
-    // Note: This is a basic check. For full verification (fingerprint, expiry, etc.)
-    // the page should use authSystem.verifySession() on mount
     return isValid;
 }

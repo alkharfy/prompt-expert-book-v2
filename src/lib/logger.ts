@@ -77,11 +77,3 @@ export const authLogger = new Logger({ prefix: 'Auth' });
 export const dbLogger = new Logger({ prefix: 'DB' });
 export const apiLogger = new Logger({ prefix: 'API' });
 export const fingerLogger = new Logger({ prefix: 'Fingerprint' });
-
-// Logger عام
-export const logger = new Logger();
-
-// دالة مساعدة للتحقق من بيئة التطوير
-export const isDevMode = (): boolean => isDev;
-
-export default Logger;

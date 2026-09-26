@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLearning } from '@/context/LearningContext';
+import { getSpecialization } from '@/data/specializations';
+import type { SpecializationId } from '@/types/learning';
 
 // أنواع المهام المتاحة
 const taskTypes = [
@@ -50,7 +53,37 @@ interface GeneratorState {
   examples: string;
 }
 
+// قوالب سريعة لكل تخصص
+const specTemplates: Record<SpecializationId, { label: string; taskType: string; context: string; request: string }[]> = {
+  programming: [
+    { label: '📝 كتابة كود', taskType: 'coding', context: 'أنا مبرمج أعمل على مشروع', request: 'اكتبلي دالة تعمل [المهمة] بلغة [اللغة]. اشرح كل خطوة واذكر edge cases.' },
+    { label: '🐛 تصحيح خطأ', taskType: 'coding', context: 'عندي خطأ في الكود', request: 'عندي الخطأ ده [رسالة الخطأ] في الكود [الكود]. اشرح السبب واديني الحل.' },
+    { label: '📖 توثيق مشروع', taskType: 'writing', context: 'عندي مشروع برمجي محتاج توثيق', request: 'اكتبلي README.md احترافي للمشروع: [وصف المشروع]. يشمل: التثبيت، الاستخدام، API Reference.' },
+  ],
+  ecommerce: [
+    { label: '🏷️ وصف منتج', taskType: 'writing', context: 'صاحب متجر إلكتروني', request: 'اكتبلي وصف منتج جذاب لـ [المنتج]. يشمل: عنوان + 3 نقاط بيع + وصف 150 كلمة + CTA.' },
+    { label: '📩 رد على عميل', taskType: 'writing', context: 'عميل عندي مشكلة محتاج أرد عليه', request: 'اكتبلي رد ودود ومهني على عميل يقول: [شكوى العميل]. يحل المشكلة ويحوله لعميل دائم.' },
+    { label: '📊 تحليل منافس', taskType: 'analysis', context: 'عايز أفهم المنافسة في سوقي', request: 'حللي [المنافس] — نقاط القوة والضعف واستراتيجية التسعير ونصائح أتفوق عليه.' },
+  ],
+  design: [
+    { label: '🎨 اقتراح هوية بصرية', taskType: 'brainstorming', context: 'مصمم يعمل على هوية بصرية', request: 'اقترح 3 اتجاهات تصميم لـ [المشروع] — كل واحد بـ color palette (hex) + خطوط + أسلوب.' },
+    { label: '📋 بريف تصميم', taskType: 'writing', context: 'محتاج أكتب design brief', request: 'اكتبلي design brief لمشروع [نوع المشروع]. يشمل الهدف والجمهور والمنافسين والمخرجات.' },
+    { label: '🖼️ وصف صورة AI', taskType: 'creative', context: 'محتاج أولّد صورة بالـ AI', request: 'اكتبلي prompt بالإنجليزي لتوليد صورة: [الوصف]. الأسلوب: [واقعي/illustration]. النسبة: 16:9.' },
+  ],
+  marketing: [
+    { label: '📱 بوست سوشيال', taskType: 'marketing', context: 'مسؤول سوشيال ميديا', request: 'اكتبلي بوست [المنصة] عن [الموضوع]. يشمل: hook + وصف + 5 هاشتاقات + CTA. اللهجة: مصري.' },
+    { label: '📣 إعلان مدفوع', taskType: 'marketing', context: 'محتاج إعلان لحملة مدفوعة', request: 'اكتبلي 3 نسخ إعلان [المنصة] لـ [المنتج]. كل نسخة بأسلوب مختلف. الجمهور: [الجمهور].' },
+    { label: '📅 خطة محتوى', taskType: 'marketing', context: 'محتاج خطة محتوى أسبوعية', request: 'اعملي خطة محتوى أسبوع لحساب [النوع] على [المنصة]. كل يوم: نوع المحتوى + الموضوع + وقت النشر.' },
+  ],
+  general: [
+    { label: '✉️ إيميل رسمي', taskType: 'writing', context: 'محتاج أكتب إيميل مهني', request: 'اكتبلي إيميل رسمي لـ [المستلم] عن [الموضوع]. النبرة: مهنية. أقل من 100 كلمة.' },
+    { label: '📝 تلخيص', taskType: 'summarization', context: 'عندي نص طويل محتاج ألخصه', request: 'لخصلي النص ده في 5 نقاط رئيسية مع رأيك: هل الكاتب مقنع؟' },
+    { label: '📋 خطة تعلم', taskType: 'education', context: 'عايز أتعلم مهارة جديدة', request: 'اعملي خطة تعلم [المهارة] في [المدة]. يومياً [الوقت]. مع تمارين عملية ومشروع نهائي.' },
+  ],
+};
+
 export default function PromptGenerator() {
+  const { preferences } = useLearning();
   const [step, setStep] = useState(1);
   const [state, setState] = useState<GeneratorState>({
     taskType: '',
@@ -184,6 +217,35 @@ export default function PromptGenerator() {
             className="generator-step"
           >
             <h3>ما نوع المهمة التي تريد إنجازها؟</h3>
+            
+            {/* Quick Templates from specialization */}
+            {preferences?.specialization && specTemplates[preferences.specialization] && (
+              <div className="spec-templates-section">
+                <div className="spec-templates-label">
+                  {getSpecialization(preferences.specialization).icon} قوالب سريعة من تخصصك:
+                </div>
+                <div className="spec-templates-grid">
+                  {specTemplates[preferences.specialization].map((tpl, i) => (
+                    <button
+                      key={i}
+                      className="spec-template-btn"
+                      onClick={() => {
+                        setState(prev => ({
+                          ...prev,
+                          taskType: tpl.taskType,
+                          context: tpl.context,
+                          specificRequest: tpl.request,
+                        }));
+                        setStep(2);
+                      }}
+                    >
+                      {tpl.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="task-types-grid">
               {taskTypes.map((task) => (
                 <button

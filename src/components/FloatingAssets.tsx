@@ -16,6 +16,15 @@ const GlowFilter = ({ id }: { id: string }) => (
     </defs>
 )
 
+// Pre-computed sparkle positions to avoid hydration mismatch from Math.random()
+const SPARKLE_POSITIONS = [
+    { cx: 65, cy: 25, duration: 1.2 },
+    { cx: 73, cy: 33, duration: 1.5 },
+    { cx: 78, cy: 22, duration: 1.8 },
+    { cx: 62, cy: 35, duration: 1.3 },
+    { cx: 71, cy: 28, duration: 1.6 },
+]
+
 export const MagicWand = () => (
     <div className="w-16 h-16 relative">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(255,107,53,0.6)]">
@@ -38,11 +47,11 @@ export const MagicWand = () => (
                 transition={{ duration: 2, repeat: Infinity }}
             />
             {/* Sparkles */}
-            {[...Array(5)].map((_, i) => (
+            {SPARKLE_POSITIONS.map((sparkle, i) => (
                 <motion.circle
                     key={i}
-                    cx={70 + Math.random() * 20 - 10}
-                    cy={30 + Math.random() * 20 - 10}
+                    cx={sparkle.cx}
+                    cy={sparkle.cy}
                     r="1.5"
                     fill="#FF9F1C"
                     animate={{
@@ -51,7 +60,7 @@ export const MagicWand = () => (
                         y: [0, -20]
                     }}
                     transition={{
-                        duration: 1 + Math.random(),
+                        duration: sparkle.duration,
                         repeat: Infinity,
                         delay: i * 0.4
                     }}

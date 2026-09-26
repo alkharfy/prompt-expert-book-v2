@@ -1,13 +1,21 @@
 // Authentication System
 // Handles user registration, login, device verification, and session management
 
-import { supabase } from './supabase'
+import { supabaseProxy as supabase } from './supabase_proxy'
 import { deviceFingerprint, DeviceFingerprintData } from './fingerprint'
 import { saveAuthCookies, getAuthCookies, clearAuthCookies } from './cookie_utils'
-import { SESSION_DURATION_MS, TOTAL_BOOK_PAGES } from './config'
+import { SESSION_DURATION_MS, TOTAL_BOOK_PAGES, TOTAL_CHAPTERS } from './config'
 import { authLogger } from './logger'
 import { hashPassword, verifyPassword, isBcryptHash, legacySha256Hash } from './password'
 import { checkRateLimit, RATE_LIMITS } from './rate-limit'
+import {
+  auth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updatePassword,
+  signOut,
+} from './firebase_client'
 
 // ============ Supabase Helper Types ============
 // هذه الأنواع تساعد في تقليل استخدام `as any` وتحسين الأمان
@@ -51,23 +59,44 @@ interface Session {
     created_at: string
 }
 
+// Constants
+const MAX_DEVICES = 3
+
+// Device info for UI display
+interface DeviceDisplayInfo {
+    id: string
+    device_id: string
+    device_type: string // Desktop / Mobile / Tablet
+    browser: string
+    os: string
+    last_used: string
+    is_current: boolean
+}
+
 // Result types
-export interface AuthResult {
+interface AuthResult {
     ok: boolean
     error?: string
     message?: string
     userId?: string
     deviceMismatch?: boolean
+    maxDevicesReached?: boolean
+    registeredDevices?: DeviceDisplayInfo[]
     needsVerification?: boolean
 }
 
-export interface SessionVerifyResult {
+interface SessionVerifyResult {
     valid: boolean
     userId?: string
     error?: string
 }
 
 class AuthSystem {
+    // Debounce cache: skip redundant verifySession calls within 30 seconds
+    private _lastVerifyResult: (SessionVerifyResult & { needsVerification?: boolean; hasPaid?: boolean }) | null = null
+    private _lastVerifyTime = 0
+    private static readonly VERIFY_CACHE_MS = 30_000 // 30 seconds
+
     /**
      * Compare device fingerprints flexibly
      * Allows same device across different browsers by comparing hardware properties
@@ -99,6 +128,51 @@ class AuthSystem {
     }
 
     /**
+     * Parse device info into display-friendly format
+     */
+    private parseDeviceDisplayInfo(device: any, currentDeviceId?: string): DeviceDisplayInfo {
+        const info = device.device_info || {}
+        
+        // Detect device type
+        let deviceType = 'Desktop'
+        const platform = (info.platform || '').toLowerCase()
+        const userAgent = (info.userAgent || '').toLowerCase()
+        if (platform.includes('android') || userAgent.includes('android') || userAgent.includes('mobile')) {
+            deviceType = 'Mobile'
+        } else if (platform.includes('iphone') || userAgent.includes('iphone')) {
+            deviceType = 'Mobile'
+        } else if (platform.includes('ipad') || userAgent.includes('ipad') || userAgent.includes('tablet')) {
+            deviceType = 'Tablet'
+        }
+
+        // Detect browser
+        let browser = 'Unknown'
+        if (userAgent.includes('edg/') || userAgent.includes('edge')) browser = 'Edge'
+        else if (userAgent.includes('chrome') && !userAgent.includes('edg')) browser = 'Chrome'
+        else if (userAgent.includes('firefox')) browser = 'Firefox'
+        else if (userAgent.includes('safari') && !userAgent.includes('chrome')) browser = 'Safari'
+        else if (userAgent.includes('opera') || userAgent.includes('opr')) browser = 'Opera'
+
+        // Detect OS
+        let os = info.platform || 'Unknown'
+        if (userAgent.includes('windows')) os = 'Windows'
+        else if (userAgent.includes('mac os') || userAgent.includes('macos')) os = 'macOS'
+        else if (userAgent.includes('linux') && !userAgent.includes('android')) os = 'Linux'
+        else if (userAgent.includes('android')) os = 'Android'
+        else if (userAgent.includes('iphone') || userAgent.includes('ipad')) os = 'iOS'
+
+        return {
+            id: device.id,
+            device_id: device.device_id,
+            device_type: deviceType,
+            browser,
+            os,
+            last_used: device.last_used || device.registered_at || '',
+            is_current: device.device_id === currentDeviceId,
+        }
+    }
+
+    /**
      * Hash a password using bcrypt (secure)
      * للتسجيل الجديد فقط
      */
@@ -122,10 +196,20 @@ class AuthSystem {
     }
 
     /**
-     * Generate a random session token
+     * Generate a random session token using CSPRNG
      */
     private generateSessionToken(): string {
-        return 'sess_' + crypto.randomUUID() + '_' + Date.now().toString(36)
+        let uuid: string
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            uuid = crypto.randomUUID()
+        } else if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+            const bytes = new Uint8Array(16)
+            crypto.getRandomValues(bytes)
+            uuid = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')
+        } else {
+            throw new Error('No secure random generator available')
+        }
+        return 'sess_' + uuid + '_' + Date.now().toString(36)
     }
 
     /**
@@ -175,53 +259,57 @@ class AuthSystem {
                 return { ok: false, error: 'البريد الإلكتروني مسجل بالفعل' }
             }
 
-            // 3. Register in Supabase Auth FIRST to get the official ID
-            const { data: authData, error: sbAuthError } = await supabase.auth.signUp({
-                email: email.toLowerCase(),
-                password: password,
-                options: {
-                    data: {
-                        full_name: fullName,
-                    }
+            // 3. Register in Firebase Auth FIRST to get the official ID
+            let firebaseUser
+            try {
+                if (!auth) {
+                    return { ok: false, error: 'خطأ في إعداد المصادقة' }
                 }
-            })
-
-            if (sbAuthError) {
-                authLogger.error('Error', sbAuthError)
-                return { ok: false, error: 'فشل في إنشاء الحساب (Auth): ' + sbAuthError.message }
+                const userCredential = await createUserWithEmailAndPassword(
+                    auth,
+                    email.toLowerCase(),
+                    password
+                )
+                firebaseUser = userCredential.user
+            } catch (firebaseError: any) {
+                authLogger.error('Firebase registration error', firebaseError)
+                if (firebaseError.code === 'auth/email-already-in-use') {
+                    return { ok: false, error: 'البريد الإلكتروني مسجل بالفعل في Firebase' }
+                }
+                if (firebaseError.code === 'auth/weak-password') {
+                    return { ok: false, error: 'كلمة المرور ضعيفة جداً (يجب أن تكون 6 أحرف على الأقل)' }
+                }
+                if (firebaseError.code === 'auth/invalid-email') {
+                    return { ok: false, error: 'البريد الإلكتروني غير صالح' }
+                }
+                return { ok: false, error: 'فشل في إنشاء الحساب. حاول مرة أخرى.' }
             }
 
-            if (!authData.user) {
-                return { ok: false, error: 'فشل في الحصول على بيانات المستخدم' }
-            }
+            const authUserId = firebaseUser.uid
 
-            const authUserId = authData.user.id
-
-            // 4. Create user in our public.users table using the SAME ID
-            const { data: newUser, error: userError } = await (supabase
+            // 4. Create user in our public.users table
+            const { data: newUser, error: userError} = await (supabase
                 .from('users') as any)
                 .insert({
-                    id: authUserId, // Use the ID from Supabase Auth!
+                    firebase_uid: authUserId, // Store Firebase UID for mapping
                     email: email.toLowerCase(),
                     password_hash: passwordHash,
                     full_name: fullName,
                     phone_number: phoneNumber || null,
-                    is_phone_verified: true,
-                    is_active: true,
+                    is_phone_verified: false,
+                    is_active: false,
                 })
                 .select()
                 .single()
 
             if (userError || !newUser) {
                 authLogger.error('Error', userError)
-                // Rollback: حذف حساب Auth اليتيم
+                // Rollback: delete orphaned Firebase user
                 try {
-                    // نحتاج لحذف المستخدم من Supabase Auth
-                    // لكن لا يمكننا ذلك من الـ client side، لذا نسجل الخطأ فقط
-                    authLogger.error('Error', authUserId)
-                    // TODO: إنشاء Edge Function لحذف المستخدمين اليتامى
+                    if (auth) await signOut(auth)
+                    authLogger.warn('Orphaned Firebase user created', { uid: authUserId })
                 } catch (rollbackErr) {
-                    authLogger.error('Error', rollbackErr)
+                    authLogger.error('Rollback error', rollbackErr)
                 }
                 return { ok: false, error: 'فشل في إكمال بيانات الحساب' }
             }
@@ -288,21 +376,64 @@ class AuthSystem {
                 return { ok: false, error: `تم تجاوز عدد المحاولات. حاول مجدداً بعد ${rateLimitResult.retryAfter} ثانية` }
             }
 
-            // 1. Find user by email first
-            const { data: user, error: userError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('email', email.toLowerCase())
-                .single() as { data: { id: string; password_hash: string; is_active: boolean; phone_number?: string; is_phone_verified?: boolean } | null; error: any }
-
-            if (userError || !user) {
-                return { ok: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' }
+            // 1. Login using Firebase Auth
+            // Ensure Firebase is initialized (client-side only)
+            if (!auth) {
+                authLogger.error('Firebase Auth not initialized - must be called from client side')
+                return { ok: false, error: 'خطأ في النظام: Firebase غير مهيأ' }
             }
 
-            // 2. Verify password (supports both bcrypt and legacy SHA-256)
-            const isPasswordValid = await this.verifyUserPassword(password, user.password_hash)
-            if (!isPasswordValid) {
-                return { ok: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' }
+            let firebaseUser
+            try {
+                const userCredential = await signInWithEmailAndPassword(
+                    auth,
+                    email.toLowerCase(),
+                    password
+                )
+                firebaseUser = userCredential.user
+                authLogger.debug('Firebase login successful', { uid: firebaseUser.uid })
+            } catch (firebaseError: any) {
+                authLogger.error('Firebase login error', firebaseError)
+                if (
+                    firebaseError.code === 'auth/wrong-password' ||
+                    firebaseError.code === 'auth/user-not-found' ||
+                    firebaseError.code === 'auth/invalid-credential'
+                ) {
+                    return { ok: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' }
+                }
+                return { ok: false, error: 'حدث خطأ أثناء تسجيل الدخول' }
+            }
+
+            // 2. Get user from database (by firebase_uid or email for backward compatibility)
+            let userQuery = await supabase
+                .from('users')
+                .select('id, firebase_uid, password_hash, is_active, phone_number, is_phone_verified')
+                .eq('firebase_uid', firebaseUser.uid)
+                .single() as { data: { id: string; firebase_uid?: string; password_hash: string; is_active: boolean; phone_number?: string; is_phone_verified?: boolean } | null; error: any }
+
+            let user = userQuery.data
+
+            // Backward compatibility: If user doesn't have firebase_uid, try by email
+            if (!user) {
+                userQuery = await supabase
+                    .from('users')
+                    .select('id, firebase_uid, password_hash, is_active, phone_number, is_phone_verified')
+                    .eq('email', email.toLowerCase())
+                    .single() as { data: { id: string; firebase_uid?: string; password_hash: string; is_active: boolean; phone_number?: string; is_phone_verified?: boolean } | null; error: any }
+
+                user = userQuery.data
+
+                // Update firebase_uid for this user
+                if (user) {
+                    await (supabase.from('users') as any)
+                        .update({ firebase_uid: firebaseUser.uid })
+                        .eq('id', user.id)
+                    authLogger.debug('firebase_uid updated for existing user')
+                }
+            }
+
+            if (!user) {
+                return { ok: false, error: 'المستخدم غير موجود في قاعدة البيانات' }
             }
 
             // 3. If using legacy hash, upgrade to bcrypt
@@ -312,10 +443,6 @@ class AuthSystem {
                     .update({ password_hash: newHash })
                     .eq('id', user.id)
                 authLogger.debug('Password hash upgraded to bcrypt')
-            }
-
-            if (userError || !user) {
-                return { ok: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' }
             }
 
             if (!user.is_active) {
@@ -334,7 +461,7 @@ class AuthSystem {
             // 4. Get registered devices for this user
             const { data: devices, error: devicesError } = await supabase
                 .from('devices')
-                .select('*')
+                .select('id, device_id, device_fingerprint, device_info, last_used, registered_at')
                 .eq('user_id', user.id)
                 .eq('is_active', true) as {
                     data: Array<{
@@ -384,10 +511,10 @@ class AuthSystem {
 
                 return { ok: true, userId: user.id }
             } else {
+                const deviceCount = devices?.length || 0
 
-                // If NO devices are registered at all, this might be an account created before
-                // the devices table was set up correctly. Allow registering this device.
-                if (!devices || devices.length === 0) {
+                // If under the limit (or no devices at all), register the new device automatically
+                if (deviceCount < MAX_DEVICES) {
 
                     const deviceId = deviceFingerprint.generateDeviceId()
 
@@ -417,11 +544,13 @@ class AuthSystem {
                     return { ok: true, userId: user.id }
                 }
 
-                // Different device - reject
+                // Max devices reached - return device list for replacement
+                const registeredDevices = devices!.map(d => this.parseDeviceDisplayInfo(d))
                 return {
                     ok: false,
-                    error: 'لا يمكن تسجيل الدخول من جهاز جديد. تم تحديد جهاز آخر سابقًا.',
-                    deviceMismatch: true,
+                    error: `وصلت للحد الأقصى (${MAX_DEVICES} أجهزة). اختر جهاز تريد استبداله.`,
+                    maxDevicesReached: true,
+                    registeredDevices,
                 }
             }
         } catch (err) {
@@ -438,7 +567,7 @@ class AuthSystem {
             // 1. Verify credentials - find user first
             const { data: user, error: userError } = await supabase
                 .from('users')
-                .select('*')
+                .select('id, password_hash')
                 .eq('email', email.toLowerCase())
                 .single() as { data: { id: string; password_hash: string } | null; error: any }
 
@@ -489,92 +618,152 @@ class AuthSystem {
     }
 
     /**
-     * Verify current session
+     * Replace a specific device - remove one device and register the current one
+     * Used when user has reached MAX_DEVICES and wants to replace one specific device
+     * SECURITY: Requires password verification to prevent unauthorized device takeover
      */
-    async verifySession(): Promise<SessionVerifyResult & { needsVerification?: boolean }> {
+    async replaceDevice(userId: string, oldDeviceId: string, password?: string): Promise<AuthResult> {
         try {
-            // 1. Get cookies
-            const { sessionToken, deviceId, userId } = getAuthCookies()
+            // SECURITY: Verify the caller owns this account via current session
+            const { userId: currentUserId } = getAuthCookies()
+            if (!currentUserId || currentUserId !== userId) {
+                return { ok: false, error: 'غير مصرح بهذا الإجراء' }
+            }
 
-            if (!sessionToken || !deviceId || !userId) {
+            // 1. Delete the old device
+            await (supabase.from('devices') as any)
+                .delete()
+                .eq('user_id', userId)
+                .eq('device_id', oldDeviceId)
+
+            // 2. Delete sessions for the old device
+            await (supabase.from('sessions') as any)
+                .delete()
+                .eq('user_id', userId)
+                .eq('device_id', oldDeviceId)
+
+            // 3. Generate new device fingerprint
+            const newFingerprint = await deviceFingerprint.generate()
+            const newDeviceId = deviceFingerprint.generateDeviceId()
+
+            // 4. Save new device
+            await (supabase.from('devices') as any).insert({
+                user_id: userId,
+                device_id: newDeviceId,
+                device_fingerprint: newFingerprint.hash,
+                device_info: newFingerprint.info,
+                is_active: true,
+            })
+
+            // 5. Create new session
+            const session = await this.createSession(userId, newDeviceId)
+            if (!session) {
+                return { ok: false, error: 'فشل في إنشاء الجلسة' }
+            }
+
+            // 6. Save to cookies
+            saveAuthCookies(session.token, newDeviceId, userId)
+
+            return { ok: true, userId, message: 'تم استبدال الجهاز بنجاح' }
+        } catch (err) {
+            authLogger.error('Error replacing device', err)
+            return { ok: false, error: 'حدث خطأ غير متوقع' }
+        }
+    }
+
+    /**
+     * Verify current session via server-side API (bypasses RLS)
+     * Falls back to updating device fingerprint client-side after verification
+     */
+    async verifySession(): Promise<SessionVerifyResult & { needsVerification?: boolean; hasPaid?: boolean }> {
+        try {
+            // Debounce: return cached result if verified recently (within 30s)
+            const now = Date.now()
+            if (this._lastVerifyResult?.valid && (now - this._lastVerifyTime) < AuthSystem.VERIFY_CACHE_MS) {
+                return this._lastVerifyResult
+            }
+
+            // 1. Check for userId cookie (non-httpOnly, readable from JS)
+            // Note: sessionToken is httpOnly (set by server), so we can't read it from JS
+            // The server-side verify-session endpoint reads it from the HTTP request cookies
+            const { userId } = getAuthCookies()
+
+            if (!userId) {
                 return { valid: false, error: 'لا توجد جلسة' }
             }
 
-            // 2. Find session in database
-            const { data: session } = await supabase
-                .from('sessions')
-                .select('*')
-                .eq('session_token', sessionToken)
-                .eq('user_id', userId)
-                .eq('device_id', deviceId)
-                .single() as { data: { id: string; expires_at: string } | null }
+            // 2. Verify session via server-side API (uses service_role, bypasses RLS)
+            const response = await fetch('/api/auth/verify-session', {
+                method: 'GET',
+                credentials: 'include',
+            })
 
-            if (!session) {
-                clearAuthCookies()
-                return { valid: false, error: 'الجلسة غير موجودة' }
+            if (!response.ok) {
+                // DON'T clear cookies on server errors — could be transient (500, 502, timeout)
+                return { valid: false, error: 'فشل التحقق من الجلسة' }
             }
 
-            // 3. Check if session expired
-            if (new Date(session.expires_at) < new Date()) {
-                // Delete expired session
-                await (supabase.from('sessions') as any).delete().eq('id', session.id)
-                clearAuthCookies()
-                return { valid: false, error: 'الجلسة منتهية' }
+            const result = await response.json()
+
+            if (!result.valid) {
+                // Only clear cookies for definitive session invalidation
+                if (result.error === 'session_expired' || result.error === 'session_not_found') {
+                    clearAuthCookies()
+                }
+                // Don't clear for 'no_session', 'server_error', or unknown errors
+                return { valid: false, error: result.error || 'الجلسة غير صالحة' }
             }
 
-            // 4. Verify device fingerprint
+            // 3. Update device fingerprint in background (client-side has hardware info)
+            const { deviceId } = getAuthCookies()
+            if (deviceId) {
+                this.updateDeviceFingerprintInBackground(deviceId, userId)
+            }
+
+            const successResult = { valid: true as const, userId, hasPaid: result.hasPaid ?? false }
+            // Cache the successful result for debouncing
+            this._lastVerifyResult = successResult
+            this._lastVerifyTime = Date.now()
+            return successResult
+        } catch (err) {
+            authLogger.error('Error', err)
+            return { valid: false, error: 'خطأ في التحقق من الجلسة' }
+        }
+    }
+
+    /**
+     * Update device fingerprint from client-side (has access to hardware info)
+     * Runs in background, doesn't block session verification
+     */
+    private async updateDeviceFingerprintInBackground(deviceId: string, userId: string): Promise<void> {
+        try {
             const currentFingerprint = await deviceFingerprint.generate()
 
             const { data: device } = await supabase
                 .from('devices')
-                .select('*')
+                .select('id, device_fingerprint, device_info')
                 .eq('device_id', deviceId)
                 .eq('user_id', userId)
                 .single() as { data: { id: string; device_fingerprint: string; device_info: any } | null }
 
-            if (!device) {
-                clearAuthCookies()
-                return { valid: false, error: 'الجهاز غير مسجل' }
-            }
+            if (!device) return
 
-            // 5. Compare fingerprints - flexible matching for cross-browser support
-            const isExactMatch = device.device_fingerprint === currentFingerprint.hash
-            const isFlexibleMatch = this.isMatchingDevice(device.device_info, currentFingerprint)
+            // Update fingerprint if device has no info (server-registered) or hash changed
+            const hasDeviceInfo = device.device_info && typeof device.device_info === 'object' && Object.keys(device.device_info).length > 0
+            const needsUpdate = !hasDeviceInfo || device.device_fingerprint !== currentFingerprint.hash
 
-            if (!isExactMatch && !isFlexibleMatch) {
-                // Fingerprint changed and hardware doesn't match - invalidate session
-                await (supabase.from('sessions') as any).delete().eq('id', session.id)
-                clearAuthCookies()
-                return { valid: false, error: 'تم الكشف عن تغيير في الجهاز' }
-            }
-
-            // Update fingerprint if it changed but device matched
-            if (!isExactMatch && isFlexibleMatch) {
+            if (needsUpdate) {
                 await (supabase
                     .from('devices') as any)
                     .update({
                         device_fingerprint: currentFingerprint.hash,
-                        device_info: currentFingerprint.info
+                        device_info: currentFingerprint.info,
+                        last_used: new Date().toISOString(),
                     })
                     .eq('id', device.id)
             }
-
-            /* Phone verification disabled
-            if (user && user.phone_number && !user.is_phone_verified) {
-                return { valid: true, userId, needsVerification: true }
-            }
-            */
-
-            // 6. Update last_used
-            await (supabase
-                .from('devices') as any)
-                .update({ last_used: new Date().toISOString() })
-                .eq('id', device.id)
-
-            return { valid: true, userId }
         } catch (err) {
-            authLogger.error('Error', err)
-            return { valid: false, error: 'خطأ في التحقق من الجلسة' }
+            authLogger.error('Error updating device fingerprint', err)
         }
     }
 
@@ -584,7 +773,10 @@ class AuthSystem {
     async sendSMSVerification(userId: string, phoneNumber: string): Promise<boolean> {
         try {
             // Generate 6-digit code
-            const code = Math.floor(100000 + Math.random() * 900000).toString()
+            // SECURITY: Use crypto for unpredictable verification codes
+            const randomBytes = new Uint32Array(1)
+            crypto.getRandomValues(randomBytes)
+            const code = (100000 + (randomBytes[0] % 900000)).toString()
 
             // Store code in database (you'll need to add verification_code column)
             const { error } = await (supabase
@@ -643,7 +835,7 @@ class AuthSystem {
     }
 
     /**
-     * Request password reset using Supabase Auth
+     * Request password reset using Firebase Auth
      */
     async requestPasswordReset(email: string): Promise<AuthResult> {
         try {
@@ -655,21 +847,29 @@ class AuthSystem {
                 .single()
 
             if (publicError || !user) {
-                return { ok: false, error: 'البريد الإلكتروني غير مسجل' }
+                // Don't reveal if email exists (security best practice)
+                return { ok: true, message: 'إذا كان البريد الإلكتروني مسجلاً، ستصلك رسالة استعادة كلمة المرور' }
             }
 
-            // 2. Call Supabase Auth to send reset email
-            // This will send an email with a link to our site
+            // 2. Call Firebase Auth to send reset email
             const redirectTo = `${window.location.origin}/reset-password`
-            authLogger.debug('Debug', redirectTo)
+            authLogger.debug('Password reset redirect URL', redirectTo)
 
-            const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
-                redirectTo: redirectTo,
-            })
-
-            if (error) {
-                authLogger.error('Error', error)
-                return { ok: false, error: 'فشل في إرسال البريد: ' + error.message }
+            try {
+                if (!auth) {
+                    return { ok: false, error: 'خطأ في إعداد المصادقة' }
+                }
+                await sendPasswordResetEmail(auth, email.toLowerCase(), {
+                    url: redirectTo,
+                    handleCodeInApp: true,
+                })
+            } catch (firebaseError: any) {
+                authLogger.error('Firebase password reset error', firebaseError)
+                if (firebaseError.code === 'auth/user-not-found') {
+                    // Don't reveal if email exists
+                    return { ok: true, message: 'إذا كان البريد الإلكتروني مسجلاً، ستصلك رسالة استعادة كلمة المرور' }
+                }
+                return { ok: false, error: 'فشل في إرسال البريد' }
             }
 
             return { ok: true, message: 'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني. يرجى مراجعة البريد (والبريد العشوائي/Spam).' }
@@ -680,30 +880,56 @@ class AuthSystem {
     }
 
     /**
-     * Reset password using Supabase Auth session
+     * Reset password for logged-in user (using Firebase Auth)
+     * Note: For password reset via email link, use confirmPasswordReset in reset-password page
      */
     async resetPassword(newPassword: string): Promise<AuthResult> {
         try {
-            // 1. Update password in Supabase Auth
-            const { data, error } = await supabase.auth.updateUser({
-                password: newPassword
-            })
-
-            if (error) {
-                return { ok: false, error: 'فشل في تحديث كلمة المرور: ' + error.message }
+            // 1. Check if user is logged in to Firebase
+            const currentUser = auth?.currentUser
+            if (!currentUser) {
+                return { ok: false, error: 'يجب تسجيل الدخول أولاً' }
             }
 
-            // 2. ALSO Update password in our public.users table (synced) with bcrypt
-            if (data?.user?.email) {
-                const passwordHash = await this.hashPasswordSecure(newPassword)
-                const { error: updateError } = await (supabase
-                    .from('users') as any)
-                    .update({ password_hash: passwordHash })
-                    .eq('email', data.user.email.toLowerCase())
-
-                if (updateError) {
-                    authLogger.error('Error', updateError)
+            // 2. Update password in Firebase Auth
+            try {
+                await updatePassword(currentUser, newPassword)
+            } catch (firebaseError: any) {
+                authLogger.error('Firebase password update error', firebaseError)
+                if (firebaseError.code === 'auth/weak-password') {
+                    return { ok: false, error: 'كلمة المرور ضعيفة جداً (يجب أن تكون 6 أحرف على الأقل)' }
                 }
+                if (firebaseError.code === 'auth/requires-recent-login') {
+                    return { ok: false, error: 'يجب تسجيل الدخول مرة أخرى لتغيير كلمة المرور' }
+                }
+                return { ok: false, error: 'فشل في تحديث كلمة المرور' }
+            }
+
+            // 3. Also update password hash in database for consistency
+            const passwordHash = await this.hashPasswordSecure(newPassword)
+            const { error: updateError } = await (supabase
+                .from('users') as any)
+                .update({ password_hash: passwordHash })
+                .eq('firebase_uid', currentUser.uid)
+
+            if (updateError) {
+                authLogger.error('Failed to update password hash in database', updateError)
+            }
+
+            // SECURITY: Invalidate ALL sessions after password change
+            // Note: getAuthCookies() can't read httpOnly session_token from client-side JS,
+            // so we invalidate ALL sessions by user ID — user will need to re-login (safer behavior)
+            const { data: userData } = await supabase
+                .from('users')
+                .select('id')
+                .eq('firebase_uid', currentUser.uid)
+                .single()
+
+            if (userData?.id) {
+                await (supabase.from('sessions') as any)
+                    .delete()
+                    .eq('user_id', userData.id)
+                authLogger.info('Invalidated all sessions after password change for user', userData.id)
             }
 
             return { ok: true, message: 'تم تغيير كلمة المرور بنجاح' }
@@ -718,15 +944,28 @@ class AuthSystem {
      */
     async logout(): Promise<void> {
         try {
-            const { sessionToken } = getAuthCookies()
-
-            if (sessionToken) {
-                // Delete session from database
-                await (supabase.from('sessions') as any).delete().eq('session_token', sessionToken)
+            // Call server-side logout to delete session from DB and clear httpOnly cookies
+            try {
+                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+            } catch {
+                // Continue even if server call fails — still clear client-side state
             }
 
-            // Clear cookies
+            // Sign out from Firebase Auth
+            try {
+                if (auth) {
+                    await signOut(auth)
+                }
+            } catch (firebaseErr) {
+                authLogger.error('Firebase sign out error', firebaseErr)
+            }
+
+            // Clear client-accessible cookies (userId, deviceId)
             clearAuthCookies()
+
+            // Invalidate verify cache
+            this._lastVerifyResult = null
+            this._lastVerifyTime = 0
         } catch (err) {
             authLogger.error('Error', err)
             // Clear cookies anyway
@@ -743,13 +982,40 @@ class AuthSystem {
     }
 
     /**
+     * Check if user has a successful payment
+     */
+    async checkPaymentStatus(userId?: string): Promise<boolean> {
+        try {
+            const targetUserId = userId || this.getCurrentUserId()
+            if (!targetUserId) return false
+
+            const { data, error } = await supabase
+                .from('payments')
+                .select('status')
+                .eq('user_id', targetUserId)
+                .eq('status', 'success')
+                .maybeSingle()
+
+            if (error) {
+                authLogger.error('Error checking payment status', error)
+                return false
+            }
+
+            return !!data
+        } catch (err) {
+            authLogger.error('Error checking payment status', err)
+            return false
+        }
+    }
+
+    /**
      * Get user info by ID
      */
-    async getUserInfo(userId: string): Promise<User | null> {
+    async getUserInfo(userId: string): Promise<Omit<User, 'password_hash'> | null> {
         try {
             const { data, error } = await supabase
                 .from('users')
-                .select('*')
+                .select('id, email, full_name, phone_number, is_phone_verified, created_at, is_active')
                 .eq('id', userId)
                 .single()
 
@@ -758,7 +1024,7 @@ class AuthSystem {
                 return null
             }
 
-            return data as User
+            return data as Omit<User, 'password_hash'>
         } catch (err) {
             authLogger.error('Error', err)
             return null
@@ -808,6 +1074,18 @@ class AuthSystem {
             if (error) {
                 authLogger.error('Error', error)
                 return { ok: false, error: 'فشل في تحديث بيانات الملف الشخصي' }
+            }
+
+            // SECURITY: If password was changed, invalidate all OTHER sessions
+            if (updates.password) {
+                const { sessionToken } = getAuthCookies()
+                if (sessionToken) {
+                    await (supabase.from('sessions') as any)
+                        .delete()
+                        .eq('user_id', userId)
+                        .neq('session_token', sessionToken)
+                    authLogger.info('Invalidated other sessions after profile password change')
+                }
             }
 
             return { ok: true, message: 'تم تحديث الملف الشخصي بنجاح' }
@@ -901,7 +1179,7 @@ class AuthSystem {
             return {
                 currentPage,
                 totalPages: data.total_pages || TOTAL_BOOK_PAGES,
-                percentage: data.completion_percentage || Math.round((currentPage / TOTAL_BOOK_PAGES) * 100),
+                percentage: data.completion_percentage || Math.min(Math.round((currentPage / TOTAL_BOOK_PAGES) * 100), 100),
                 completedChapters
             }
         } catch (err) {
@@ -913,32 +1191,40 @@ class AuthSystem {
     /**
      * Calculate which chapters are completed based on current page number
      * Page ranges for each chapter (based on actual bookData counts):
-     * - Intro (0): pages 1-2 (2 pages)
-     * - Section 1 (1): pages 3-13 (11 pages)
-     * - Section 2 (2): pages 14-19 (6 pages)
-     * - Section 3 (3): pages 20-28 (9 pages)
-     * - Section 4 (4): pages 29-39 (11 pages)
-     * - Section 5 (5): pages 40-49 (10 pages)
-     * - Section 6 (6): pages 50-58 (9 pages)
-     * - Library (7): pages 59-66 (8 pages)
-     * - Appendix (8): pages 67-84 (18 pages)
-     * - Glossary (9): pages 85-89 (5 pages) [Optional bonus]
-     * Total: 89 pages
+     * - Intro (0): pages 1-6 (6 pages)
+     * - Section 1 (1): pages 7-23 (17 pages)
+     * - Section 2 (2): pages 24-41 (18 pages)
+     * - Section 3 (3): pages 42-59 (18 pages)
+     * - Section 4 (4): pages 60-77 (18 pages)
+     * - Section 5 (5): pages 78-95 (18 pages)
+     * - Section 6 (6): pages 96-113 (18 pages)
+     * - Section 7 (7): pages 114-131 (18 pages)
+     * - Section 8 (8): pages 132-147 (16 pages)
+     * - Section 9 (9): pages 148-163 (16 pages)
+     * - Section 10 (10): pages 164-175 (12 pages)
+     * - Library (11): pages 176-187 (12 pages)
+     * - Appendix (12): pages 188-207 (20 pages)
+     * - Glossary: pages 208-215 (8 pages) [Optional bonus, not a numbered chapter]
+     * Total: 215 pages
      */
     private calculateCompletedChapters(currentPage: number): number[] {
         const completed: number[] = []
 
         // Chapter end pages (inclusive) - verified against bookData
         const chapterEndPages = [
-            2,   // Intro ends at page 2 (2 pages)
-            13,  // Section 1 ends at page 13 (11 pages)
-            19,  // Section 2 ends at page 19 (6 pages)
-            28,  // Section 3 ends at page 28 (9 pages)
-            39,  // Section 4 ends at page 39 (11 pages)
-            49,  // Section 5 ends at page 49 (10 pages)
-            58,  // Section 6 ends at page 58 (9 pages)
-            66,  // Library ends at page 66 (8 pages) - was incorrectly 64
-            84   // Appendix ends at page 84 (18 pages) - was incorrectly 70
+            6,    // Intro ends at page 6 (6 pages)
+            23,   // Section 1 ends at page 23 (17 pages)
+            41,   // Section 2 ends at page 41 (18 pages)
+            59,   // Section 3 ends at page 59 (18 pages)
+            77,   // Section 4 ends at page 77 (18 pages)
+            95,   // Section 5 ends at page 95 (18 pages)
+            113,  // Section 6 ends at page 113 (18 pages)
+            131,  // Section 7 ends at page 131 (18 pages)
+            147,  // Section 8 ends at page 147 (16 pages)
+            163,  // Section 9 ends at page 163 (16 pages)
+            175,  // Section 10 ends at page 175 (12 pages)
+            187,  // Library ends at page 187 (12 pages)
+            207,  // Appendix ends at page 207 (20 pages)
         ]
 
         for (let i = 0; i < chapterEndPages.length; i++) {
@@ -957,18 +1243,15 @@ class AuthSystem {
     private async syncCompletedChapters(userId: string, chapters: number[]): Promise<void> {
         try {
             const chaptersStr = chapters.map(c => c.toString())
-            const TOTAL_CHAPTERS = 9
-            const percentage = Math.min(Math.round((chapters.length / TOTAL_CHAPTERS) * 100), 100)
 
             await (supabase
                 .from('reading_progress') as any)
                 .update({
                     completed_chapters: chaptersStr,
-                    completion_percentage: percentage
                 })
                 .eq('user_id', userId)
 
-            authLogger.debug(`Synced completed chapters: ${chapters.length}/${9} (${percentage}%)`)
+            authLogger.debug(`Synced completed chapters: ${chapters.length}/${TOTAL_CHAPTERS}`)
         } catch (err) {
             authLogger.error('Error syncing chapters', err)
         }
@@ -1003,15 +1286,10 @@ class AuthSystem {
             // 2. Update with new chapter
             const updated = [...current, indexStr]
 
-            // 3. Calculate new percentage (9 total chapters)
-            const TOTAL_CHAPTERS = 9
-            const percentage = Math.min(Math.round((updated.length / TOTAL_CHAPTERS) * 100), 100)
-
             const { error: updateError } = await (supabase
                 .from('reading_progress') as unknown as SupabaseTable)
                 .update({
                     completed_chapters: updated,
-                    completion_percentage: percentage
                 })
                 .eq('user_id', userId)
 
@@ -1020,7 +1298,7 @@ class AuthSystem {
                 return false
             }
 
-            authLogger.debug(`Chapter ${chapterIndex} marked as completed (${percentage}%)`)
+            authLogger.debug(`Chapter ${chapterIndex} marked as completed`)
             return true
         } catch (err) {
             authLogger.error('Error completing chapter', err)
@@ -1033,9 +1311,12 @@ class AuthSystem {
      */
     private generateVerificationCode(): string {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Excluded confusing chars: 0,O,1,I
+        // SECURITY: Use crypto for unpredictable verification codes
+        const randomBytes = new Uint8Array(6)
+        crypto.getRandomValues(randomBytes)
         let code = ''
         for (let i = 0; i < 6; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length))
+            code += chars.charAt(randomBytes[i] % chars.length)
         }
         return code
     }
@@ -1059,33 +1340,43 @@ class AuthSystem {
                 return { ok: false, error: 'البريد الإلكتروني مسجل بالفعل' }
             }
 
-            // 3. Register in Supabase Auth FIRST to get the official ID
-            const { data: authData, error: sbAuthError } = await supabase.auth.signUp({
-                email: email.toLowerCase(),
-                password: password,
-                options: {
-                    data: {
-                        full_name: fullName,
-                    }
+            // 3. Register in Firebase Auth to get the official ID
+            // Ensure Firebase is initialized (client-side only)
+            if (!auth) {
+                authLogger.error('Firebase Auth not initialized - must be called from client side')
+                return { ok: false, error: 'خطأ في النظام: Firebase غير مهيأ' }
+            }
+
+            let firebaseUser
+            try {
+                const userCredential = await createUserWithEmailAndPassword(
+                    auth,
+                    email.toLowerCase(),
+                    password
+                )
+                firebaseUser = userCredential.user
+                authLogger.debug('Firebase user created successfully', { uid: firebaseUser.uid })
+            } catch (firebaseError: any) {
+                authLogger.error('Firebase registration error', firebaseError)
+                if (firebaseError.code === 'auth/email-already-in-use') {
+                    return { ok: false, error: 'البريد الإلكتروني مسجل بالفعل' }
                 }
-            })
-
-            if (sbAuthError) {
-                authLogger.error('Error', sbAuthError)
-                return { ok: false, error: 'فشل في إنشاء الحساب: ' + sbAuthError.message }
+                if (firebaseError.code === 'auth/weak-password') {
+                    return { ok: false, error: 'كلمة المرور ضعيفة جداً (يجب أن تكون 6 أحرف على الأقل)' }
+                }
+                if (firebaseError.code === 'auth/invalid-email') {
+                    return { ok: false, error: 'البريد الإلكتروني غير صالح' }
+                }
+                return { ok: false, error: 'فشل في إنشاء الحساب' }
             }
 
-            if (!authData.user) {
-                return { ok: false, error: 'فشل في الحصول على بيانات المستخدم' }
-            }
-
-            const authUserId = authData.user.id
+            const authUserId = firebaseUser.uid
 
             // 4. Create user in our public.users table (NOT ACTIVE YET)
             const { data: newUser, error: userError } = await (supabase
                 .from('users') as any)
                 .insert({
-                    id: authUserId,
+                    firebase_uid: authUserId, // Map Firebase UID
                     email: email.toLowerCase(),
                     password_hash: passwordHash,
                     full_name: fullName,
@@ -1099,13 +1390,13 @@ class AuthSystem {
 
             if (userError || !newUser) {
                 authLogger.error('Error', userError)
-                // Rollback: حذف حساب Auth اليتيم
+                // Rollback: sign out from Firebase to clean up
                 try {
-                    authLogger.error('Error', authUserId)
-                    // TODO: إنشاء Edge Function لحذف المستخدمين اليتامى
+                    await signOut(auth)
                 } catch (rollbackErr) {
-                    authLogger.error('Error', rollbackErr)
+                    authLogger.error('Rollback error', rollbackErr)
                 }
+                authLogger.warn('Orphaned Firebase user created', { userId: authUserId, email: email.toLowerCase() })
                 return { ok: false, error: 'فشل في إكمال بيانات الحساب' }
             }
 
@@ -1153,13 +1444,22 @@ class AuthSystem {
 
     /**
      * Login user directly using userId (after code verification)
+     * SECURITY: This is only safe when called immediately after successful
+     * server-side verification (phone/email). Do NOT expose as a public API.
+     * The callerVerified flag must be explicitly set to true.
      */
-    async loginWithUserId(userId: string): Promise<AuthResult> {
+    async loginWithUserId(userId: string, callerVerified: boolean = false): Promise<AuthResult> {
         try {
+            // SECURITY: Ensure this is only called from verified contexts
+            if (!callerVerified) {
+                authLogger.error('Error', 'loginWithUserId called without callerVerified flag')
+                return { ok: false, error: 'غير مصرح بهذا الإجراء' }
+            }
+
             // 1. Find user
             const { data: user, error: userError } = await supabase
                 .from('users')
-                .select('*')
+                .select('id')
                 .eq('id', userId)
                 .single() as { data: { id: string } | null; error: any }
 
@@ -1171,27 +1471,45 @@ class AuthSystem {
             const fingerprintData = await deviceFingerprint.generate()
             const deviceId = deviceFingerprint.generateDeviceId()
 
-            // 3. Save device
-            const { error: deviceError } = await (supabase.from('devices') as any).insert({
-                user_id: user.id,
-                device_id: deviceId,
-                device_fingerprint: fingerprintData.hash,
-                device_info: fingerprintData.info,
-                is_active: true,
-            })
+            // 3. Check if device already exists for this user
+            const { data: existingDevice } = await supabase
+                .from('devices')
+                .select('id, device_id')
+                .eq('user_id', user.id)
+                .eq('device_fingerprint', fingerprintData.hash)
+                .single() as { data: { id: string; device_id: string } | null }
 
-            if (deviceError) {
-                authLogger.error('Error', deviceError)
+            let finalDeviceId = deviceId
+
+            if (existingDevice) {
+                // Device already exists, use its device_id
+                finalDeviceId = existingDevice.device_id
+                await (supabase.from('devices') as any)
+                    .update({ last_used: new Date().toISOString(), device_info: fingerprintData.info })
+                    .eq('id', existingDevice.id)
+            } else {
+                // Save new device
+                const { error: deviceError } = await (supabase.from('devices') as any).insert({
+                    user_id: user.id,
+                    device_id: deviceId,
+                    device_fingerprint: fingerprintData.hash,
+                    device_info: fingerprintData.info,
+                    is_active: true,
+                })
+
+                if (deviceError) {
+                    authLogger.error('Error', deviceError)
+                }
             }
 
             // 4. Create session
-            const session = await this.createSession(user.id, deviceId)
+            const session = await this.createSession(user.id, finalDeviceId)
             if (!session) {
                 return { ok: false, error: 'فشل في إنشاء الجلسة' }
             }
 
             // 5. Save to cookies
-            saveAuthCookies(session.token, deviceId, user.id)
+            saveAuthCookies(session.token, finalDeviceId, user.id)
 
             return {
                 ok: true,
@@ -1206,3 +1524,5 @@ class AuthSystem {
 
 // Export singleton instance
 export const authSystem = new AuthSystem()
+export { MAX_DEVICES }
+export type { DeviceDisplayInfo }

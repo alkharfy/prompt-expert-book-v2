@@ -26,7 +26,7 @@ function sanitizeCookieValue(value: string): string {
  * @param value Cookie value
  * @param maxAge Max age in seconds (optional, defaults to config)
  */
-export function setCookie(name: string, value: string, maxAge: number = COOKIE_MAX_AGE): void {
+function setCookie(name: string, value: string, maxAge: number = COOKIE_MAX_AGE): void {
     // SSR guard - document is not available on server
     if (typeof document === 'undefined') return
     
@@ -42,13 +42,17 @@ export function setCookie(name: string, value: string, maxAge: number = COOKIE_M
  * @param name Cookie name
  * @returns Cookie value or null if not found
  */
-export function getCookie(name: string): string | null {
+function getCookie(name: string): string | null {
     // SSR guard - document is not available on server
     if (typeof document === 'undefined') return null
     
     const cookies = document.cookie.split(';')
     for (const cookie of cookies) {
-        const [cookieName, cookieValue] = cookie.trim().split('=')
+        const trimmed = cookie.trim()
+        const eqIdx = trimmed.indexOf('=')
+        if (eqIdx === -1) continue
+        const cookieName = trimmed.substring(0, eqIdx)
+        const cookieValue = trimmed.substring(eqIdx + 1)
         if (cookieName === name) {
             return decodeURIComponent(cookieValue)
         }
@@ -60,7 +64,7 @@ export function getCookie(name: string): string | null {
  * Delete a cookie by name
  * @param name Cookie name
  */
-export function deleteCookie(name: string): void {
+function deleteCookie(name: string): void {
     // SSR guard - document is not available on server
     if (typeof document === 'undefined') return
     
@@ -68,13 +72,15 @@ export function deleteCookie(name: string): void {
 }
 
 /**
- * Save auth session data to cookies
- * @param sessionToken The session token
+ * Save auth session data to cookies (client-side)
+ * NOTE: Session token is NOT set here — it must be set server-side with httpOnly flag.
+ * Only userId and deviceId are safe for client-side cookies.
+ * @param _sessionToken Ignored — kept for backward compatibility
  * @param deviceId The device ID
  * @param userId The user ID
  */
-export function saveAuthCookies(sessionToken: string, deviceId: string, userId: string): void {
-    setCookie(COOKIE_SESSION_TOKEN, sessionToken)
+export function saveAuthCookies(_sessionToken: string, deviceId: string, userId: string): void {
+    // Session token is set server-side with httpOnly — do NOT set it client-side
     setCookie(COOKIE_DEVICE_ID, deviceId)
     setCookie(COOKIE_USER_ID, userId)
 }
@@ -92,10 +98,12 @@ export function getAuthCookies(): { sessionToken: string | null; deviceId: strin
 }
 
 /**
- * Clear all auth cookies (logout)
+ * Clear client-accessible auth cookies (logout)
+ * NOTE: ebook_session_token is httpOnly and CANNOT be deleted from client JS.
+ * For full logout including httpOnly cookies, call POST /api/auth/logout first.
  */
 export function clearAuthCookies(): void {
-    deleteCookie(COOKIE_SESSION_TOKEN)
+    // Don't try to delete COOKIE_SESSION_TOKEN — it's httpOnly, server must clear it
     deleteCookie(COOKIE_DEVICE_ID)
     deleteCookie(COOKIE_USER_ID)
 }

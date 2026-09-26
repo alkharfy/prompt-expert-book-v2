@@ -24,13 +24,18 @@ export interface Database {
                     is_verified: boolean
                     is_active: boolean
                     is_admin: boolean
+                    firebase_uid: string | null
+                    referral_code: string | null
+                    referred_by: string | null
                     registered_at: string
                     last_login_at: string | null
+                    current_plan: string | null
+                    plan_expires_at: string | null
                     created_at: string
                     updated_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['users']['Row'], 'created_at' | 'updated_at'>
-                Update: Partial<Database['public']['Tables']['users']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             devices: {
                 Row: {
@@ -40,24 +45,26 @@ export interface Database {
                     device_fingerprint: string
                     device_info: Record<string, unknown>
                     is_active: boolean
+                    registered_at: string | null
+                    last_used: string | null
                     created_at: string
                     updated_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['devices']['Row'], 'id' | 'created_at' | 'updated_at'>
-                Update: Partial<Database['public']['Tables']['devices']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             sessions: {
                 Row: {
                     id: string
                     user_id: string
                     device_id: string
-                    token: string
+                    session_token: string
                     expires_at: string
                     is_active: boolean
                     created_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['sessions']['Row'], 'id' | 'created_at'>
-                Update: Partial<Database['public']['Tables']['sessions']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             reading_progress: {
                 Row: {
@@ -72,8 +79,8 @@ export interface Database {
                     created_at: string
                     updated_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['reading_progress']['Row'], 'id' | 'created_at' | 'updated_at'>
-                Update: Partial<Database['public']['Tables']['reading_progress']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             bookmarks: {
                 Row: {
@@ -83,8 +90,8 @@ export interface Database {
                     page_title: string
                     created_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['bookmarks']['Row'], 'id' | 'created_at'>
-                Update: Partial<Database['public']['Tables']['bookmarks']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             certificates: {
                 Row: {
@@ -98,8 +105,8 @@ export interface Database {
                     is_public: boolean
                     created_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['certificates']['Row'], 'id' | 'created_at'>
-                Update: Partial<Database['public']['Tables']['certificates']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             user_gamification: {
                 Row: {
@@ -115,8 +122,8 @@ export interface Database {
                     created_at: string
                     updated_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['user_gamification']['Row'], 'id' | 'created_at' | 'updated_at'>
-                Update: Partial<Database['public']['Tables']['user_gamification']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             user_exercise_stats: {
                 Row: {
@@ -132,22 +139,24 @@ export interface Database {
                     created_at: string
                     updated_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['user_exercise_stats']['Row'], 'id' | 'created_at' | 'updated_at'>
-                Update: Partial<Database['public']['Tables']['user_exercise_stats']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             exercise_progress: {
                 Row: {
                     id: string
                     user_id: string
                     exercise_id: string
+                    exercise_type: string | null
                     is_completed: boolean
                     is_correct: boolean
                     points_earned: number
+                    completed_at: string | null
                     created_at: string
                     updated_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['exercise_progress']['Row'], 'id' | 'created_at' | 'updated_at'>
-                Update: Partial<Database['public']['Tables']['exercise_progress']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             points_history: {
                 Row: {
@@ -158,8 +167,8 @@ export interface Database {
                     action_details: Record<string, unknown> | null
                     created_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['points_history']['Row'], 'id' | 'created_at'>
-                Update: Partial<Database['public']['Tables']['points_history']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             verification_codes: {
                 Row: {
@@ -170,8 +179,8 @@ export interface Database {
                     used_at: string | null
                     created_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['verification_codes']['Row'], 'id' | 'created_at'>
-                Update: Partial<Database['public']['Tables']['verification_codes']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             testimonials: {
                 Row: {
@@ -186,8 +195,8 @@ export interface Database {
                     created_at: string
                     updated_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['testimonials']['Row'], 'id' | 'created_at' | 'updated_at'>
-                Update: Partial<Database['public']['Tables']['testimonials']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             site_settings: {
                 Row: {
@@ -197,8 +206,8 @@ export interface Database {
                     created_at: string
                     updated_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['site_settings']['Row'], 'id' | 'created_at' | 'updated_at'>
-                Update: Partial<Database['public']['Tables']['site_settings']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             admin_sessions: {
                 Row: {
@@ -210,8 +219,8 @@ export interface Database {
                     last_activity: string
                     expires_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['admin_sessions']['Row'], 'id'>
-                Update: Partial<Database['public']['Tables']['admin_sessions']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             badges: {
                 Row: {
@@ -226,8 +235,8 @@ export interface Database {
                     is_hidden: boolean
                     created_at: string
                 }
-                Insert: Omit<Database['public']['Tables']['badges']['Row'], 'id' | 'created_at'>
-                Update: Partial<Database['public']['Tables']['badges']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             user_badges: {
                 Row: {
@@ -237,8 +246,8 @@ export interface Database {
                     earned_at: string
                     is_featured: boolean
                 }
-                Insert: Omit<Database['public']['Tables']['user_badges']['Row'], 'id'>
-                Update: Partial<Database['public']['Tables']['user_badges']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             user_certificates: {
                 Row: {
@@ -250,8 +259,8 @@ export interface Database {
                     completed_exercises: number
                     is_public: boolean
                 }
-                Insert: Omit<Database['public']['Tables']['user_certificates']['Row'], 'id'>
-                Update: Partial<Database['public']['Tables']['user_certificates']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             user_achievements: {
                 Row: {
@@ -261,8 +270,8 @@ export interface Database {
                     unlocked_at: string
                     points_awarded: number
                 }
-                Insert: Omit<Database['public']['Tables']['user_achievements']['Row'], 'id'>
-                Update: Partial<Database['public']['Tables']['user_achievements']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
             }
             public_certificates: {
                 Row: {
@@ -272,14 +281,250 @@ export interface Database {
                     issued_at: string
                     total_points: number
                 }
-                Insert: Omit<Database['public']['Tables']['public_certificates']['Row'], 'id'>
-                Update: Partial<Database['public']['Tables']['public_certificates']['Row']>
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
+            }
+            user_notes: {
+                Row: {
+                    id: string
+                    user_id: string
+                    section_id: string
+                    page_number: number
+                    highlighted_text: string | null
+                    text_start_offset: number | null
+                    text_end_offset: number | null
+                    content_block_index: number | null
+                    note_text: string | null
+                    highlight_color: 'orange' | 'yellow' | 'green' | 'blue' | 'purple'
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
+            }
+            mission_templates: {
+                Row: {
+                    id: string
+                    title_ar: string
+                    description_ar: string
+                    icon: string
+                    category: 'reading' | 'exercises' | 'notes' | 'tools' | 'streak' | 'social'
+                    min_target: number
+                    max_target: number
+                    base_points: number
+                    bonus_multiplier: number
+                    requires_plan: string | null
+                    min_level: number
+                    is_active: boolean
+                    created_at: string
+                }
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
+            }
+            user_daily_missions: {
+                Row: {
+                    id: string
+                    user_id: string
+                    mission_template_id: string
+                    mission_date: string
+                    target_value: number
+                    current_value: number
+                    status: 'active' | 'completed' | 'expired' | 'skipped'
+                    points_earned: number
+                    completed_at: string | null
+                    slot_number: number
+                    created_at: string
+                }
+                Insert: Record<string, unknown>
+                Update: Record<string, unknown>
+            }
+            chat_messages: {
+                Row: {
+                    id: string
+                    user_id: string
+                    session_id: string
+                    role: 'user' | 'assistant'
+                    content: string
+                    model: string | null
+                    created_at: string
+                }
+                Insert: {
+                    user_id: string
+                    session_id: string
+                    role: 'user' | 'assistant'
+                    content: string
+                    model?: string | null
+                }
+                Update: Record<string, unknown>
+            }
+            chat_ratings: {
+                Row: {
+                    id: string
+                    user_id: string
+                    message_content: string
+                    query_content: string
+                    model: string | null
+                    rating: number
+                    created_at: string
+                }
+                Insert: {
+                    user_id: string
+                    message_content: string
+                    query_content: string
+                    model?: string | null
+                    rating: number
+                }
+                Update: Record<string, unknown>
+            }
+            subscriptions: {
+                Row: {
+                    id: string
+                    user_id: string
+                    plan_id: string
+                    payment_id: string | null
+                    status: string
+                    starts_at: string
+                    expires_at: string
+                    upgraded_from: string | null
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    user_id: string
+                    plan_id: string
+                    expires_at: string
+                    payment_id?: string | null
+                    status?: string
+                    starts_at?: string
+                    upgraded_from?: string | null
+                }
+                Update: Record<string, unknown>
+            }
+            plan_features: {
+                Row: {
+                    id: string
+                    plan_id: string
+                    feature_key: string
+                    is_enabled: boolean
+                }
+                Insert: {
+                    plan_id: string
+                    feature_key: string
+                    is_enabled?: boolean
+                }
+                Update: Record<string, unknown>
+            }
+            payments: {
+                Row: {
+                    id: string
+                    user_id: string
+                    kashier_session_id: string | null
+                    kashier_order_id: string | null
+                    amount: number
+                    currency: string
+                    plan_id: string
+                    payment_method: string | null
+                    status: string
+                    created_at: string
+                    paid_at: string | null
+                    notes: string | null
+                }
+                Insert: {
+                    user_id: string
+                    amount: number
+                    plan_id: string
+                    kashier_session_id?: string | null
+                    kashier_order_id?: string | null
+                    currency?: string
+                    payment_method?: string | null
+                    status?: string
+                    notes?: string | null
+                }
+                Update: Record<string, unknown>
+            }
+            email_preferences: {
+                Row: {
+                    id: string
+                    user_id: string
+                    reminders_enabled: boolean
+                    reminder_frequency: 'daily' | 'every_3_days' | 'weekly' | 'smart'
+                    preferred_time: string
+                    timezone: string
+                    streak_reminders: boolean
+                    mission_reminders: boolean
+                    milestone_notifications: boolean
+                    weekly_recap: boolean
+                    last_email_sent_at: string | null
+                    total_emails_sent: number
+                    unsubscribe_token: string
+                    created_at: string
+                    updated_at: string
+                }
+                Insert: {
+                    user_id: string
+                    reminders_enabled?: boolean
+                    reminder_frequency?: 'daily' | 'every_3_days' | 'weekly' | 'smart'
+                    preferred_time?: string
+                    timezone?: string
+                    streak_reminders?: boolean
+                    mission_reminders?: boolean
+                    milestone_notifications?: boolean
+                    weekly_recap?: boolean
+                }
+                Update: Record<string, unknown>
+            }
+            email_log: {
+                Row: {
+                    id: string
+                    user_id: string
+                    email_type: string
+                    subject: string
+                    template_id: string | null
+                    status: 'sent' | 'failed' | 'bounced'
+                    sent_at: string
+                }
+                Insert: {
+                    user_id: string
+                    email_type: string
+                    subject: string
+                    template_id?: string | null
+                    status?: 'sent' | 'failed' | 'bounced'
+                }
+                Update: Record<string, unknown>
+            }
+            referrals: {
+                Row: {
+                    id: string
+                    referrer_id: string
+                    referred_id: string
+                    referral_code: string
+                    status: string
+                    reward_given: boolean
+                    created_at: string
+                }
+                Insert: {
+                    referrer_id: string
+                    referred_id: string
+                    referral_code: string
+                    status?: string
+                    reward_given?: boolean
+                }
+                Update: Record<string, unknown>
+            }
+        }
+        Functions: {
+            get_user_plan: {
+                Args: { p_user_id: string }
+                Returns: { plan_id: string | null; expires_at: string | null; status: string | null }[]
+            }
+            user_has_feature: {
+                Args: { p_user_id: string; p_feature: string }
+                Returns: boolean
+            }
+            has_successful_payment: {
+                Args: { p_user_id: string }
+                Returns: boolean
             }
         }
     }
 }
-
-// Helper types
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
-export type InsertTables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert']
-export type UpdateTables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update']

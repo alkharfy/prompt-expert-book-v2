@@ -9,6 +9,9 @@ import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { authSystem } from '@/lib/auth_system'
 import { dbLogger, authLogger } from '@/lib/logger'
+import { useLearning } from '@/context/LearningContext'
+import { trackCtaClick } from '@/lib/analytics'
+import { isChapterInPath } from '@/data/learningPaths'
 
 interface Chapter {
     number: string
@@ -30,56 +33,63 @@ const chapters: Chapter[] = [
     },
     {
         number: '01',
-        title: 'أساسيات برومبت مشروع',
-        description: 'التفكير كمشروع لا كدردشة',
+        title: 'كيف يفكر AI؟',
+        description: 'كيف يفكر الذكاء الاصطناعي فعلاً (GPT-5, Claude, Gemini)',
         href: '/read/section-1/1',
-        icon: '📋',
+        icon: '🧠',
         isFree: true
     },
     {
         number: '02',
-        title: 'من الفكرة إلى المواصفات',
-        description: 'تحويل الخيال إلى نقاط عمل',
+        title: 'أول برومبت احترافي',
+        description: 'من برومبت عشوائي إلى برومبت منظم',
         href: '/read/section-2/1',
         icon: '💡'
     },
     {
         number: '03',
-        title: 'إطار GOLDS للبرومبتات',
-        description: 'أساسيات البرومبت الفعال والتقنيات المتقدمة',
+        title: 'إطار GOLDS',
+        description: 'نظام ثابت لأي برومبت (Goal, Output, Language, Details, Style)',
         href: '/read/section-3/1',
         icon: '🎯'
     },
     {
         number: '04',
-        title: 'البرومبتات المتسلسلة',
-        description: 'Prompt Chaining وبناء المشاريع',
+        title: 'Prompt Chaining',
+        description: 'برومبتات متسلسلة لبناء مشروع كامل',
         href: '/read/section-4/1',
         icon: '🔗'
     },
     {
         number: '05',
-        title: 'الجودة والتحسين',
-        description: 'قوائم التدقيق وضمان الجودة',
+        title: 'جودة وتصحيح',
+        description: 'جودة المخرجات وتصحيح البرومبت (Debug & Refinement)',
         href: '/read/section-5/1',
-        icon: '📋'
+        icon: '✅'
     },
     {
         number: '06',
-        title: 'الأدوات المستخدمة',
-        description: 'التقنيات وتصميم البيانات',
+        title: 'Multimodal AI',
+        description: 'التعامل مع الصور والصوت والفيديو',
         href: '/read/section-6/1',
-        icon: '⚙️'
+        icon: '🎨'
     },
     {
         number: '07',
+        title: 'وكلاء AI',
+        description: 'بناء وكلاء AI يعملون نيابةً عنك',
+        href: '/read/section-7/1',
+        icon: '🤖'
+    },
+    {
+        number: '08',
         title: 'مكتبة القوالب',
-        description: '30 قالب برومبت جاهز للنسخ',
+        description: '95 قالب برومبت جاهز للنسخ',
         href: '/library/1',
         icon: '📚'
     },
     {
-        number: '08',
+        number: '09',
         title: 'الملحق',
         description: 'تمارين وإجابات نموذجية',
         href: '/read/appendix/1',
@@ -90,6 +100,8 @@ const chapters: Chapter[] = [
 export default function RoadmapPath() {
     const router = useRouter()
     const pathname = usePathname()
+    const { preferences } = useLearning()
+    const userPath = preferences?.learningPath ?? null
     const containerRef = useRef<HTMLDivElement>(null)
     const cardRefs = useRef<(HTMLDivElement | null)[]>([])
     const startRef = useRef<HTMLDivElement>(null)
@@ -273,7 +285,8 @@ export default function RoadmapPath() {
         // If user is logged in, allow access to all chapters
         // If not logged in, only allow free chapters
         if (!userId && !chapters[index].isFree) {
-            authLogger.debug("Chapter is locked - user not logged in")
+            authLogger.debug("Chapter is locked — routing guest to checkout")
+            router.push('/payment?plan=pro')
             return
         }
 
@@ -285,6 +298,7 @@ export default function RoadmapPath() {
 
         if (!targetCard || !robotElement || !containerRef.current) {
             router.push(href)
+            setIsAnimating(false)
             return
         }
 
@@ -404,6 +418,7 @@ export default function RoadmapPath() {
                 <div className="roadmap-steps">
                     {chapters.map((chapter, index) => {
                         const isCompleted = completedCards.includes(index)
+                        const inPath = !userPath || isChapterInPath(index, userPath)
                         return (
                             <motion.div
                                 key={chapter.number}
@@ -419,14 +434,36 @@ export default function RoadmapPath() {
                                 }}
                             >
                                 <motion.div
-                                    className={`step-card ${isCompleted ? 'completed' : ''}`}
-                                    whileHover={{ scale: 1.05, y: -5 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => handleCardClick(index, chapter.href)}
-                                    style={{ cursor: 'pointer' }}
+                                    className={`step-card ${isCompleted ? 'completed' : ''} ${!inPath ? 'outside-path' : ''}`}
+                                    whileHover={inPath ? { scale: 1.05, y: -5 } : undefined}
+                                    whileTap={inPath ? { scale: 0.98 } : undefined}
+                                    onClick={() => inPath ? handleCardClick(index, chapter.href) : undefined}
+                                    style={{ cursor: inPath ? 'pointer' : 'default' }}
                                 >
                                     {isCompleted && <div className="completed-check-overlay">✓</div>}
-                                    {chapter.isFree && (
+                                    {!inPath && (
+                                        <span style={{
+                                            position: 'absolute',
+                                            top: '-28px',
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            background: 'linear-gradient(135deg, #555 0%, #444 100%)',
+                                            color: '#ccc',
+                                            padding: '5px 14px',
+                                            borderRadius: '15px',
+                                            fontSize: '0.7rem',
+                                            fontWeight: 'bold',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                                            zIndex: 10,
+                                            whiteSpace: 'nowrap',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px'
+                                        }}>
+                                            🔒 خارج مسارك
+                                        </span>
+                                    )}
+                                    {inPath && chapter.isFree && (
                                         <span style={{
                                             position: 'absolute',
                                             top: '-28px',
@@ -446,11 +483,27 @@ export default function RoadmapPath() {
                                         </span>
                                     )}
                                     <div className="step-number-circle">
-                                        <span>{index === 0 ? '⭐' : chapter.number}</span>
+                                        <span>{!inPath ? '🔒' : index === 0 ? '⭐' : chapter.number}</span>
                                     </div>
                                     <div className="step-icon">{chapter.icon}</div>
                                     <h3 className="step-title">{chapter.title}</h3>
                                     <p className="step-desc">{chapter.description}</p>
+                                    {!inPath && (
+                                        <Link
+                                            href="/payment"
+                                            onClick={(e) => e.stopPropagation()}
+                                            style={{
+                                                display: 'inline-block',
+                                                marginTop: '8px',
+                                                fontSize: '0.72rem',
+                                                color: '#FF6B35',
+                                                textDecoration: 'none',
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            ترقية للوصول ←
+                                        </Link>
+                                    )}
                                 </motion.div>
                             </motion.div>
                         )

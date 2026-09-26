@@ -6,34 +6,28 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // التحقق من وجود المتغيرات
-let supabase: SupabaseClient<Database>
-
-// Flag لتتبع ما إذا كان Supabase متاحاً
-let isSupabaseConfigured = false
+let supabase: SupabaseClient
 
 if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
-    isSupabaseConfigured = true
+    supabase = createClient(supabaseUrl, supabaseAnonKey)
 } else {
-    // في بيئة البناء (build time)، نستخدم placeholder مؤقت
-    // لكن في وقت التشغيل، سيتم رمي خطأ عند أول محاولة استخدام
-    if (typeof window !== 'undefined' || process.env.NODE_ENV === 'production') {
-        // في الإنتاج أو العميل، هذا خطأ حقيقي
-        console.error('⚠️ CRITICAL: Missing Supabase environment variables!')
-        console.error('The application will not function correctly.')
+    // في بيئة الإنتاج يجب أن تكون المتغيرات موجودة — إظهار خطأ واضح
+    const errorMessage = '⚠️ CRITICAL: Missing Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY). Set them in .env.local'
+    
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error(errorMessage)
     }
     
-    // إنشاء عميل وهمي فقط للسماح بالبناء
-    supabase = createClient<Database>('https://placeholder.supabase.co', 'placeholder-key')
+    // في بيئة البناء (build time): إنشاء Proxy يرمي خطأ عند أي استخدام فعلي
+    console.warn(errorMessage)
+    supabase = new Proxy({} as SupabaseClient, {
+        get(_target, prop) {
+            if (prop === 'then' || prop === 'catch') return undefined
+            return () => {
+                throw new Error(errorMessage)
+            }
+        },
+    })
 }
 
-/**
- * التحقق من أن Supabase متاح قبل استخدامه
- */
-export function ensureSupabaseConfigured(): void {
-    if (!isSupabaseConfigured) {
-        throw new Error('Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.')
-    }
-}
-
-export { supabase, isSupabaseConfigured }
+export { supabase }

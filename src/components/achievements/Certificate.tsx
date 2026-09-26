@@ -31,7 +31,7 @@ export default function Certificate({
   const [copied, setCopied] = useState(false);
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('ar-SA', {
+    return new Intl.DateTimeFormat('ar-EG', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -82,8 +82,8 @@ export default function Certificate({
       const shareUrl = getCertificateShareUrl(certificateId);
       if (navigator.share) {
         await navigator.share({
-          title: 'شهادة إتمام - خبير البرومبتات',
-          text: `🎉 حصلت على شهادة إتمام كتاب "خبير البرومبتات"!`,
+          title: 'شهادة إتمام - PromptMaster',
+          text: `🎉 حصلت على شهادة إتمام منصة PromptMaster!`,
           url: shareUrl,
         });
         onShare?.();
@@ -149,9 +149,9 @@ export default function Certificate({
           <p className="certificate-text">
             قد أتم بنجاح دراسة كتاب
           </p>
-          <h3 className="certificate-book">خبير البرومبتات</h3>
+          <h3 className="certificate-book">PromptMaster</h3>
           <p className="certificate-book-subtitle">
-            دليلك الشامل لإتقان فن التواصل مع الذكاء الاصطناعي
+            دليلك الشامل لاحتراف هندسة البرومبت وبناء المواقع والتطبيقات بالذكاء الاصطناعي
           </p>
 
           {/* الإحصائيات */}
@@ -188,7 +188,7 @@ export default function Certificate({
             </div>
             <div className="footer-section signature">
               <div className="signature-line"></div>
-              <p className="footer-label">خبير البرومبتات</p>
+              <p className="footer-label">PromptMaster</p>
             </div>
           </div>
 
@@ -302,7 +302,7 @@ export function AchievementCard({
 
         {isUnlocked && unlockedAt && (
           <p className="achievement-date">
-            تم فتحه في {new Intl.DateTimeFormat('ar-SA').format(unlockedAt)}
+            تم فتحه في {new Intl.DateTimeFormat('ar-EG').format(unlockedAt)}
           </p>
         )}
       </div>
@@ -321,7 +321,7 @@ interface Achievement {
   icon: string;
   title: string;
   description: string;
-  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions';
+  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions' | 'notes' | 'social';
   points: number;
   requirement: number;
   currentProgress: number;
@@ -347,6 +347,8 @@ export function AchievementsList({ achievements, filter = 'all' }: AchievementsL
     streak: { name: 'الاستمرارية', icon: '🔥' },
     special: { name: 'خاصة', icon: '⭐' },
     missions: { name: 'المهمات', icon: '🧭' },
+    notes: { name: 'الملاحظات', icon: '📝' },
+    social: { name: 'المشاركة', icon: '📤' },
   };
 
   const groupedAchievements = filteredAchievements.reduce((acc, achievement) => {

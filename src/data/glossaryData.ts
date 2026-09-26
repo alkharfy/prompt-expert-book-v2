@@ -23,7 +23,7 @@ export interface GlossaryTerm {
     category: 'ai-basics' | 'prompting' | 'technical' | 'platforms';
 }
 
-export const glossaryData: Record<string, GlossaryTerm> = {
+const glossaryData: Record<string, GlossaryTerm> = {
     // ═══════════════════════════════════════════════════════════════
     // أساسيات الذكاء الاصطناعي
     // ═══════════════════════════════════════════════════════════════
@@ -177,10 +177,11 @@ Temperature = 0.9 (إبداعي):
         category: 'technical',
         fullExplanation: `نافذة السياق هي "ذاكرة" النموذج - كم من النص يمكنه تذكره ومعالجته في نفس الوقت.
 
-**الحدود الحالية (فبراير 2026):**
-• GPT-4o: 128,000 توكن (≈ 100 صفحة)
-• Claude 3.5: 200,000 توكن (≈ 150 صفحة)
-• Gemini 1.5: 2,000,000 توكن (≈ 1500 صفحة!)
+**الحدود الحالية (2026):**
+• GPT-5.5: ≈ 1,000,000 توكن
+• Claude Opus 4.8: 1,000,000 توكن (النماذج الأقدم/الاقتصادية: 200,000)
+• Gemini 3.1 Pro: 1,000,000 توكن
+• LLaMA 4 Scout: حتى 10,000,000 توكن (رقم نظري معلن)
 
 **لماذا مهم؟**
 • المحادثات الطويلة تستهلك السياق
@@ -689,18 +690,18 @@ RAG يفعل:
 • يتوقع الكلمة التالية بناءً على السياق
 
 **أشهر النماذج (2026):**
-• GPT-4o, GPT-5 (OpenAI)
-• Claude 3.5 Sonnet, Claude 4 (Anthropic)
-• Gemini 1.5, Gemini 2 (Google)
-• Llama 3 (Meta, مفتوح المصدر)`,
+• GPT-5.5 (OpenAI)
+• Claude Opus 4.8 / Fable 5 (Anthropic)
+• Gemini 3.1 Pro (Google)
+• Llama 4 (Meta, مفتوح المصدر)`,
         examples: [
             {
                 title: '📈 تطور النماذج',
                 content: `2020: GPT-3 (175 مليار parameter)
 2023: GPT-4 (تريليونات؟ غير معلن)
 2024: Claude 3, Gemini 1.5
-2025: GPT-4o, Claude 3.5
-2026: GPT-5, Claude 4 (متوقع)
+2025: GPT-5, Claude 4, Gemini 2.5
+2026: GPT-5.5, Claude Opus 4.8 / Fable 5, Gemini 3.1 Pro
 
 ↳ كل جيل أذكى من السابق!`
             }
@@ -781,23 +782,4 @@ User: "رأسي يؤلمني"
 // دالة البحث عن مصطلح
 export function getGlossaryTerm(termId: string): GlossaryTerm | undefined {
     return glossaryData[termId];
-}
-
-// دالة الحصول على جميع المصطلحات بفئة معينة
-export function getTermsByCategory(category: GlossaryTerm['category']): GlossaryTerm[] {
-    return Object.values(glossaryData).filter(term => term.category === category);
-}
-
-// قائمة المصطلحات للبحث السريع (للتطبيق التلقائي على النصوص)
-export const glossaryTermsList = Object.keys(glossaryData);
-
-// دالة للبحث عن مصطلح بالاسم العربي أو الإنجليزي
-export function findTermByName(name: string): GlossaryTerm | undefined {
-    const lowercaseName = name.toLowerCase();
-    return Object.values(glossaryData).find(
-        term => 
-            term.term === name || 
-            term.termEn.toLowerCase() === lowercaseName ||
-            term.id === lowercaseName
-    );
 }

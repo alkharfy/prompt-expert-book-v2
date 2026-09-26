@@ -34,6 +34,15 @@ Cinematic isometric 3D scene showing the Self-Consistency technique. A central A
 
 ---
 
+## Image 3b: unit-5/3b.webp
+### المنهج العلمي للتصحيح
+
+```
+Cinematic isometric 3D scene showing the Scientific Debugging Method. A circular workflow diagram with 5 connected stations: (1) OBSERVE - magnifying glass with Arabic "لاحظ", (2) HYPOTHESIZE - lightbulb with Arabic "افترض", (3) ISOLATE - single variable highlighted with Arabic "اعزل", (4) TEST - beaker/experiment with Arabic "اختبر", (5) DOCUMENT - notebook with Arabic "وثّق". Ahmed stands at a lab bench going through the cycle while Sarah guides him. A debug log book is prominently shown. The scene emphasizes systematic, methodical approach vs chaotic random changes. Color palette: #050505, #FF6B35, #FFB800. Ultra-detailed, 8K quality.
+```
+
+---
+
 ## Image 4: unit-5/4.webp
 ### إطار ReAct للتصحيح
 
@@ -66,6 +75,15 @@ Cinematic isometric 3D visualization of Tree of Thoughts technique. A literal gl
 
 ```
 Cinematic isometric 3D scene showing Context Engineering as a control room. A large central display shows "CONTEXT BUDGET: 8000 tokens" with a pie chart divided into: System Prompt (20%), User Input (15%), Retrieved Data (35%), History (25%), Examples (5%). Sarah operates a mixing console with sliders for each component. Ahmed observes pie slices moving as she adjusts. The concept of budgeting and managing context is visualized as resource allocation. Floating year: "2025". Color palette: #050505 background, #FF6B35 and #FFB800 for chart segments. Ultra-detailed, 8K quality.
+```
+
+---
+
+## Image 7b: unit-5/7b.webp
+### النافذة المنزلقة الذكية
+
+```
+Cinematic isometric 3D visualization of the Smart Sliding Window technique. A long conversation thread (50 messages) shown as a vertical scroll. The visualization shows: TOP (green, fixed) - "First 2 messages" labeled "الهدف الأصلي", MIDDLE (compressed, orange) - "Summarized to 3-5 points" labeled "ملخص", BOTTOM (blue, fixed) - "Last 5 messages" labeled "السياق الفوري". Arrows show compression of middle section. Ahmed and Sarah observe the smart compression process. Memory optimization concept clearly visualized. Color palette: #050505, #FF6B35, #FFB800. Ultra-detailed, 8K quality.
 ```
 
 ---
@@ -113,14 +131,16 @@ Cinematic isometric 3D celebration scene. Ahmed and Sarah stand together in a pr
 ## Folder Structure
 ```
 public/assets/content/unit-5/
-├── 1.webp  (مشكلة المشروع)
-├── 2.webp  (تصنيف الفشل)
-├── 3.webp  (Self-Consistency)
-├── 4.webp  (ReAct)
-├── 5.webp  (Structured Outputs)
-├── 6.webp  (Tree of Thoughts)
-├── 7.webp  (Context Engineering)
-├── 8.webp  (Meta-Prompting)
-├── 9.webp  (Prompt Injection)
-└── 10.webp (إتمام الوحدة)
+├── 1.webp   (مشكلة المشروع)
+├── 2.webp   (تصنيف الفشل)
+├── 3.webp   (Self-Consistency)
+├── 3b.webp  (المنهج العلمي للتصحيح)
+├── 4.webp   (ReAct)
+├── 5.webp   (Structured Outputs)
+├── 6.webp   (Tree of Thoughts)
+├── 7.webp   (Context Engineering)
+├── 7b.webp  (النافذة المنزلقة الذكية)
+├── 8.webp   (Meta-Prompting)
+├── 9.webp   (Prompt Injection)
+└── 10.webp  (إتمام الوحدة)
 ```

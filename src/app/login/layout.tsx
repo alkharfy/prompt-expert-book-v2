@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: 'تسجيل الدخول | خبير التوجيهات الذكية',
-    description: 'سجّل دخولك لمتابعة رحلة تعلم صياغة البرومبتات الذكية.',
+    title: 'تسجيل الدخول | PromptMaster',
+    description: 'سجّل دخولك لمتابعة رحلتك في احتراف هندسة البرومبت والذكاء الاصطناعي.',
 }
 
 export default function LoginLayout({

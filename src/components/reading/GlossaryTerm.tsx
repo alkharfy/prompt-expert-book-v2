@@ -29,6 +29,7 @@ export default function GlossaryTerm({ termId, children, displayText }: Glossary
 
     // Wait for client-side mount to use portal
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- portal mount detection requires client-side check
         setIsMounted(true);
     }, []);
 

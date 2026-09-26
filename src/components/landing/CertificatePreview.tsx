@@ -17,7 +17,7 @@ export default function CertificatePreview() {
                         <span className="section-badge">🎓 شهادة معتمدة</span>
                         <h2 className="section-title">احصل على شهادة إتمام</h2>
                         <p className="section-description">
-                            عند إتمامك للكتاب بنسبة 100%، تحصل على شهادة معتمدة من &quot;خبير البرومبتات&quot;
+                            عند إتمامك لـ PromptMaster بنسبة 100%، تحصل على شهادة معتمدة
                             برقم فريد قابل للتحقق ورابط عام للمشاركة على LinkedIn ومنصات التواصل.
                         </p>
 
@@ -31,8 +31,8 @@ export default function CertificatePreview() {
                                 رابط عام للمشاركة
                             </li>
                             <li>
-                                <span className="feature-icon">📄</span>
-                                قابلة للتحميل PDF
+                                <span className="feature-icon">🖼️</span>
+                                قابلة للتحميل كصورة PNG
                             </li>
                             <li>
                                 <span className="feature-icon">📱</span>
@@ -56,24 +56,24 @@ export default function CertificatePreview() {
                             <div className="certificate-inner">
                                 <div className="certificate-border">
                                     <div className="certificate-header">
-                                        <div className="logo-text">خبير البرومبتات</div>
+                                        <div className="logo-text">PromptMaster</div>
                                         <div className="certificate-type">شهادة إتمام</div>
                                     </div>
 
                                     <div className="certificate-body">
                                         <p className="cert-text">يُشهد بأن</p>
-                                        <h3 className="cert-name">[ اسمك هنا ]</h3>
+                                        <h3 className="cert-name">محمد أحمد</h3>
                                         <p className="cert-text">قد أتم بنجاح</p>
                                         <p className="course-name">بناء المواقع والتطبيقات بالذكاء الاصطناعي</p>
                                     </div>
 
                                     <div className="certificate-footer">
-                                        <div className="cert-date">التاريخ: يناير 2026</div>
+                                        <div className="cert-date">التاريخ: فبراير 2026</div>
                                         <div className="cert-signature">
                                             <span className="signature">التوقيع الرقمي</span>
-                                            <span className="signer">خبير البرومبتات</span>
+                                            <span className="signer">PromptMaster</span>
                                         </div>
-                                        <div className="cert-id">CERT-2026-XXXXXX</div>
+                                        <div className="cert-id">CERT-2026-PM8X4K</div>
                                     </div>
 
                                     <div className="qr-placeholder">

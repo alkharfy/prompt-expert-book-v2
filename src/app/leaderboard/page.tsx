@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
+import ShareButton from '@/components/sharing/ShareButton'
 import { supabase } from '@/lib/supabase'
 import { authSystem } from '@/lib/auth_system'
 import { dbLogger } from '@/lib/logger'
@@ -222,6 +223,20 @@ export default function LeaderboardPage() {
                             <div className="user-rank-level">
                                 المستوى {userRank.current_level}
                             </div>
+                            <ShareButton
+                                type="streak"
+                                data={{
+                                    type: 'streak',
+                                    title: `الترتيب #${userRank.rank} في لوحة المتصدرين`,
+                                    subtitle: getDisplayValue(userRank),
+                                    icon: getRankIcon(userRank.rank),
+                                    stats: [
+                                        { label: 'نقطة', value: userRank.total_points },
+                                        { label: 'يوم streak', value: userRank.current_streak },
+                                    ],
+                                }}
+                                variant="icon"
+                            />
                         </motion.div>
                     )}
 

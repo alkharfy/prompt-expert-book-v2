@@ -31,6 +31,7 @@ export default function PromoBanner() {
         }, 1000)
 
         // Initial calculation
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- synchronizes timer with external clock before interval fires
         setTimeLeft(getPromoTimeRemaining(promo.end_date))
 
         return () => clearInterval(timer)

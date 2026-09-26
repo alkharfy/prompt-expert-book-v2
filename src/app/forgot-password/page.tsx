@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
                 subtitle="أدخل بريدك الإلكتروني للحصول على رمز التحقق"
             >
                 {status && (
-                    <div className={status.type === 'error' ? 'auth-global-error' : 'auth-global-success'}>
+                    <div className={status.type === 'error' ? 'auth-global-error' : 'auth-global-success'} role="alert">
                         {status.message}
                     </div>
                 )}

@@ -3,22 +3,14 @@
  * دوال آمنة لهاش والتحقق من كلمات المرور باستخدام bcrypt
  */
 
-import bcrypt from 'bcryptjs'
-
-// عدد جولات التشفير (12 هو توازن جيد بين الأمان والسرعة)
+// bcryptjs is loaded ONLY inside the (server-side, already-async) hash/verify
+// functions via dynamic import, so it is never pulled into the client first-load
+// bundle by the many client components that transitively import auth_system.
 const SALT_ROUNDS = 12
 
 // الحد الأقصى لطول كلمة المرور (لمنع DOS attacks على bcrypt)
 // bcrypt يعالج فقط أول 72 bytes، لكن نحد أكثر للأمان
-export const MAX_PASSWORD_LENGTH = 128
-export const MIN_PASSWORD_LENGTH = 6
-
-/**
- * التحقق من طول كلمة المرور
- */
-export function isValidPasswordLength(password: string): boolean {
-    return password.length >= MIN_PASSWORD_LENGTH && password.length <= MAX_PASSWORD_LENGTH
-}
+const MAX_PASSWORD_LENGTH = 128
 
 /**
  * هاش كلمة المرور باستخدام bcrypt
@@ -30,6 +22,7 @@ export async function hashPassword(password: string): Promise<string> {
     if (password.length > MAX_PASSWORD_LENGTH) {
         throw new Error('Password too long')
     }
+    const bcrypt = (await import('bcryptjs')).default
     return bcrypt.hash(password, SALT_ROUNDS)
 }
 
@@ -40,6 +33,11 @@ export async function hashPassword(password: string): Promise<string> {
  * @returns true إذا تطابقت
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+    // SECURITY: Reject overly long passwords to prevent DoS on bcrypt
+    if (!password || password.length > MAX_PASSWORD_LENGTH) {
+        return false
+    }
+    const bcrypt = (await import('bcryptjs')).default
     return bcrypt.compare(password, hash)
 }
 
@@ -55,9 +53,13 @@ export function isBcryptHash(hash: string): boolean {
  * ⚠️ لا تستخدم هذا للهاشات الجديدة!
  */
 export async function legacySha256Hash(password: string): Promise<string> {
-    const encoder = new TextEncoder()
-    const data = encoder.encode(password)
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+        const encoder = new TextEncoder()
+        const data = encoder.encode(password)
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    }
+    // crypto.subtle is available in all modern runtimes (Node 15+, all browsers)
+    throw new Error('crypto.subtle is not available. Cannot compute SHA-256 hash.')
 }

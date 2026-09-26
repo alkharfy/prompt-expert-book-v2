@@ -1,3 +1,13 @@
+/**
+ * Testimonials module
+ * 
+ * ℹ️ NOTE: This module uses the anon-key Supabase client intentionally.
+ * It is imported by client components (Testimonials landing, billing/admin/testimonials).
+ * Switching to service_role would expose the key in the client bundle.
+ * Ensure testimonials table has appropriate RLS policies:
+ * - Public read for visible testimonials
+ * - Admin-only write via RLS or authenticated role checks
+ */
 import { supabase } from './supabase'
 import { dbLogger } from './logger'
 
@@ -14,7 +24,7 @@ export interface Testimonial {
     updated_at: string
 }
 
-export interface TestimonialInput {
+interface TestimonialInput {
     name: string
     title?: string
     photo_url?: string
@@ -119,21 +129,6 @@ export async function toggleTestimonialVisibility(id: string, isVisible: boolean
     const { error } = await (supabase
         .from('testimonials') as unknown as { update: (data: unknown) => { eq: (col: string, val: string) => Promise<{ error: unknown }> } })
         .update({ is_visible: isVisible, updated_at: new Date().toISOString() })
-        .eq('id', id)
-
-    if (error) {
-        dbLogger.error('Error', error)
-        return false
-    }
-
-    return true
-}
-
-// Update display order
-export async function updateTestimonialOrder(id: string, order: number): Promise<boolean> {
-    const { error } = await (supabase
-        .from('testimonials') as unknown as { update: (data: unknown) => { eq: (col: string, val: string) => Promise<{ error: unknown }> } })
-        .update({ display_order: order, updated_at: new Date().toISOString() })
         .eq('id', id)
 
     if (error) {

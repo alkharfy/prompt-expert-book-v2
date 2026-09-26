@@ -1,0 +1,611 @@
+/* ============================================
+   Payment Page Styles
+   ============================================ */
+
+.payment-page {
+    width: 100%;
+    max-width: 800px;
+    padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+.payment-header {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.payment-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-sm);
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.payment-title {
+    font-size: var(--font-size-4xl);
+    font-weight: 800;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.payment-subtitle {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-base);
+}
+
+/* ============================================
+   Plans Grid
+   ============================================ */
+
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.plan-card {
+    position: relative;
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl) var(--spacing-lg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.plan-card:hover {
+    border-color: rgba(255, 107, 53, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.plan-card.selected {
+    border-color: var(--color-orange-primary);
+    background: rgba(255, 107, 53, 0.05);
+    box-shadow: 0 0 25px rgba(255, 107, 53, 0.15);
+}
+
+.plan-card.popular {
+    border-color: rgba(255, 107, 53, 0.3);
+}
+
+.popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--color-orange-primary), var(--color-orange-glow));
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.plan-name {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.plan-price {
+    margin-bottom: var(--spacing-lg);
+}
+
+.price-amount {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--color-orange-primary);
+    line-height: 1;
+}
+
+.price-currency {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    margin-right: 4px;
+}
+
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--spacing-lg) 0;
+    text-align: right;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    padding: 6px 0;
+}
+
+.plan-features li svg {
+    color: var(--color-orange-primary);
+    flex-shrink: 0;
+}
+
+.plan-radio {
+    display: flex;
+    justify-content: center;
+}
+
+.radio-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.radio-dot.active {
+    border-color: var(--color-orange-primary);
+}
+
+.radio-dot.active::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-orange-primary);
+}
+
+/* ============================================
+   Payment Summary
+   ============================================ */
+
+.payment-summary {
+    background: rgba(10, 10, 10, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.summary-row.total {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.summary-value {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.summary-row.total .summary-value {
+    color: var(--color-orange-primary);
+}
+
+/* ============================================
+   Payment Button
+   ============================================ */
+
+.payment-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: linear-gradient(135deg, var(--color-orange-primary), var(--color-orange-dark));
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    font-family: var(--font-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+.payment-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+}
+
+.payment-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.payment-btn-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.payment-secure {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: var(--spacing-md);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+}
+
+/* ============================================
+   WhatsApp Support Button
+   ============================================ */
+
+.whatsapp-support {
+    text-align: center;
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: rgba(37, 211, 102, 0.05);
+    border: 1px solid rgba(37, 211, 102, 0.2);
+    border-radius: var(--radius-lg);
+}
+
+.whatsapp-support-text {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin: 0 0 var(--spacing-xs) 0;
+}
+
+.whatsapp-support-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    background: #25D366;
+    color: white;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-family: var(--font-primary);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-support-btn:hover {
+    background: #1da851;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+}
+
+/* ============================================
+   Callback Page
+   ============================================ */
+
+.callback-card {
+    width: 100%;
+    max-width: 500px;
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 107, 53, 0.2);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.callback-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--spacing-md);
+}
+
+.callback-spinner {
+    width: 60px;
+    height: 60px;
+    position: relative;
+}
+
+.spinner-ring {
+    width: 100%;
+    height: 100%;
+    border: 3px solid rgba(255, 107, 53, 0.2);
+    border-top-color: var(--color-orange-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.callback-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: scaleIn 0.5s ease;
+}
+
+.callback-icon.success {
+    background: rgba(46, 213, 115, 0.1);
+    border: 2px solid rgba(46, 213, 115, 0.3);
+    color: #2ed573;
+}
+
+.callback-icon.failed {
+    background: rgba(255, 77, 77, 0.1);
+    border: 2px solid rgba(255, 77, 77, 0.3);
+    color: #ff4d4d;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.callback-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+.callback-title.success-text {
+    color: #2ed573;
+}
+
+.callback-title.failed-text {
+    color: #ff4d4d;
+}
+
+.callback-text {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+}
+
+.callback-redirect-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: var(--spacing-sm);
+}
+
+.redirect-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #2ed573, #7bed9f);
+    border-radius: 2px;
+    animation: progressFill 2.5s ease forwards;
+}
+
+@keyframes progressFill {
+    from {
+        width: 0%;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+.callback-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+    margin-top: var(--spacing-md);
+}
+
+.callback-btn-secondary {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-base);
+    font-family: var(--font-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.callback-btn-secondary:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--color-text-primary);
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 768px) {
+    .plans-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .plan-card {
+        padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    .payment-title {
+        font-size: var(--font-size-3xl);
+    }
+
+    .price-amount {
+        font-size: 2rem;
+    }
+
+    .callback-card {
+        padding: var(--spacing-xl);
+    }
+}
+
+@media (max-width: 480px) {
+    .payment-page {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+
+    .payment-title {
+        font-size: var(--font-size-2xl);
+    }
+}
+
+/* ============================================
+   Promo Code Section
+   ============================================ */
+
+.promo-section {
+    background: rgba(10, 10, 10, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.promo-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+}
+
+.promo-icon {
+    font-size: 1.1rem;
+}
+
+.promo-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.promo-input {
+    flex: 1;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-family: monospace;
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.08em;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.promo-input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.6;
+    font-family: var(--font-primary);
+}
+
+.promo-input:focus {
+    border-color: rgba(255, 107, 53, 0.5);
+}
+
+.promo-apply-btn {
+    padding: 10px 20px;
+    background: rgba(255, 107, 53, 0.15);
+    border: 1px solid rgba(255, 107, 53, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--color-orange-primary);
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.promo-apply-btn:hover:not(:disabled) {
+    background: rgba(255, 107, 53, 0.25);
+}
+
+.promo-apply-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.promo-applied {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: var(--radius-md);
+    gap: 10px;
+}
+
+.promo-applied-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.promo-check {
+    font-size: 1.2rem;
+}
+
+.promo-remove-btn {
+    padding: 6px 14px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--radius-md);
+    color: #f87171;
+    font-weight: 600;
+    font-size: 0.75rem;
+    font-family: var(--font-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.promo-remove-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.promo-error {
+    margin: 8px 0 0;
+    font-size: 0.8rem;
+    color: #f87171;
+}
+
+.summary-row.discount {
+    color: #10b981;
+}
+
+.summary-row .discount-value {
+    color: #10b981 !important;
+    font-weight: 700;
+}

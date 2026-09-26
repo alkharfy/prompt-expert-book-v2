@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
+import { supabaseProxy as supabase } from '@/lib/supabase_proxy'
 import { authSystem } from '@/lib/auth_system'
 import { onExerciseComplete } from '@/lib/gamification'
 import { dbLogger } from '@/lib/logger'
@@ -186,12 +186,12 @@ export default function FillInBlank({
 
     // تحويل النص مع الفراغات إلى عناصر
     const renderTextWithInputs = () => {
-        const parts = textWithBlanks.split(/(\{\{[^}]+\}\})/)
+        const parts = textWithBlanks.split(/(\[[^\]]+\]|\{\{[^}]+\}\})/)
         
         return parts.map((part, index) => {
-            const match = part.match(/\{\{([^}]+)\}\}/)
+            const match = part.match(/\[([^\]]+)\]|\{\{([^}]+)\}\}/)
             if (match) {
-                const blankId = match[1]
+                const blankId = match[1] || match[2]
                 const blank = blanks.find(b => b.id === blankId)
                 if (!blank) return null
 

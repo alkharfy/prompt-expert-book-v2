@@ -7,8 +7,13 @@ import Navigation from '@/components/Navigation'
 import QuizQuestion from '@/components/exercises/QuizQuestion'
 import FillInBlank from '@/components/exercises/FillInBlank'
 import PromptBuilder from '@/components/exercises/PromptBuilder'
+import FeatureGate from '@/components/FeatureGate'
+import ProgressDashboard from '@/components/exercises/ProgressDashboard'
 import { allExercises, sectionInfo, ExerciseData } from '@/data/exercisesData'
-import { supabase } from '@/lib/supabase'
+import { useLearning } from '@/context/LearningContext'
+import { hasSpecContent } from '@/data/specializationContent'
+import { getSpecialization } from '@/data/specializations'
+import { supabaseProxy as supabase } from '@/lib/supabase_proxy'
 import { authSystem } from '@/lib/auth_system'
 import { dbLogger } from '@/lib/logger'
 
@@ -20,9 +25,11 @@ interface UserStats {
 
 export default function ExercisesPage() {
     const router = useRouter()
+    const { preferences: learningPrefs } = useLearning()
     const [isLoading, setIsLoading] = useState(true)
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [selectedSection, setSelectedSection] = useState<string | null>(null)
+    const [activeTab, setActiveTab] = useState<'exercises' | 'progress'>('exercises')
     const [userStats, setUserStats] = useState<UserStats | null>(null)
     const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set())
     const [sectionProgress, setSectionProgress] = useState<Record<string, number>>({})
@@ -181,8 +188,9 @@ export default function ExercisesPage() {
     return (
         <>
             <Navigation />
-            <main className="exercises-page">
-                <div className="container">
+            <FeatureGate feature="exercises">
+                <main className="exercises-page">
+                    <div className="container">
                     {/* Header */}
                     <motion.div 
                         className="exercises-header"
@@ -217,19 +225,91 @@ export default function ExercisesPage() {
                         </div>
                     </motion.div>
 
+                    {/* Tab Switcher */}
+                    {!selectedSection && (
+                        <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            justifyContent: 'center',
+                            marginBottom: '24px',
+                        }}>
+                            <button
+                                onClick={() => setActiveTab('exercises')}
+                                style={{
+                                    padding: '10px 24px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: 600,
+                                    fontSize: '0.95rem',
+                                    fontFamily: 'inherit',
+                                    background: activeTab === 'exercises'
+                                        ? 'linear-gradient(135deg, #ff6b35, #ff8c42)'
+                                        : 'rgba(255,255,255,0.06)',
+                                    color: activeTab === 'exercises' ? '#fff' : 'rgba(255,255,255,0.5)',
+                                    transition: 'all 0.2s',
+                                }}
+                            >
+                                التمارين
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('progress')}
+                                style={{
+                                    padding: '10px 24px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontWeight: 600,
+                                    fontSize: '0.95rem',
+                                    fontFamily: 'inherit',
+                                    background: activeTab === 'progress'
+                                        ? 'linear-gradient(135deg, #ff6b35, #ff8c42)'
+                                        : 'rgba(255,255,255,0.06)',
+                                    color: activeTab === 'progress' ? '#fff' : 'rgba(255,255,255,0.5)',
+                                    transition: 'all 0.2s',
+                                }}
+                            >
+                                تقدمي
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Progress Dashboard Tab */}
+                    {activeTab === 'progress' && !selectedSection && (
+                        <ProgressDashboard
+                            userStats={userStats}
+                            completedExercises={completedExercises}
+                            sectionProgress={sectionProgress}
+                            onSectionClick={(sectionId) => {
+                                setSelectedSection(sectionId)
+                                setActiveTab('exercises')
+                            }}
+                        />
+                    )}
+
                     {/* Section Selection or Exercises */}
-                    {!selectedSection ? (
+                    {activeTab === 'exercises' && !selectedSection ? (
                         // Section Cards
                         <div className="sections-grid">
-                            {Object.entries(sectionInfo).map(([sectionId, info], index) => {
+                            {Object.entries(sectionInfo)
+                                .sort(([aId], [bId]) => {
+                                    // Sort specialization-matching sections first
+                                    if (!learningPrefs?.specialization) return 0
+                                    const aHas = hasSpecContent(aId) ? -1 : 0
+                                    const bHas = hasSpecContent(bId) ? -1 : 0
+                                    return aHas - bHas
+                                })
+                                .map(([sectionId, info], index) => {
                                 const exercises = allExercises[sectionId] || []
                                 const progress = sectionProgress[sectionId] || 0
                                 const completedCount = exercises.filter(e => completedExercises.has(e.exerciseId)).length
+                                const isSpecSection = learningPrefs?.specialization && hasSpecContent(sectionId)
+                                const specInfo = learningPrefs?.specialization ? getSpecialization(learningPrefs.specialization) : null
 
                                 return (
                                     <motion.div
                                         key={sectionId}
-                                        className="section-card"
+                                        className={`section-card${isSpecSection ? ' spec-highlight' : ''}`}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: index * 0.1 }}
@@ -237,6 +317,9 @@ export default function ExercisesPage() {
                                         whileHover={{ scale: 1.02, y: -5 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
+                                        {isSpecSection && specInfo && (
+                                            <span className="spec-badge">{specInfo.icon} تخصصك</span>
+                                        )}
                                         <div className="section-icon">{info.icon}</div>
                                         <h3>{info.title}</h3>
                                         <div className="section-meta">
@@ -259,11 +342,21 @@ export default function ExercisesPage() {
                                         {progress === 100 && (
                                             <span className="section-complete-badge">✅ مكتمل</span>
                                         )}
+
+                                        <span
+                                            className="read-chapter-link"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                router.push(`/read/${sectionId}/1`)
+                                            }}
+                                        >
+                                            📖 اقرأ الفصل
+                                        </span>
                                     </motion.div>
                                 )
                             })}
                         </div>
-                    ) : (
+                    ) : selectedSection ? (
                         // Exercises List
                         <div className="exercises-section">
                             <motion.button
@@ -275,7 +368,7 @@ export default function ExercisesPage() {
                                 → العودة للأقسام
                             </motion.button>
 
-                            <motion.div 
+                            <motion.div
                                 className="section-header"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -285,13 +378,13 @@ export default function ExercisesPage() {
                                 </span>
                                 <h2>{sectionInfo[selectedSection]?.title}</h2>
                                 <p>
-                                    {allExercises[selectedSection]?.length} تمارين • 
+                                    {allExercises[selectedSection]?.length} تمارين •
                                     {sectionInfo[selectedSection]?.totalPoints} نقطة
                                 </p>
                             </motion.div>
 
                             <div className="exercises-list">
-                                {allExercises[selectedSection]?.map((exercise, index) => (
+                                {allExercises[selectedSection]?.map((exercise: ExerciseData, index: number) => (
                                     <motion.div
                                         key={exercise.exerciseId}
                                         initial={{ opacity: 0, y: 20 }}
@@ -303,9 +396,10 @@ export default function ExercisesPage() {
                                 ))}
                             </div>
                         </div>
-                    )}
+                    ) : null}
                 </div>
             </main>
+            </FeatureGate>
         </>
     )
 }

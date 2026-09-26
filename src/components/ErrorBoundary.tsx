@@ -38,62 +38,47 @@ class ErrorBoundary extends Component<Props, State> {
             }
 
             return (
-                <div className="error-boundary">
-                    <div className="error-boundary-content">
-                        <div className="error-icon">⚠️</div>
-                        <h2>عذراً، حدث خطأ غير متوقع</h2>
-                        <p>نعتذر عن هذا الإزعاج. يرجى تحديث الصفحة أو المحاولة لاحقاً.</p>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '400px',
+                    padding: '2rem',
+                }}>
+                    <div style={{
+                        textAlign: 'center',
+                        background: '#1a1a1a',
+                        padding: '3rem',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255, 107, 53, 0.2)',
+                        maxWidth: '500px',
+                    }}>
+                        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⚠️</div>
+                        <h2 style={{
+                            color: '#FF6B35',
+                            marginBottom: '1rem',
+                            fontSize: '1.5rem',
+                        }}>عذراً، حدث خطأ غير متوقع</h2>
+                        <p style={{
+                            color: '#b0b0b0',
+                            marginBottom: '1.5rem',
+                        }}>نعتذر عن هذا الإزعاج. يرجى تحديث الصفحة أو المحاولة لاحقاً.</p>
                         <button 
                             onClick={() => window.location.reload()}
-                            className="error-reload-btn"
+                            style={{
+                                background: '#FF6B35',
+                                color: 'white',
+                                border: 'none',
+                                padding: '0.75rem 2rem',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                transition: 'all 0.3s ease',
+                            }}
                         >
                             تحديث الصفحة
                         </button>
                     </div>
-                    <style jsx>{`
-                        .error-boundary {
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            min-height: 400px;
-                            padding: 2rem;
-                        }
-                        .error-boundary-content {
-                            text-align: center;
-                            background: var(--color-bg-card, #1a1a1a);
-                            padding: 3rem;
-                            border-radius: 16px;
-                            border: 1px solid rgba(255, 107, 53, 0.2);
-                            max-width: 500px;
-                        }
-                        .error-icon {
-                            font-size: 4rem;
-                            margin-bottom: 1rem;
-                        }
-                        h2 {
-                            color: var(--color-orange-primary, #FF6B35);
-                            margin-bottom: 1rem;
-                            font-size: 1.5rem;
-                        }
-                        p {
-                            color: var(--color-text-secondary, #b0b0b0);
-                            margin-bottom: 1.5rem;
-                        }
-                        .error-reload-btn {
-                            background: var(--color-orange-primary, #FF6B35);
-                            color: white;
-                            border: none;
-                            padding: 0.75rem 2rem;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-size: 1rem;
-                            transition: all 0.3s ease;
-                        }
-                        .error-reload-btn:hover {
-                            transform: translateY(-2px);
-                            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
-                        }
-                    `}</style>
                 </div>
             )
         }

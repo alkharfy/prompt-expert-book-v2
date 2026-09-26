@@ -32,7 +32,7 @@ class DeviceFingerprint {
             userAgent: navigator.userAgent,
             language: navigator.language,
             languages: Array.from(navigator.languages || [navigator.language]),
-            platform: navigator.platform,
+            platform: (navigator as any).userAgentData?.platform || navigator.platform || 'unknown',
             screenResolution: `${screen.width}x${screen.height}`,
             colorDepth: screen.colorDepth,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -133,12 +133,22 @@ class DeviceFingerprint {
      * @returns Hexadecimal hash string
      */
     async hashString(str: string): Promise<string> {
-        const encoder = new TextEncoder()
-        const data = encoder.encode(str)
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-        const hashArray = Array.from(new Uint8Array(hashBuffer))
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-        return hashHex
+        // crypto.subtle is only available in secure contexts (HTTPS / localhost)
+        if (typeof crypto !== 'undefined' && crypto.subtle) {
+            const encoder = new TextEncoder()
+            const data = encoder.encode(str)
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+            const hashArray = Array.from(new Uint8Array(hashBuffer))
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+        }
+        // Fallback: simple hash for non-secure contexts (dev HTTP)
+        let hash = 0
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i)
+            hash = ((hash << 5) - hash) + char
+            hash |= 0
+        }
+        return 'fb-' + Math.abs(hash).toString(16).padStart(8, '0')
     }
 
     /**
@@ -146,7 +156,11 @@ class DeviceFingerprint {
      * @returns A unique random ID
      */
     generateDeviceId(): string {
-        return 'device_' + crypto.randomUUID()
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return 'device_' + crypto.randomUUID()
+        }
+        // Fallback for non-secure contexts
+        return 'device_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 10)
     }
 }
 

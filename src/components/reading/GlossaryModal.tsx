@@ -22,6 +22,7 @@ export default function GlossaryModal({ term, isOpen, onClose }: GlossaryModalPr
     }, []);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- reset tab state when modal reopens
         if (isOpen) setActiveTab('explanation');
     }, [isOpen]);
 
