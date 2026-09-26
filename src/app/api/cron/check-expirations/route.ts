@@ -86,14 +86,16 @@ export async function GET(request: NextRequest) {
             throw updateError
         }
 
-        // 5. تحديث users.current_plan إلى null (اختياري)
-        // يمكن تركه كما هو للـ grace period أو إزالته
+        // Clear only an expired user term. An older expired subscription must
+        // not revoke a renewal/upgrade that is still active.
         const userIds = expiredSubs.map((sub: any) => sub.user_id)
 
-        await (supabase as any)
+        const { error: userUpdateError } = await (supabase as any)
             .from('users')
-            .update({ current_plan: null })
+            .update({ current_plan: null, plan_expires_at: null, is_active: false })
             .in('id', userIds)
+            .lt('plan_expires_at', now)
+        if (userUpdateError) throw userUpdateError
 
         dbLogger.info(`[Cron] Successfully expired ${expiredSubs.length} subscriptions`)
 

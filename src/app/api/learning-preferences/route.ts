@@ -1,3 +1,4 @@
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import {
   getLearningPreferences,
@@ -7,7 +8,7 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.cookies.get('ebook_user_id')?.value
+    const userId = await getAuthenticatedUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.cookies.get('ebook_user_id')?.value
+    const userId = await getAuthenticatedUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

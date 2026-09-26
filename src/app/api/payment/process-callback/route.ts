@@ -1,3 +1,4 @@
+import { activateStoredPayment, paymentAmountMatches } from '@/lib/payment-activation'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPaymentSession } from '@/lib/kashier'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
@@ -36,32 +37,6 @@ export async function POST(request: NextRequest) {
         }
 
         const supabase = getSupabaseAdmin()
-
-        // 1. Check if user already has a successful payment
-        const { data: existingSuccess } = await (supabase
-            .from('payments') as any)
-            .select('id, plan_id')
-            .eq('user_id', userId)
-            .eq('status', 'success')
-            .maybeSingle()
-
-        if (existingSuccess) {
-            dbLogger.info(`[process-callback] User ${userId} already has successful payment`)
-            // Re-query to get amount + plan for analytics. existingSuccess only had id, plan_id.
-            const { data: paid } = await (supabase.from('payments') as any)
-                .select('amount, plan_id, kashier_order_id')
-                .eq('id', existingSuccess.id)
-                .single()
-            return NextResponse.json({
-                success: true,
-                status: 'SUCCESS',
-                message: 'تم الدفع بنجاح مسبقاً',
-                userId,
-                amount: paid?.amount ?? null,
-                planId: paid?.plan_id ?? existingSuccess.plan_id,
-                orderId: paid?.kashier_order_id ?? null,
-            })
-        }
 
         // 2. Find the payment record
         let payment: any = null
@@ -123,6 +98,7 @@ export async function POST(request: NextRequest) {
 
         let verified = false
         let paymentMethod: string | null = null
+        let verifiedAmount: unknown
 
         // التحقق عبر Kashier API — المصدر الموثوق الوحيد
         // Retry up to 2 times with short delays (Kashier may lag behind redirect)
@@ -135,7 +111,8 @@ export async function POST(request: NextRequest) {
                 try {
                     const verifyResult = await verifyPaymentSession(payment.kashier_session_id)
                     if (verifyResult.ok && verifyResult.paid) {
-                        verified = true
+                        verified = paymentAmountMatches(verifyResult.data?.amount, payment.amount)
+                        verifiedAmount = verifyResult.data?.amount
                         paymentMethod = verifyResult.data?.method || null
                         dbLogger.info(`[process-callback] Kashier API confirms SUCCESS for session ${payment.kashier_session_id} (attempt ${i + 1})`)
                     } else {
@@ -160,6 +137,8 @@ export async function POST(request: NextRequest) {
             })
         }
 
+        if (!paymentAmountMatches(verifiedAmount, payment.amount)) return NextResponse.json({ success: false, error: 'مبلغ الدفع غير مطابق للطلب' }, { status: 400 })
+
         // 5. Mark payment as success
         const updateData: any = {
             status: 'success',
@@ -173,7 +152,7 @@ export async function POST(request: NextRequest) {
             .eq('id', payment.id)
 
         if (updateError) {
-            dbLogger.error('[process-callback] Payment update error:', updateError)
+            throw new Error('Payment status update failed')
         }
 
         // 6. Create subscription
@@ -236,73 +215,6 @@ export async function POST(request: NextRequest) {
 }
 
 async function ensureSubscription(supabase: any, userId: string, paymentId: string, planId: string) {
-    try {
-        // Check if subscription already exists for this payment
-        const { data: existingSub } = await (supabase as any)
-            .from('subscriptions')
-            .select('id')
-            .eq('payment_id', paymentId)
-            .maybeSingle()
-
-        if (existingSub) {
-            dbLogger.info(`[ensureSubscription] Subscription already exists for payment ${paymentId}`)
-            return
-        }
-
-        // For upgrades: deactivate any existing active subscriptions
-        const { data: activeSubs } = await (supabase as any)
-            .from('subscriptions')
-            .select('id, plan_id')
-            .eq('user_id', userId)
-            .eq('status', 'active')
-
-        if (activeSubs && activeSubs.length > 0) {
-            for (const sub of activeSubs) {
-                await (supabase as any)
-                    .from('subscriptions')
-                    .update({ status: 'upgraded', updated_at: new Date().toISOString() })
-                    .eq('id', sub.id)
-                dbLogger.info(`[ensureSubscription] Deactivated old subscription ${sub.id} (plan: ${sub.plan_id}) for upgrade`)
-            }
-        }
-
-        const startsAt = new Date()
-        const expiresAt = new Date(startsAt)
-        expiresAt.setDate(expiresAt.getDate() + 365)
-
-        // Create new subscription
-        const { error: subError } = await (supabase as any)
-            .from('subscriptions')
-            .insert({
-                user_id: userId,
-                plan_id: planId,
-                payment_id: paymentId,
-                status: 'active',
-                starts_at: startsAt.toISOString(),
-                expires_at: expiresAt.toISOString(),
-            })
-
-        if (subError) {
-            dbLogger.error('[ensureSubscription] Insert error:', subError)
-            return
-        }
-
-        // Update user's current_plan
-        const { error: userError } = await (supabase as any)
-            .from('users')
-            .update({
-                current_plan: planId,
-                plan_expires_at: expiresAt.toISOString(),
-                is_active: true,
-            })
-            .eq('id', userId)
-
-        if (userError) {
-            dbLogger.error('[ensureSubscription] User update error:', userError)
-        }
-
-        dbLogger.info(`[ensureSubscription] Created subscription for user ${userId}, plan ${planId}`)
-    } catch (err) {
-        dbLogger.error('[ensureSubscription] Unexpected error:', err)
-    }
+    const result = await activateStoredPayment(userId, paymentId, 'callback')
+    if (!result.ok) throw new Error(result.error || 'Subscription activation failed')
 }

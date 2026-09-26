@@ -1,5 +1,7 @@
 // Tests for POST/DELETE /api/resources/[id]/save
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+const { authSpy } = vi.hoisted(() => ({ authSpy: vi.fn() }))
+vi.mock('@/lib/auth-middleware', () => ({ getAuthenticatedUser: authSpy }))
 
 // Queue-based thenable mock for Supabase fluent chain
 const { mockFrom, pushResult, calls } = vi.hoisted(() => {
@@ -47,6 +49,7 @@ vi.mock('@supabase/supabase-js', () => ({
 import { POST, DELETE } from '@/app/api/resources/[id]/save/route'
 
 function createMockRequest(options?: { cookies?: Record<string, string> }) {
+  authSpy.mockResolvedValue(options?.cookies?.ebook_session_token === 'valid-session' ? options.cookies.ebook_user_id : null)
   return {
     cookies: {
       get: (name: string) => {
@@ -76,10 +79,16 @@ describe('POST /api/resources/[id]/save', () => {
     expect(data.error).toBe('Unauthorized')
   })
 
+  it('rejects a user-id cookie without a valid session', async () => {
+    const req = createMockRequest({ cookies: { ebook_user_id: 'victim-id' } })
+    expect((await POST(req, createMockParams('res-1'))).status).toBe(401)
+    expect(calls.findAll('upsert')).toHaveLength(0)
+  })
+
   it('should upsert save for authenticated user', async () => {
     pushResult({ error: null })
 
-    const req = createMockRequest({ cookies: { ebook_user_id: 'user-123' } })
+    const req = createMockRequest({ cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' } })
     const res = await POST(req, createMockParams('res-abc'))
     const data = await res.json()
 
@@ -95,7 +104,7 @@ describe('POST /api/resources/[id]/save', () => {
   it('should return 500 on database error', async () => {
     pushResult({ error: { message: 'Constraint violation' } })
 
-    const req = createMockRequest({ cookies: { ebook_user_id: 'user-123' } })
+    const req = createMockRequest({ cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' } })
     const res = await POST(req, createMockParams('bad-id'))
     const data = await res.json()
 
@@ -122,7 +131,7 @@ describe('DELETE /api/resources/[id]/save', () => {
   it('should delete save for authenticated user', async () => {
     pushResult({ error: null })
 
-    const req = createMockRequest({ cookies: { ebook_user_id: 'user-123' } })
+    const req = createMockRequest({ cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' } })
     const res = await DELETE(req, createMockParams('res-abc'))
     const data = await res.json()
 
@@ -135,7 +144,7 @@ describe('DELETE /api/resources/[id]/save', () => {
   it('should return 500 on database error', async () => {
     pushResult({ error: { message: 'Delete failed' } })
 
-    const req = createMockRequest({ cookies: { ebook_user_id: 'user-123' } })
+    const req = createMockRequest({ cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' } })
     const res = await DELETE(req, createMockParams('bad-id'))
     const data = await res.json()
 

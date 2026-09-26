@@ -1,3 +1,4 @@
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
@@ -6,7 +7,7 @@ const VALID_PLANS = ['basic', 'pro', 'vip']
 export async function POST(request: NextRequest) {
     try {
         // Get user ID from cookie
-        const userId = request.cookies.get('ebook_user_id')?.value
+        const userId = await getAuthenticatedUser()
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
@@ -36,11 +37,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: true, existing: true })
         }
 
-        await supabase.from('payment_intents').insert({
+        const { error: insertError } = await supabase.from('payment_intents').insert({
             user_id: userId,
             selected_plan: plan,
         })
 
+        if (insertError) return NextResponse.json({ error: 'تعذّر حفظ الطلب' }, { status: 500 })
         return NextResponse.json({ success: true })
     } catch {
         return NextResponse.json({ error: 'Internal error' }, { status: 500 })

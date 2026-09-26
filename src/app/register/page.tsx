@@ -155,7 +155,7 @@ function RegisterContent() {
             // SECURITY: Don't pass userId in URL — cookie is already set
             if (goingToPayment) {
                 trackFunnelStep('payment_intent', 5)
-                window.location.href = planParam ? `/payment?plan=${planParam}` : '/payment'
+                window.location.href = nextPath.startsWith('/payment') ? nextPath : `/payment?plan=${planParam || 'basic'}`
             } else {
                 window.location.href = '/onboarding'
             }
@@ -340,7 +340,7 @@ function RegisterContent() {
 
                 <div className="auth-footer">
                     <span>لديك حساب بالفعل؟ </span>
-                    <Link id="login-link" href={`/login${nextPath !== '/toc' ? `?next=${nextPath}` : ''}`}>
+                    <Link id="login-link" href={`/login${nextPath !== '/toc' ? `?next=${encodeURIComponent(nextPath)}` : ''}`}>
                         تسجيل الدخول
                     </Link>
                 </div>

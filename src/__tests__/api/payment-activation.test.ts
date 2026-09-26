@@ -1,101 +1,94 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-// ── Hoisted mocks ────────────────────────────────────────────────────────────
-const { alertSpy, h } = vi.hoisted(() => ({
-  alertSpy: vi.fn(),
-  h: { supabase: null as any },
-}))
-
+const { alertSpy, h } = vi.hoisted(() => ({ alertSpy: vi.fn(), h: { supabase: null as any } }))
 vi.mock('@/lib/alert', () => ({ alertMoneyPath: alertSpy }))
 vi.mock('@/lib/supabase-admin', () => ({ getSupabaseAdmin: () => h.supabase }))
 vi.mock('@/lib/logger', () => ({ dbLogger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } }))
+import { activatePaidSubscription, activateStoredPayment, paymentAmountMatches } from '@/lib/payment-activation'
 
-import { activatePaidSubscription } from '@/lib/payment-activation'
-
-interface MockOpts {
-  existingSub?: { id: string } | null
-  subInsertError?: { message: string } | null
-  userUpdateError?: { message: string } | null
+function makeSupabase(opts: { existingSub?: any; user?: any; payment?: any; insertError?: any; updateError?: any; lookupError?: any } = {}) {
+  const captured: { subInsert?: any; userUpdate?: any; filters: any[] } = { filters: [] }
+  return { captured, from(table: string) {
+    const chain: any = {
+      select: () => chain,
+      eq: (...args: any[]) => { captured.filters.push([table, ...args]); return chain },
+      maybeSingle: async () => ({ data: table === 'subscriptions' ? opts.existingSub ?? null : opts.user ?? { current_plan: null, plan_expires_at: null }, error: opts.lookupError ?? null }),
+      single: async () => ({ data: opts.payment ?? null, error: null }),
+      insert: async (row: any) => { captured.subInsert = row; return { error: opts.insertError ?? null } },
+      update: (row: any) => { captured.userUpdate = row; return chain },
+      then: (resolve: any) => Promise.resolve({ error: opts.updateError ?? null }).then(resolve),
+    }
+    return chain
+  } }
 }
-
-function makeSupabase(opts: MockOpts = {}) {
-  const captured: { subInsert?: any; userUpdate?: any } = {}
-  const eqResult: any = {
-    maybeSingle: async () => ({ data: opts.existingSub ?? null }),
-    single: async () => ({ data: opts.existingSub ?? null }),
-    // awaitable → resolves to { error } for the users.update(...).eq(...) chain
-    then: (resolve: (v: any) => void) => resolve({ error: opts.userUpdateError ?? null }),
-  }
-  const builder: any = {
-    select: () => builder,
-    eq: () => eqResult,
-    maybeSingle: async () => ({ data: opts.existingSub ?? null }),
-    insert: async (row: any) => { captured.subInsert = row; return { error: opts.subInsertError ?? null } },
-    update: (payload: any) => { captured.userUpdate = payload; return builder },
-  }
-  return { from: () => builder, captured }
-}
-
-describe('activatePaidSubscription (WS8)', () => {
-  beforeEach(() => {
-    alertSpy.mockClear()
+const input = { userId: 'u1', paymentId: 'p1', planId: 'pro', owedAmount: 499, paidAmount: '499.00', paidAt: '2026-09-26T00:00:00Z', source: 'verify' }
+const expiry = '2027-02-01T00:00:00.000Z'
+describe('verified activation and payment replay', () => {
+  beforeEach(() => { alertSpy.mockClear(); vi.useFakeTimers(); vi.setSystemTime(new Date('2026-09-26T00:00:00Z')) })
+  it('creates a one-year entitlement from the original payment date', async () => {
+    const db = makeSupabase(); h.supabase = db
+    expect((await activatePaidSubscription(input)).ok).toBe(true)
+    expect(db.captured.subInsert).toMatchObject({ user_id: 'u1', plan_id: 'pro', payment_id: 'p1', expires_at: '2027-09-26T00:00:00.000Z' })
+    expect(db.captured.userUpdate).toMatchObject({ is_active: true, is_verified: true })
   })
-
-  it('always sets is_active:true (+is_verified) and creates the subscription on a matching payment', async () => {
-    const mock = makeSupabase({ existingSub: null })
-    h.supabase = mock
-    const res = await activatePaidSubscription({
-      userId: 'u1', paymentId: 'p1', planId: 'pro', owedAmount: 199, paidAmount: 199, source: 'verify',
-    })
-    expect(res.ok).toBe(true)
-    expect(res.activated).toBe(true)
-    expect(mock.captured.subInsert).toMatchObject({ user_id: 'u1', plan_id: 'pro', payment_id: 'p1', status: 'active' })
-    expect(mock.captured.userUpdate).toMatchObject({ current_plan: 'pro', is_active: true, is_verified: true })
-    expect(alertSpy).not.toHaveBeenCalled()
+  it.each([null, undefined, '', 'garbage', '4.99', 99])('blocks an invalid or insufficient provider amount (%j)', async amount => {
+    const db = makeSupabase(); h.supabase = db
+    const result = await activatePaidSubscription({ ...input, paidAmount: amount })
+    expect(result).toMatchObject({ ok: false, blocked: true, error: 'amount_mismatch' })
+    expect(db.captured.subInsert).toBeUndefined()
+    expect(db.captured.userUpdate).toBeUndefined()
+    expect(alertSpy).toHaveBeenCalled()
   })
-
-  it('accepts Kashier string amounts ("199.00") without a false mismatch', async () => {
-    const mock = makeSupabase({ existingSub: null })
-    h.supabase = mock
-    const res = await activatePaidSubscription({
-      userId: 'u1', paymentId: 'p1', planId: 'pro', owedAmount: '199.00', paidAmount: '199.00', source: 'verify',
-    })
-    expect(res.ok).toBe(true)
-    expect(mock.captured.userUpdate.is_active).toBe(true)
-    expect(alertSpy).not.toHaveBeenCalled()
+  it('preserves the original expiry when the same payment is replayed', async () => {
+    const db = makeSupabase({ existingSub: { id: 's1', user_id: 'u1', plan_id: 'pro', status: 'active', expires_at: expiry } }); h.supabase = db
+    expect((await activatePaidSubscription(input)).alreadyActive).toBe(true)
+    expect(db.captured.subInsert).toBeUndefined()
+    expect(db.captured.userUpdate.plan_expires_at).toBe(expiry)
   })
-
-  it('underpayment: burn-in still activates BUT raises an amount_mismatch alert', async () => {
-    const mock = makeSupabase({ existingSub: null })
-    h.supabase = mock
-    const res = await activatePaidSubscription({
-      userId: 'u1', paymentId: 'p1', planId: 'pro', owedAmount: 199, paidAmount: 99, source: 'verify',
-    })
-    // Burn-in (ENFORCE_AMOUNT_GUARD=false): activation proceeds, mismatch is alerted.
-    expect(res.ok).toBe(true)
-    expect(mock.captured.userUpdate.is_active).toBe(true)
-    expect(alertSpy).toHaveBeenCalledWith('amount_mismatch', expect.objectContaining({ paid: 99, owed: 199, source: 'verify' }))
+  it.each(['expired', 'cancelled', 'other-owner'])('rejects an %s existing entitlement', async mode => {
+    const db = makeSupabase({ existingSub: { id: 's1', user_id: mode === 'other-owner' ? 'u2' : 'u1', plan_id: 'pro', status: mode === 'cancelled' ? 'cancelled' : 'active', expires_at: mode === 'expired' ? '2026-01-01' : expiry } }); h.supabase = db
+    expect((await activatePaidSubscription(input)).ok).toBe(false)
+    expect(db.captured.userUpdate).toBeUndefined()
   })
-
-  it('idempotent: an existing subscription is not re-inserted, but is_active is still ensured', async () => {
-    const mock = makeSupabase({ existingSub: { id: 'sub1' } })
-    h.supabase = mock
-    const res = await activatePaidSubscription({
-      userId: 'u1', paymentId: 'p1', planId: 'pro', owedAmount: 199, paidAmount: 199, source: 'reconcile',
-    })
-    expect(res.ok).toBe(true)
-    expect(res.alreadyActive).toBe(true)
-    expect(mock.captured.subInsert).toBeUndefined() // no duplicate insert
-    expect(mock.captured.userUpdate.is_active).toBe(true) // entitlement still ensured
+  it('cannot downgrade VIP when an old Pro payment is replayed', async () => {
+    const db = makeSupabase({ user: { current_plan: 'vip', plan_expires_at: expiry } }); h.supabase = db
+    expect((await activatePaidSubscription(input)).alreadyActive).toBe(true)
+    expect(db.captured.userUpdate).toBeUndefined()
   })
-
-  it('reports failure + alerts when the users.update errors', async () => {
-    const mock = makeSupabase({ existingSub: null, userUpdateError: { message: 'db down' } })
-    h.supabase = mock
-    const res = await activatePaidSubscription({
-      userId: 'u1', paymentId: 'p1', planId: 'pro', owedAmount: 199, paidAmount: 199, source: 'verify',
-    })
-    expect(res.ok).toBe(false)
-    expect(alertSpy).toHaveBeenCalledWith('user_activation_failed', expect.objectContaining({ userId: 'u1' }))
+  it('keeps the existing term on upgrade instead of adding another year', async () => {
+    const db = makeSupabase({ user: { current_plan: 'basic', plan_expires_at: expiry } }); h.supabase = db
+    expect((await activatePaidSubscription({ ...input, isUpgrade: true })).ok).toBe(true)
+    expect(db.captured.subInsert.expires_at).toBe(expiry)
+  })
+  it('restores the upgrade expiry recorded at checkout even if the user pointer changed', async () => {
+    const db = makeSupabase(); h.supabase = db
+    expect((await activatePaidSubscription({ ...input, isUpgrade: true, upgradeExpiresAt: expiry })).ok).toBe(true)
+    expect(db.captured.subInsert.expires_at).toBe(expiry)
+  })
+  it('reports a failed insert without granting access', async () => {
+    const db = makeSupabase({ insertError: { message: 'DB down' } }); h.supabase = db
+    expect((await activatePaidSubscription(input)).ok).toBe(false)
+    expect(db.captured.userUpdate).toBeUndefined()
+  })
+  it('reports a failed user update so callbacks can retry', async () => {
+    h.supabase = makeSupabase({ updateError: { message: 'DB down' } })
+    expect((await activatePaidSubscription(input)).error).toBe('user_update_failed')
+  })
+  it('fails closed when subscription lookup fails', async () => {
+    const db = makeSupabase({ lookupError: { message: 'DB down' } }); h.supabase = db
+    expect((await activatePaidSubscription(input)).ok).toBe(false)
+    expect(db.captured.subInsert).toBeUndefined()
+  })
+  it('checks stored payment ownership and paid status before activation', async () => {
+    const db = makeSupabase({ payment: { user_id: 'u2', plan_id: 'vip', status: 'success', amount: 999, paid_at: input.paidAt } }); h.supabase = db
+    expect((await activateStoredPayment('u1', 'p1', 'test')).error).toBe('payment_not_verified')
+    expect(db.captured.filters).toContainEqual(['payments', 'user_id', 'u1'])
+    expect(db.captured.subInsert).toBeUndefined()
+  })
+  it('rejects missing, zero and negative amounts, accepting only currency-scale rounding', () => {
+    expect(paymentAmountMatches('499.00', 499)).toBe(true)
+    expect(paymentAmountMatches(499.001, 499)).toBe(true)
+    expect(paymentAmountMatches(498.5, 499)).toBe(false)
+    expect(paymentAmountMatches(0, 0)).toBe(false)
+    expect(paymentAmountMatches(false, 499)).toBe(false)
   })
 })

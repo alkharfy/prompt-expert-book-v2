@@ -8,18 +8,13 @@ import { trackCtaClick } from '@/lib/analytics'
 import { dbLogger } from '@/lib/logger'
 
 function getResumeUrl(page: number): string {
-    if (page <= 6) return `/read/intro/${page}`
-    if (page <= 23) return `/read/section-1/${page - 6}`
-    if (page <= 41) return `/read/section-2/${page - 23}`
-    if (page <= 59) return `/read/section-3/${page - 41}`
-    if (page <= 77) return `/read/section-4/${page - 59}`
-    if (page <= 95) return `/read/section-5/${page - 77}`
-    if (page <= 115) return `/read/section-6/${page - 95}`
-    if (page <= 133) return `/read/section-7/${page - 115}`
-    if (page <= 149) return `/read/section-8/${page - 133}`
-    if (page <= 165) return `/read/section-9/${page - 149}`
-    if (page <= 182) return `/read/section-10/${page - 165}`
-    return `/read/glossary/${Math.max(1, page - 182)}`
+    const sections = [['/read/intro', 6], ['/read/section-1', 17], ['/read/section-2', 18], ['/read/section-3', 18], ['/read/section-4', 18], ['/read/section-5', 18], ['/read/section-6', 20], ['/read/section-7', 18], ['/read/section-8', 16], ['/read/section-9', 16], ['/read/section-10', 17], ['/library', 12], ['/read/appendix', 20], ['/read/glossary', 8]] as const
+    let offset = 0
+    for (const [path, count] of sections) {
+        if (page <= offset + count) return path + '/' + Math.max(1, page - offset)
+        offset += count
+    }
+    return '/toc'
 }
 
 export default function HeroSection() {
@@ -58,16 +53,16 @@ export default function HeroSection() {
 
                         <div className="hero-text-container hero-fade">
                             <h1 className="hero-title">
-                                اختصر <span className="text-gradient">6 شهور تعلم AI</span> في أسبوع واحد
+                                استخدم <span className="text-gradient">AI في شغلك ودراستك</span> بخطوات واضحة
                             </h1>
 
                             <p className="hero-description">
-                                دليل عملي بالعربي يعلّمك تستخدم AI صح — تكتب برومبت يفهمك من أول مرة، توفّر ساعات شغل، وتبدأ تكسب من مهارات الـ AI
+                                دليل تفاعلي بالعربي يعلّمك كتابة برومبت واضح، مراجعة النتائج، وتطبيق AI على الإيميلات والتقارير والتلخيص — حتى لو بتبدأ من الصفر.
                             </p>
 
                             <div className="hero-benefits hero-fade">
-                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> اختصر 6 شهور تجربة وخطأ في أسبوع</div>
-                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> 10 فصول + 48 تمرين عملي قابل للتطبيق</div>
+                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> ابدأ بمهمة عملية ثم طبّقها على شغلك أو مذاكرتك</div>
+                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> 10 فصول + 45 تمرين عملي قابل للتطبيق</div>
                                 <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> المقدمة + الفصل الأول كامل مجاناً — جرّب قبل ما تشتري</div>
                             </div>
 
@@ -82,7 +77,7 @@ export default function HeroSection() {
                                 ) : (
                                     <>
                                         <Link href="#pricing" className="btn btn-primary btn-pulse" onClick={() => trackCtaClick('اشترك الآن', 'hero_section')}>
-                                            <span>اشترك الآن — ابدأ من 99 ج.م ←</span>
+                                            <span>شاهد الباقات والأسعار ←</span>
                                         </Link>
                                         <Link href="/read/intro/1" className="btn btn-secondary" onClick={() => trackCtaClick('جرّب الفصل الأول مجاناً', 'hero_section_secondary')}>
                                             <span>جرّب الفصل الأول مجاناً</span>
@@ -110,7 +105,7 @@ export default function HeroSection() {
                                 <span className="hero-trust-divider">|</span>
                                 <span>🆓 المعاينة المجانية بدون تسجيل</span>
                                 <span className="hero-trust-divider">|</span>
-                                <span>📱 دفع بفودافون كاش/فوري</span>
+                                <span>📱 دفع ببطاقات ومحافظ إلكترونية</span>
                             </div>
                         </div>
                     </div>

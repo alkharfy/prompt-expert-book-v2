@@ -1,5 +1,7 @@
 // Tests for GET /api/resources route
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+const { authSpy } = vi.hoisted(() => ({ authSpy: vi.fn() }))
+vi.mock('@/lib/auth-middleware', () => ({ getAuthenticatedUser: authSpy }))
 
 // Queue-based thenable mock for Supabase fluent chain
 const { mockFrom, pushResult, calls } = vi.hoisted(() => {
@@ -8,7 +10,7 @@ const { mockFrom, pushResult, calls } = vi.hoisted(() => {
 
   const createChain = (): any => {
     const chain: any = {}
-    const methods = ['select', 'eq', 'contains', 'or', 'order', 'insert', 'limit', 'upsert', 'delete']
+    const methods = ['select', 'eq', 'contains', 'or', 'order', 'insert', 'limit', 'upsert', 'delete', 'maybeSingle']
     methods.forEach(m => {
       chain[m] = (...args: any[]) => {
         allCalls.push({ method: m, args })
@@ -58,6 +60,7 @@ vi.mock('@/data/learningResources', () => ({
 import { GET, POST } from '@/app/api/resources/route'
 
 function createMockRequest(url: string, options?: { method?: string; cookies?: Record<string, string>; body?: unknown }) {
+  authSpy.mockResolvedValue(options?.cookies?.ebook_session_token === 'valid-session' ? options.cookies.ebook_user_id : null)
   const req = {
     url,
     method: options?.method || 'GET',
@@ -153,7 +156,7 @@ describe('GET /api/resources', () => {
     pushResult({ data: [{ resource_id: 'res-1' }], error: null })
 
     const req = createMockRequest('http://localhost/api/resources', {
-      cookies: { ebook_user_id: 'user-123' },
+      cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' },
     })
     const res = await GET(req)
     const data = await res.json()
@@ -167,7 +170,7 @@ describe('GET /api/resources', () => {
     pushResult({ data: [{ resource_id: 'res-1' }], error: null })
 
     const req = createMockRequest('http://localhost/api/resources?saved=true', {
-      cookies: { ebook_user_id: 'user-123' },
+      cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' },
     })
     const res = await GET(req)
     const data = await res.json()
@@ -206,12 +209,22 @@ describe('POST /api/resources (seed)', () => {
     expect(data.error).toBe('Unauthorized')
   })
 
+  it('rejects an authenticated non-admin before any seed write', async () => {
+    pushResult({ data: { is_admin: false }, error: null })
+    const req = createMockRequest('http://localhost/api/resources', {
+      method: 'POST', cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' }, body: { action: 'seed' },
+    })
+    expect((await POST(req)).status).toBe(403)
+    expect(calls.findAll('insert')).toHaveLength(0)
+  })
+
   it('should not seed if resources already exist', async () => {
+    pushResult({ data: { is_admin: true }, error: null })
     pushResult({ data: [{ id: 'existing' }], error: null })
 
     const req = createMockRequest('http://localhost/api/resources', {
       method: 'POST',
-      cookies: { ebook_user_id: 'user-123' },
+      cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' },
       body: { action: 'seed' },
     })
     const res = await POST(req)
@@ -222,13 +235,14 @@ describe('POST /api/resources (seed)', () => {
   })
 
   it('should seed resources when table is empty', async () => {
+    pushResult({ data: { is_admin: true }, error: null })
     pushResult({ data: [], error: null })  // check existing
     pushResult({ error: null })            // insert resources
     pushResult({ error: null })            // insert changelog
 
     const req = createMockRequest('http://localhost/api/resources', {
       method: 'POST',
-      cookies: { ebook_user_id: 'user-123' },
+      cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' },
       body: { action: 'seed' },
     })
     const res = await POST(req)
@@ -240,9 +254,10 @@ describe('POST /api/resources (seed)', () => {
   })
 
   it('should return error for invalid action', async () => {
+    pushResult({ data: { is_admin: true }, error: null })
     const req = createMockRequest('http://localhost/api/resources', {
       method: 'POST',
-      cookies: { ebook_user_id: 'user-123' },
+      cookies: { ebook_user_id: 'user-123', ebook_session_token: 'valid-session' },
       body: { action: 'invalid_action' },
     })
     const res = await POST(req)

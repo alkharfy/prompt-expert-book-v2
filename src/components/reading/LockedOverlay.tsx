@@ -173,7 +173,7 @@ export default function LockedOverlay({
         case 'no_subscription':
             title = 'أكملت المحتوى المجاني — جاهز تكمل؟'
             description = 'قرأت المقدمة والفصل الأول كاملاً (23 صفحة) واكتشفت أساسيات AI. الباقي أقوى بكتير!'
-            actionLabel = 'اشترك الآن — من 99 ج.م'
+            actionLabel = 'اشترك الآن — حسب الباقة المختارة'
             showPaymentIcon = true
             showValueProps = true
             break
@@ -250,11 +250,11 @@ export default function LockedOverlay({
                             >
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">📖</span>
-                                    <span>188 صفحة إضافية</span>
+                                    <span>محتوى الكتاب والملاحق</span>
                                 </div>
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">✏️</span>
-                                    <span>48 تمرين تفاعلي</span>
+                                    <span>45 تمرين تفاعلي</span>
                                 </div>
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">🛠️</span>

@@ -46,8 +46,8 @@ export default function AppendixReader({ data, initialHasAccess = false, initial
         if (!initialHasAccess) {
             setIsLockOverlayOpen(true)
         } else {
-            // Save progress (Intro:6 + S1:17 + S2-7:18×6 + S8:16 + S9:16 + S10:12 + Library:12 = 187 pages before Appendix)
-            authSystem.updateReadingProgress(187 + pageNum).catch(err => {
+            // Save progress after 194 preceding pages.
+            authSystem.updateReadingProgress(194 + pageNum).catch(err => {
                 console.error('Failed to save progress:', err)
             })
         }

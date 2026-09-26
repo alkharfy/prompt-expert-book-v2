@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from '@/lib/logger'
 import { verifyPaymentSession } from '@/lib/kashier'
-import { activatePaidSubscription } from '@/lib/payment-activation'
+import { activateStoredPayment, paymentAmountMatches } from '@/lib/payment-activation'
 import { sendCAPIPurchase } from '@/lib/meta-capi'
 import { purchaseEventId } from '@/lib/tracking-config'
 import { alertMoneyPath } from '@/lib/alert'
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // Pending payments that have a Kashier session to re-verify.
     const { data: pendings, error } = await (supabase.from('payments') as any)
-      .select('id, user_id, plan_id, amount, kashier_session_id, kashier_order_id, status')
+      .select('id, user_id, plan_id, amount, paid_at, kashier_session_id, kashier_order_id, status')
       .eq('status', 'pending')
       .not('kashier_session_id', 'is', null)
       .limit(100)
@@ -63,20 +63,15 @@ export async function GET(request: NextRequest) {
         if (!result.ok) continue
 
         if (result.paid) {
+          if (!paymentAmountMatches(result.data?.amount, p.amount)) throw new Error('Payment amount mismatch')
           // pending → success transition (the ONLY place we emit Purchase here)
-          await (supabase.from('payments') as any)
-            .update({ status: 'success', paid_at: new Date().toISOString(), payment_method: result.data?.method || null })
+          const { error: updateError } = await (supabase.from('payments') as any)
+            .update({ status: 'success', paid_at: p.paid_at || new Date().toISOString(), payment_method: result.data?.method || null })
             .eq('id', p.id)
+          if (updateError) throw new Error('Payment update failed')
+          const activation = await activateStoredPayment(p.user_id, p.id, 'reconcile')
 
-          await activatePaidSubscription({
-            userId: p.user_id,
-            paymentId: p.id,
-            planId: p.plan_id,
-            owedAmount: p.amount,
-            paidAmount: result.data?.amount ?? null,
-            source: 'reconcile',
-          })
-
+          if (!activation.ok) throw new Error(activation.error || 'Activation failed')
           const orderId = p.kashier_order_id || p.id
           await sendCAPIPurchase({
             value: (result.data?.amount ? parseFloat(String(result.data.amount)) : 0) || Number(p.amount) || 0,
@@ -89,13 +84,25 @@ export async function GET(request: NextRequest) {
         } else if (result.status === 'FAILED' || result.status === 'EXPIRED') {
           await (supabase.from('payments') as any)
             .update({ status: 'failed' })
-            .eq('id', p.id)
+            .eq('id', p.id).neq('status', 'success')
         }
         // PENDING/CREATED/OPENED → leave as-is for the next run
       } catch (err) {
         failures.push(p.id)
         dbLogger.error(`[reconcile] error on payment ${p.id}:`, err)
       }
+    }
+
+    // Retry entitlement writes that failed after the payment was marked success.
+    // These are already provider-verified; never emit another purchase event.
+    const { data: recentPaid, error: retryError } = await (supabase.from('payments') as any)
+      .select('id, user_id').eq('status', 'success')
+      .gte('paid_at', new Date(Date.now() - 7 * 86400000).toISOString())
+      .order('paid_at', { ascending: false }).limit(100)
+    if (retryError) throw new Error('Activation recovery lookup failed')
+    for (const payment of recentPaid || []) {
+      const activation = await activateStoredPayment(payment.user_id, payment.id, 'reconcile:retry')
+      if (!activation.ok && !['subscription_expired', 'subscription_inactive', 'upgrade_subscription_expired'].includes(activation.error || '')) failures.push(payment.id)
     }
 
     if (failures.length) {

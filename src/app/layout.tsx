@@ -36,11 +36,11 @@ const tajawal = Tajawal({
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'PromptMaster | اتعلم الذكاء الاصطناعي بالعربي وابني مشاريعك واكسب منه',
+    default: 'PromptMaster | استخدم الذكاء الاصطناعي في العمل والدراسة بالعربي',
     template: '%s | PromptMaster',
   },
-  description: 'اتعلم تستخدم الذكاء الاصطناعي صح بالعربي • 10 فصول + 48 تمرين تفاعلي + تحدي 7 أيام • من الصفر للاحتراف في استخدام AI وبناء المشاريع وكسب دخل منه. ابدأ بـ 5 جنيه بس.',
-  keywords: ['PromptMaster', 'تعلم الذكاء الاصطناعي', 'استخدام ChatGPT', 'كسب فلوس بال AI', 'ذكاء اصطناعي', 'ChatGPT', 'AI', 'تعلم AI', 'فريلانس AI', 'بناء مشاريع بال AI'],
+  description: 'اتعلم تستخدم الذكاء الاصطناعي صح بالعربي • 10 فصول + 45 تمرين تفاعلي + تحدي 7 أيام • أمثلة عملية للإيميلات والتقارير والمذاكرة مع معاينة مجانية قبل الاشتراك.',
+  keywords: ['PromptMaster', 'تعلم الذكاء الاصطناعي', 'استخدام ChatGPT', 'AI للعمل والدراسة', 'ذكاء اصطناعي', 'ChatGPT', 'AI', 'تعلم AI', 'فريلانس AI', 'بناء مشاريع بال AI'],
   authors: [{ name: 'PromptMaster' }],
   alternates: { canonical: '/' },
   openGraph: {
@@ -48,14 +48,14 @@ export const metadata: Metadata = {
     locale: 'ar_EG',
     url: SITE_URL,
     siteName: 'PromptMaster',
-    title: 'PromptMaster | اتعلم الذكاء الاصطناعي بالعربي وابني مشاريعك واكسب منه',
-    description: 'اتعلم تستخدم الذكاء الاصطناعي صح بالعربي • 10 فصول + 48 تمرين تفاعلي + تحدي 7 أيام • ابدأ بـ 5 جنيه بس.',
+    title: 'PromptMaster | استخدم الذكاء الاصطناعي في العمل والدراسة بالعربي',
+    description: 'اتعلم تستخدم الذكاء الاصطناعي صح بالعربي • 10 فصول + 45 تمرين تفاعلي + تحدي 7 أيام • جرّب المقدمة والفصل الأول مجانًا.',
     images: [{ url: '/assets/card.png', width: 1200, height: 630, alt: 'PromptMaster' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PromptMaster | اتعلم الذكاء الاصطناعي بالعربي وابني مشاريعك واكسب منه',
-    description: 'اتعلم تستخدم الذكاء الاصطناعي صح بالعربي • 10 فصول + 48 تمرين تفاعلي + تحدي 7 أيام • ابدأ بـ 5 جنيه بس.',
+    title: 'PromptMaster | استخدم الذكاء الاصطناعي في العمل والدراسة بالعربي',
+    description: 'اتعلم تستخدم الذكاء الاصطناعي صح بالعربي • 10 فصول + 45 تمرين تفاعلي + تحدي 7 أيام • جرّب المقدمة والفصل الأول مجانًا.',
     images: ['/assets/card.png'],
   },
   robots: {
@@ -73,7 +73,7 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Book',
     name: 'PromptMaster',
-    description: 'منصة تعليمية تفاعلية لاحتراف الذكاء الاصطناعي بالعربي — بناء مشاريع وكسب دخل من AI',
+    description: 'منصة تعليمية تفاعلية لاحتراف الذكاء الاصطناعي بالعربي — أمثلة وتمارين للعمل والدراسة',
     inLanguage: 'ar',
     genre: 'تعليمي',
     bookFormat: 'https://schema.org/EBook',

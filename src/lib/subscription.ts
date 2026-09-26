@@ -71,6 +71,7 @@ export async function getUserSubscription(userId: string): Promise<UserPlan | nu
                 .select('plan_id, expires_at, status')
                 .eq('user_id', userId)
                 .eq('status', 'active')
+                .gt('expires_at', new Date().toISOString())
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle()
@@ -106,41 +107,8 @@ export async function getUserSubscription(userId: string): Promise<UserPlan | nu
             console.warn('[subscription] users table fallback failed')
         }
 
-        // Strategy 4: Check if user has a recent successful payment (basic fallback)
-        // SECURITY: Only treat as active if payment is within last 365 days to prevent
-        // historical payments from granting permanent access
-        try {
-            const { data: payment } = await (supabaseAdmin.from('payments') as any)
-                .select('plan_id, created_at')
-                .eq('user_id', userId)
-                .eq('status', 'success')
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle()
-
-            if (payment && payment.plan_id && payment.created_at) {
-                const paymentDate = new Date(payment.created_at)
-                const expiresAt = new Date(paymentDate)
-                expiresAt.setFullYear(expiresAt.getFullYear() + 1) // 1 year from payment
-
-                if (expiresAt > new Date()) {
-                    return {
-                        plan_id: payment.plan_id as PlanId,
-                        expires_at: expiresAt.toISOString(),
-                        status: 'active' as SubscriptionStatus,
-                    }
-                }
-                // Payment exists but expired — return inactive
-                return {
-                    plan_id: payment.plan_id as PlanId,
-                    expires_at: expiresAt.toISOString(),
-                    status: null,
-                }
-            }
-        } catch {
-            console.warn('[subscription] payments table fallback failed')
-        }
-
+        // A successful payment alone cannot override a cancelled/expired subscription.
+        // Recovery creates an entitlement through the verified activation path.
         return null
     } catch (err) {
         console.error('[subscription] Unexpected error in getUserSubscription:', err)

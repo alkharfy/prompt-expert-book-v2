@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { getPricingPlans, getPromoSettings, calculateDiscountedPrice, isPromoValid, PricingPlan, PromoSettings } from '@/lib/promo'
-import { trackCtaClick, trackPromoViewed } from '@/lib/analytics'
-import { BOOK_PAGES_DISPLAY } from '@/lib/config'
+import { getPricingPlans, PricingPlan } from '@/lib/promo'
+import { trackCtaClick } from '@/lib/analytics'
 
 const PLAN_ICONS: Record<string, string> = { basic: '📖', pro: '🚀', vip: '👑' }
 const PLAN_COLORS: Record<string, [string, string]> = {
@@ -16,168 +15,27 @@ const PLAN_COLORS: Record<string, [string, string]> = {
 
 export default function PricingSection() {
     const [plans, setPlans] = useState<PricingPlan[]>([])
-    const [promo, setPromo] = useState<PromoSettings | null>(null)
+    const [loadError, setLoadError] = useState('')
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        async function loadData() {
-            const [plansData, promoData] = await Promise.all([
-                getPricingPlans(),
-                getPromoSettings()
-            ])
-            setPlans(plansData)
-            if (promoData.is_active && isPromoValid(promoData.end_date)) {
-                setPromo(promoData)
-            }
-            setIsLoading(false)
-        }
-        loadData()
+        let cancelled = false
+        getPricingPlans().then(data => {
+            if (!cancelled) setPlans(data)
+        }).catch(() => {
+            if (!cancelled) setLoadError('تعذّر تحميل الأسعار الحالية. أعد تحميل الصفحة أو تواصل معنا قبل الدفع.')
+        }).finally(() => { if (!cancelled) setIsLoading(false) })
+        return () => { cancelled = true }
     }, [])
 
-    // Fire promo_viewed impression once the promo card resolves, so we can
-    // measure: promo_viewed → CTA_click → purchase as a funnel.
-    useEffect(() => {
-        if (!promo || plans.length === 0) return
-        const basicPlan = plans.find(p => p.id === 'basic')
-        const originalPrice = basicPlan?.price ?? 99
-        const discountPct = Math.min(Math.max(promo.discount_percentage || 30, 5), 50)
-        const finalPrice = Math.max(Math.round(originalPrice * (1 - discountPct / 100)), 1)
-        trackPromoViewed('basic', finalPrice, discountPct)
-    }, [promo, plans])
+    if (loadError) return <section id="pricing" className="landing-section"><div className="container"><p role="alert">{loadError}</p><Link href="/contact">تواصل معنا</Link></div></section>
 
     if (isLoading) {
         return (
-            <section className="landing-section landing-section-dark">
+            <section id="pricing" className="landing-section landing-section-dark">
                 <div className="container">
                     <div className="pr-loading">جاري التحميل...</div>
                 </div>
-            </section>
-        )
-    }
-
-    // === PROMO MODE: Single prominent card ===
-    if (promo) {
-        const basicPlan = plans.find(p => p.id === 'basic')
-        const originalPrice = basicPlan?.price ?? 99
-        // Honest discount: respect the configured discount_percentage (default 30%)
-        // instead of forcing a 98% drop that triggers "scam" perception.
-        const discountPct = Math.min(Math.max(promo.discount_percentage || 30, 5), 50)
-        const finalPrice = Math.max(Math.round(originalPrice * (1 - discountPct / 100)), 1)
-        const promoFeatures = [
-            `10 فصول كاملة — ${BOOK_PAGES_DISPLAY}+ صفحة تفاعلية`,
-            '48 تمرين عملي قابل للتطبيق',
-            '95 قالب جاهز للنسخ',
-            'نظام Gamification (نقاط + إنجازات + Streak)',
-            'شهادة إتمام معتمدة',
-            'المقدمة + الفصل الأول كامل مجاناً — جرّب قبل ما تشتري',
-        ]
-
-        return (
-            <section id="pricing" className="landing-section pr-section">
-                <div className="pr-bg-dots" />
-                <div className="container">
-                    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="pr-header">
-                        <span className="pr-badge">🔥 عرض لفترة محدودة</span>
-                        <h2 className="pr-title">ابدأ رحلتك في احتراف AI بأقل من سعر كوباية قهوة</h2>
-                    </motion.div>
-
-                    <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.6 }} className="pr-promo-card">
-                        <div className="pr-promo-border" />
-                        <div className="pr-promo-glow" />
-                        <div className="pr-promo-inner">
-                            <div className="pr-promo-head">
-                                <span className="pr-promo-icon">📖</span>
-                                <h3 className="pr-promo-name">الكتاب الكامل</h3>
-                                <span className="pr-discount-pill">خصم {discountPct}%</span>
-                            </div>
-
-                            <div className="pr-promo-price-area">
-                                <span className="pr-promo-old">{originalPrice} ج.م</span>
-                                <div className="pr-promo-now">
-                                    <span className="pr-promo-amount">{finalPrice}</span>
-                                    <div className="pr-promo-suffix">
-                                        <span>ج.م</span>
-                                        <span>فقط</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="pr-promo-code">
-                                {promo.promo_text || 'العرض ساري لفترة محدودة'}
-                            </div>
-
-                            <ul className="pr-promo-features">
-                                {promoFeatures.map((f, i) => (
-                                    <li key={i}><span className="pr-feat-check">✓</span>{f}</li>
-                                ))}
-                            </ul>
-
-                            <div className="pr-promo-payment">💳 فودافون كاش — بطاقة ائتمان — فوري · الدفع عبر بوابة Kashier المؤمّنة</div>
-
-                            <Link href="/payment" className="pr-cta-main" onClick={() => trackCtaClick(`اشتري الآن بـ ${finalPrice} ج.م`, 'pricing_section')}>
-                                🚀 اشتري الآن بـ {finalPrice} ج.م
-                            </Link>
-
-                            <Link href="/read/intro/1" className="pr-try-link" onClick={() => trackCtaClick('جرّب مجاناً أولاً', 'pricing_section')}>
-                                أو جرّب الفصل الأول مجاناً ←
-                            </Link>
-
-                            <div className="pr-promo-footer">
-                                <span className="pr-trust-item">🔒 دفع آمن</span>
-                                <span className="pr-trust-sep" />
-                                <span className="pr-trust-item"><Link href="/refund-policy">🛡️ ضمان 30 يوم</Link></span>
-                                <span className="pr-trust-sep" />
-                                <span className="pr-trust-item">⚡ وصول فوري</span>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-
-                <style jsx global>{`
-                    .pr-section { padding: 100px 0; position: relative; overflow: hidden; }
-                    .pr-bg-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(255,107,53,0.06) 1px, transparent 1px); background-size: 28px 28px; pointer-events: none; }
-                    .pr-header { text-align: center; margin-bottom: 48px; }
-                    .pr-badge { display: inline-block; background: rgba(255,107,53,0.12); color: #FF6B35; padding: 8px 22px; border-radius: 30px; font-size: 0.9rem; font-weight: 600; margin-bottom: 20px; border: 1px solid rgba(255,107,53,0.25); }
-                    .pr-title { font-size: 2.4rem; font-weight: 800; background: linear-gradient(135deg, #fff 20%, #FF6B35); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 14px; }
-                    .pr-subtitle { font-size: 1.05rem; color: rgba(255,255,255,0.55); }
-                    .pr-loading { text-align: center; color: rgba(255,255,255,0.5); padding: 60px; }
-
-                    /* Promo card */
-                    .pr-promo-card { position: relative; max-width: 540px; margin: 0 auto; border-radius: 28px; padding: 2px; }
-                    .pr-promo-border { position: absolute; inset: 0; border-radius: 28px; padding: 2px; background: conic-gradient(from var(--border-angle,0deg), transparent 0%, #FF6B35 20%, #FF8C42 35%, #FFB347 50%, transparent 55%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: prBorderSpin 4s linear infinite; }
-                    .pr-promo-glow { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 70%; height: 80px; background: radial-gradient(ellipse, rgba(255,107,53,0.18) 0%, transparent 70%); pointer-events: none; filter: blur(20px); }
-                    .pr-promo-inner { position: relative; background: linear-gradient(165deg, rgba(25,18,12,0.97), rgba(12,10,22,0.98)); border-radius: 26px; padding: 48px 40px 40px; text-align: center; }
-                    .pr-promo-head { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
-                    .pr-promo-icon { font-size: 2rem; }
-                    .pr-promo-name { font-size: 1.6rem; font-weight: 800; color: white; }
-                    .pr-discount-pill { background: linear-gradient(135deg, #22c55e, #4ade80); color: white; padding: 5px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
-                    .pr-promo-price-area { margin-bottom: 20px; }
-                    .pr-promo-old { font-size: 1.2rem; color: rgba(255,255,255,0.3); text-decoration: line-through; }
-                    .pr-promo-now { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; }
-                    .pr-promo-amount { font-size: 4rem; font-weight: 900; background: linear-gradient(135deg, #FF6B35, #FFB347); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.1; }
-                    .pr-promo-suffix { display: flex; flex-direction: column; align-items: flex-start; color: #FF8C42; font-weight: 700; font-size: 0.95rem; line-height: 1.3; }
-                    .pr-promo-code { display: inline-block; background: rgba(255,107,53,0.1); border: 1.5px dashed rgba(255,107,53,0.4); color: #FF8C42; padding: 10px 28px; border-radius: 12px; font-size: 1.05rem; font-weight: 600; margin-bottom: 28px; }
-                    .pr-promo-features { list-style: none; padding: 0; margin: 0 0 24px; text-align: right; }
-                    .pr-promo-features li { color: rgba(255,255,255,0.85); font-size: 0.98rem; line-height: 2.2; display: flex; align-items: center; gap: 10px; }
-                    .pr-feat-check { color: #22c55e; font-weight: 700; font-size: 1rem; flex-shrink: 0; }
-                    .pr-promo-payment { color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-bottom: 20px; }
-                    .pr-cta-main { display: block; width: 100%; padding: 18px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; border-radius: 16px; text-align: center; font-weight: 800; font-size: 1.2rem; text-decoration: none; transition: all 0.3s; box-shadow: 0 8px 32px rgba(255,107,53,0.3); }
-                    .pr-cta-main:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(255,107,53,0.45); }
-                    .pr-try-link { display: inline-block; color: rgba(255,255,255,0.5); font-size: 0.92rem; margin-top: 14px; text-decoration: none; transition: color 0.2s; }
-                    .pr-try-link:hover { color: #FF6B35; }
-                    .pr-promo-footer { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; flex-wrap: wrap; }
-                    .pr-trust-item { color: rgba(255,255,255,0.45); font-size: 0.82rem; }
-                    .pr-trust-sep { width: 1px; height: 16px; background: rgba(255,255,255,0.1); }
-                    @property --border-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-                    @keyframes prBorderSpin { to { --border-angle: 360deg; } }
-                    @media (max-width: 576px) {
-                        .pr-section { padding: 60px 0; }
-                        .pr-title { font-size: 1.7rem; }
-                        .pr-promo-inner { padding: 32px 20px 28px; }
-                        .pr-promo-amount { font-size: 3rem; }
-                        .pr-cta-main { font-size: 1.05rem; padding: 16px; }
-                    }
-                `}</style>
             </section>
         )
     }
@@ -190,15 +48,15 @@ export default function PricingSection() {
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="pr-header">
                     <span className="pr-badge">💰 باقات الاشتراك</span>
-                    <h2 className="pr-title">استثمر في مستقبلك</h2>
-                    <p className="pr-subtitle">اختر الخطة التي تناسب احتياجاتك وابدأ رحلة الاحتراف اليوم</p>
+                    <h2 className="pr-title">ابدأ بالكتاب والتمارين</h2>
+                    <p className="pr-subtitle">الأساسية تشمل القراءة والتمارين والقوالب. قارن المميزات ثم اختر ما تحتاجه.</p>
                 </motion.div>
 
                 {/* Trust bar — only verifiable claims; no inflated user counts */}
                 <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="pr-social-bar">
                     <span>🛡️ ضمان استرداد 30 يوم</span>
                     <span className="pr-social-sep" />
-                    <span>📱 فودافون كاش / فوري / فيزا</span>
+                    <span>📱 بطاقات بنكية ومحافظ إلكترونية</span>
                     <span className="pr-social-sep" />
                     <span>⏳ وصول لمدة سنة كاملة</span>
                 </motion.div>
@@ -224,7 +82,7 @@ export default function PricingSection() {
                                 {/* Popular badge */}
                                 {plan.is_popular && (
                                     <div className="pr-popular-badge">
-                                        <span>✨</span> الأكثر شيوعاً
+                                        <span>✨</span> مناسبة للبدء
                                     </div>
                                 )}
 

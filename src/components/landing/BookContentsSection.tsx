@@ -107,7 +107,7 @@ export default function BookContentsSection() {
                     <span className="section-badge">📚 محتوى الكتاب</span>
                     <h2 className="section-title">ماذا بداخل الكتاب؟</h2>
                     <p className="section-subtitle">
-                        10 فصول — {totalPages}+ صفحة — 48 تمرين تفاعلي
+                        10 فصول — {totalPages}+ صفحة — 45 تمرين تفاعلي
                     </p>
                 </motion.div>
 
@@ -163,7 +163,7 @@ export default function BookContentsSection() {
                     className="contents-cta"
                 >
                     <Link href="#pricing" className="btn-contents-primary">
-                        💳 اشترك الآن — من 99 ج.م
+                        💳 اشترك الآن — حسب الباقة المختارة
                     </Link>
                     <Link href="/read/intro/1" className="btn-contents-secondary">
                         🆓 جرّب الفصل المجاني

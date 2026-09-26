@@ -1,3 +1,5 @@
+import { getUserSubscription } from '@/lib/subscription'
+import { getCheckoutBasePrice } from '@/lib/payment-pricing'
 import { NextRequest, NextResponse } from 'next/server'
 import { createPaymentSession } from '@/lib/kashier'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
@@ -14,7 +16,10 @@ export async function POST(request: NextRequest) {
     try {
         const supabase = getSupabaseAdmin()
         const body = await request.json()
-        const { planId, promoCode, isUpgrade, currentPlanId } = body
+        const { planId, promoCode, isUpgrade } = body
+        if (typeof planId !== 'string' || promoCode != null && typeof promoCode !== 'string' || isUpgrade != null && typeof isUpgrade !== 'boolean') {
+            return NextResponse.json({ error: 'بيانات طلب غير صالحة' }, { status: 400 })
+        }
 
         // استخراج userId من cookies مع التحقق من الجلسة
         // skipActiveCheck: المستخدم الجديد لسه ما دفعش فـ is_active=false
@@ -26,6 +31,9 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             )
         }
+
+        const subscription = await getUserSubscription(userId)
+        const currentPlanId = subscription?.plan_id || null
 
         // SECURITY: Rate limit payment session creation
         const clientIP = getClientIP(request)
@@ -65,6 +73,7 @@ export async function POST(request: NextRequest) {
         const { data: planRows, error: plansLoadError } = await (supabase
             .from('plans') as any)
             .select('id, name_ar, price')
+            .eq('is_active', true)
             .in('id', validPlans)
 
         if (plansLoadError || !planRows || planRows.length === 0) {
@@ -87,18 +96,12 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // حساب السعر — ترقية = الفرق بين الباقتين
-        let basePrice = plan.price
-        let currentPlanPrice = 0
-        if (isUpgrade && currentPlanId && plans[currentPlanId]) {
-            currentPlanPrice = plans[currentPlanId].price
-            basePrice = plan.price - currentPlanPrice
-            if (basePrice <= 0) {
-                return NextResponse.json(
-                    { error: 'لا يمكن الترقية لباقة بنفس السعر أو أقل' },
-                    { status: 400 }
-                )
-            }
+        let basePrice: number
+        const currentPlanPrice = currentPlanId ? plans[currentPlanId]?.price || 0 : 0
+        try {
+            basePrice = getCheckoutBasePrice(Object.fromEntries(Object.entries(plans).map(([id, p]) => [id, p.price])), planId, isUpgrade === true, subscription)
+        } catch (error) {
+            return NextResponse.json({ error: error instanceof Error ? error.message : 'باقة غير صالحة' }, { status: 400 })
         }
 
         let finalAmount = basePrice
@@ -110,7 +113,7 @@ export async function POST(request: NextRequest) {
             const { data: promo, error: promoError } = await (supabase
                 .from('promo_codes') as any)
                 .select('*')
-                .eq('code', promoCode.toUpperCase())
+                .eq('code', promoCode.trim().toUpperCase())
                 .eq('is_active', true)
                 .single()
 
@@ -165,6 +168,9 @@ export async function POST(request: NextRequest) {
                 // تنظيف الاستخدامات القديمة وتصحيح العداد يتم ذرياً في try_use_promo_code
             }
 
+            if (promo.min_amount && basePrice < Number(promo.min_amount)) {
+                return NextResponse.json({ error: 'المبلغ أقل من الحد الأدنى لاستخدام الكود' }, { status: 400 })
+            }
             // حساب الخصم — منطق واحد مشترك مع /api/promo/validate (لا انحراف)
             const promoCalc = applyPromoDiscount(basePrice, promo)
             discountAmount = promoCalc.discountAmount
@@ -185,7 +191,7 @@ export async function POST(request: NextRequest) {
         const webhookUrl = `${baseUrl}/api/payment/webhook`
 
         // إنشاء جلسة كاشير
-        const upgradeLabel = isUpgrade ? ` (ترقية من ${plans[currentPlanId]?.name || 'الحالية'})` : ''
+        const upgradeLabel = isUpgrade ? ` (ترقية من ${(currentPlanId ? plans[currentPlanId]?.name : null) || 'الحالية'})` : ''
         const sessionResult = await createPaymentSession({
             orderId,
             amount: finalAmount.toFixed(2),
@@ -215,7 +221,7 @@ export async function POST(request: NextRequest) {
         }
         // Store upgrade metadata if available
         if (isUpgrade && currentPlanId) {
-            paymentInsert.notes = `upgrade:${currentPlanId}->${planId}|diff:${basePrice}|from_price:${currentPlanPrice}|to_price:${plan.price}`
+            paymentInsert.notes = `upgrade:${currentPlanId}->${planId}|diff:${basePrice}|from_price:${currentPlanPrice}|to_price:${plan.price}|expires:${subscription!.expires_at}`
         }
 
         const { data: paymentRecord, error: insertError } = await (supabase
@@ -239,16 +245,14 @@ export async function POST(request: NextRequest) {
                     p_promo_id: promoId,
                     p_user_id: userId,
                     p_payment_id: paymentRecord.id,
-                    p_original_amount: plan.price,
+                    p_original_amount: basePrice,
                     p_discount_amount: discountAmount,
                     p_final_amount: finalAmount,
                 })
 
-            if (promoRpcError) {
-                dbLogger.error('Promo atomic RPC error:', promoRpcError)
-            } else if (promoResult && !promoResult.success) {
-                // الدالة الذرية رفضت الاستخدام (max_uses أو already_used)
-                dbLogger.warn(`Promo code rejected atomically: ${promoResult.error}`)
+            if (promoRpcError || !promoResult?.success) {
+                await (supabase.from('payments') as any).update({ status: 'failed' }).eq('id', paymentRecord.id)
+                return NextResponse.json({ error: 'تعذّر تأكيد كود الخصم. حاول مجددًا قبل الدفع.' }, { status: 409 })
             }
         }
 
@@ -274,6 +278,7 @@ export async function POST(request: NextRequest) {
             success: true,
             sessionUrl: sessionResult.sessionUrl,
             sessionId: sessionResult.sessionId,
+            amount: finalAmount,
             orderId
         })
     } catch (error) {

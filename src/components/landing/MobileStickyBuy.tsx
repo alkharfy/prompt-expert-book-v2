@@ -45,7 +45,7 @@ export default function MobileStickyBuy() {
     return (
         <div className="mobile-sticky-buy">
             <Link href="#pricing" className="mobile-sticky-btn" onClick={() => trackCtaClick('اشترك الآن', 'mobile_sticky_bar')}>
-                اشترك الآن — من 99 ج.م 🚀
+                اشترك الآن — حسب الباقة المختارة 🚀
             </Link>
 
             <style jsx>{`

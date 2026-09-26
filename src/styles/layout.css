@@ -250,6 +250,7 @@
 }
 
 @media (max-width: 768px) {
+  .unified-background { display: none; }
   .lesson-nav-footer {
     flex-direction: column !important;
     gap: 20px !important;
@@ -608,4 +609,14 @@
     z-index: 1 !important;
     transform: none !important;
   }
-}
+}
+
+/* Keep the first mobile screen focused on the lesson value and next step. */
+@media (max-width: 768px) {
+  .hero-grid { display: flex; flex-direction: column; gap: 16px; }
+  .hero-text-container { order: 0; }
+  .hero-image-container { order: 1; max-height: 170px; overflow: hidden; width: 100%; opacity: .85; }
+  .hero-section { padding-top: calc(var(--header-h, 70px) + 24px); }
+  .hero-title { font-size: clamp(1.7rem, 7vw, 2.2rem); line-height: 1.5; }
+  .hero-description { line-height: 1.9; }
+}

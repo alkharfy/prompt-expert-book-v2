@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ ok: true, plans })
+    return NextResponse.json({ ok: true, plans }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     dbLogger.error('Plans API error:', error)
     return NextResponse.json(

@@ -20,8 +20,8 @@ export const COOKIE_SECURE = process.env.NODE_ENV === 'production' // Use secure
 export const COOKIE_SAME_SITE = 'Lax' as const
 
 // Total pages in the book (for reading progress)
-// Intro:6 + S1:17 + S2-7:18×6 + S8:16 + S9:16 + S10:12 + Library:12 + Appendix:20 + Glossary:8 = 215
-export const TOTAL_BOOK_PAGES = 215
+// Intro 6 + main chapters 176 + library 12 + appendix 20 + glossary 8 = 222
+export const TOTAL_BOOK_PAGES = 222
 
 // Total main chapters (excluding Glossary which is bonus content)
 // Intro + S1-S10 + Library + Appendix = 13 chapters
@@ -41,6 +41,5 @@ export const SUPPORT_EMAIL = 'support@prompt-mr.com'
 export const EMAIL_FROM_DEFAULT = process.env.EMAIL_FROM || `PromptMaster <noreply@${SITE_DOMAIN.replace(/^www\./, '')}>`
 
 // Single canonical page-count shown anywhere in marketing copy / structured data.
-// Conservative vs the 215 internal reading-progress units; keep ALL display copy
-// pointing here so the live DOM never shows two different numbers (WS4).
-export const BOOK_PAGES_DISPLAY = 188
+// Includes the introduction, chapters, library, appendix and glossary.
+export const BOOK_PAGES_DISPLAY = TOTAL_BOOK_PAGES

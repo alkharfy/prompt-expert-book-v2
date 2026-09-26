@@ -14,7 +14,7 @@ export default function BlogCTA() {
       </p>
       <div className="blog-cta-features">
         <span>📚 {BOOK_PAGES_DISPLAY} صفحة تفاعلية</span>
-        <span>✏️ 48 تمرين عملي</span>
+        <span>✏️ 45 تمرين عملي</span>
         <span>🏆 شهادة إتمام</span>
       </div>
       <Link href="/#pricing" className="blog-cta-button">

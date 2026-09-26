@@ -53,33 +53,18 @@ const StudentIcon = () => (
 )
 
 const audiences = [
-    {
-        icon: <BusinessIcon />,
-        emoji: '💼',
-        title: 'صاحب مشروع',
-        subtitle: 'رائد أعمال أو مدير فريق',
-        description: 'تريد استخدام AI لتسريع عملك: كتابة خطط التسويق، تحليل البيانات، بناء استراتيجيات المبيعات — بدون فريق تقني كامل',
-        painPoints: ['تكاليف تسويق مرتفعة', 'بيانات بدون تحليل', 'منافسة شديدة'],
-        gains: ['خفض تكاليف التسويق 60%', 'تقارير جاهزة في دقائق', 'ميزة تنافسية حقيقية'],
-    },
-    {
-        icon: <CreatorIcon />,
-        emoji: '✍️',
-        title: 'صانع محتوى',
-        subtitle: 'كاتب أو مؤثر رقمي',
-        description: 'تبحث عن نظام عمل منظم لإنتاج محتوى احترافي بسرعة وكفاءة',
-        painPoints: ['ضغط المواعيد', 'جودة غير متسقة', 'إرهاق إبداعي'],
-        gains: ['محتوى أسرع 5 مرات', 'جودة ثابتة بقوالب ذكية', 'إبداع بلا حدود'],
-    },
-    {
-        icon: <DesignerIcon />,
-        emoji: '💻',
-        title: 'مطوّر أو مصمم',
-        subtitle: 'مبرمج أو مصمم UI/UX',
-        description: 'تريد دمج AI في سير عملك اليومي من التخطيط إلى التنفيذ',
-        painPoints: ['مهام متكررة', 'وقت ضائع في التوثيق', 'اختبار الجودة'],
-        gains: ['أتمتة 70% من المهام', 'توثيق تلقائي بالـ AI', 'كود أنظف وأسرع'],
-    }
+    { title: 'موظف', subtitle: 'تقارير وإيميلات ومهام يومية', icon: <BusinessIcon />, emoji: '💼',
+      description: 'تعلّم تحويل ملاحظات الاجتماع إلى مهام، وكتابة تقرير أو إيميل واضح مع مراجعة النتيجة.',
+      painPoints: ['ملاحظات مبعثرة', 'تقارير تحتاج تنظيمًا', 'صياغة رسائل العمل'],
+      gains: ['قالب لمحضر اجتماع ومسؤوليات ومواعيد', 'مسودة تقرير أسبوعي قابلة للمراجعة', 'برومبتات تعدّلها حسب وظيفتك'] },
+    { title: 'طالب', subtitle: 'فهم ومراجعة وتدريب', icon: <CreatorIcon />, emoji: '🎓',
+      description: 'استخدم AI لشرح فكرة، وتنظيم خطة مذاكرة، وتوليد أسئلة تدريب مع الرجوع إلى مصادر دراستك.',
+      painPoints: ['شرح غير واضح', 'وقت مذاكرة غير منظم', 'صعوبة اختبار فهمك'],
+      gains: ['خطة مراجعة حسب الوقت المتاح', 'تلخيص مع مراجعة المصدر الأصلي', 'أسئلة تساعدك تختبر فهمك'] },
+    { title: 'خريج', subtitle: 'عرض مهاراتك والتحضير للعمل', icon: <DesignerIcon />, emoji: '🚀',
+      description: 'تدرّب على صياغة خبراتك ومشروعاتك، وتحسين ملفك المهني، ومراجعة نتائج AI قبل استخدامها.',
+      painPoints: ['صياغة السيرة الذاتية', 'عرض المشروعات والمهارات', 'بداية استخدام AI في العمل'],
+      gains: ['تطبيق إطار GOLDS على مسودة سيرتك الذاتية', 'قالب لخطة محتوى مهني على LinkedIn', 'أمثلة عملية قابلة للتطبيق؛ التوظيف يعتمد على مهاراتك والسوق'] },
 ]
 
 export default function TargetAudience() {
@@ -100,7 +85,7 @@ export default function TargetAudience() {
                     <span className="ta-badge">🎯 لمن هذا الكتاب؟</span>
                     <h2 className="ta-title">هل أنت الشخص المستهدف؟</h2>
                     <p className="ta-subtitle">
-                        صُمم هذا الكتاب خصيصاً ليساعدك على اختصار سنوات من التعلم
+                        أمثلة عربية تساعدك تبدأ تطبيق AI على مهام تخصك
                     </p>
                 </motion.div>
 
@@ -116,6 +101,16 @@ export default function TargetAudience() {
                             onMouseEnter={() => setActiveCard(index)}
                             onMouseLeave={() => setActiveCard(null)}
                             onClick={() => setFlipped(flipped === index ? null : index)}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`${audience.title}: عرض ${flipped === index ? 'التحديات' : 'الحلول'}`}
+                            aria-pressed={flipped === index}
+                            onKeyDown={event => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault()
+                                    setFlipped(flipped === index ? null : index)
+                                }
+                            }}
                         >
                             {/* Front side */}
                             <AnimatePresence mode="wait">

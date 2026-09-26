@@ -4,7 +4,7 @@ import { dbLogger } from '@/lib/logger'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { checkRateLimitAsync, getClientIP, RATE_LIMITS } from '@/lib/rate-limit'
-import { activatePaidSubscription } from '@/lib/payment-activation'
+import { activateStoredPayment, paymentAmountMatches } from '@/lib/payment-activation'
 
 /**
  * إنشاء اشتراك بعد الدفع الناجح — يمرّ عبر activatePaidSubscription الموحّد
@@ -18,6 +18,7 @@ async function createSubscriptionAfterPayment(userId: string, sessionId: string,
             .from('payments')
             .select('id, plan_id, paid_at, amount')
             .eq('kashier_session_id', sessionId)
+            .eq('user_id', userId)
             .single()
 
         if (paymentError || !payment) {
@@ -25,15 +26,7 @@ async function createSubscriptionAfterPayment(userId: string, sessionId: string,
             return { ok: false, error: 'Payment not found' }
         }
 
-        return await activatePaidSubscription({
-            userId,
-            paymentId: payment.id,
-            planId: payment.plan_id,
-            owedAmount: payment.amount,
-            paidAmount: paidAmount ?? null,
-            paidAt: payment.paid_at,
-            source: 'verify',
-        })
+        return await activateStoredPayment(userId, payment.id, 'verify')
     } catch (err) {
         dbLogger.error('[createSubscription] Unexpected error:', err)
         return { ok: false, error: 'خطأ غير متوقع' }
@@ -73,6 +66,8 @@ export async function POST(request: NextRequest) {
         }
 
         const supabase = getSupabaseAdmin()
+        const { data: ownedPayment, error: ownershipError } = await (supabase.from('payments') as any).select('id, amount, status, paid_at').eq('kashier_session_id', sessionId).eq('user_id', userId).single()
+        if (ownershipError || !ownedPayment) return NextResponse.json({ error: 'لم يتم العثور على طلب الدفع الخاص بك' }, { status: 404 })
         const verifyResult = await verifyPaymentSession(sessionId)
 
         if (!verifyResult.ok) {
@@ -85,17 +80,18 @@ export async function POST(request: NextRequest) {
         const status = verifyResult.status
 
         if (verifyResult.paid) {
+            if (!paymentAmountMatches(verifyResult.data?.amount, ownedPayment.amount)) return NextResponse.json({ error: 'مبلغ الدفع غير مطابق للطلب' }, { status: 400 })
             // الدفع ناجح - تحديث قاعدة البيانات
             const { error: updateError } = await (supabase.from('payments') as any)
                 .update({
                     status: 'success',
-                    paid_at: new Date().toISOString(),
+                    paid_at: ownedPayment.paid_at || new Date().toISOString(),
                     payment_method: verifyResult.data?.method || null
                 })
-                .eq('kashier_session_id', sessionId)
+                .eq('kashier_session_id', sessionId).eq('user_id', userId)
 
             if (updateError) {
-                dbLogger.error('Error updating payment status:', updateError)
+                return NextResponse.json({ error: 'تعذّر حفظ تأكيد الدفع' }, { status: 500 })
             }
 
             dbLogger.info(`Payment successful for user ${userId}, session ${sessionId}`)
@@ -103,7 +99,7 @@ export async function POST(request: NextRequest) {
             // Stage 3: تفعيل الاشتراك عبر المصدر الموحّد (يضبط is_active + حارس المبلغ)
             const subResult = await createSubscriptionAfterPayment(userId, sessionId, verifyResult.data?.amount)
             if (!subResult.ok) {
-                dbLogger.error(`[Payment Verify] Activation failed: ${subResult.error}`)
+                return NextResponse.json({ success: false, error: 'تعذّر تفعيل الاشتراك. تواصل مع الدعم برقم الطلب.' }, { status: 500 })
             }
 
             return NextResponse.json({
@@ -119,7 +115,7 @@ export async function POST(request: NextRequest) {
                     status: 'failed',
                     payment_method: verifyResult.data?.method || null
                 })
-                .eq('kashier_session_id', sessionId)
+                .eq('kashier_session_id', sessionId).eq('user_id', userId).neq('status', 'success')
 
             return NextResponse.json({
                 success: false,

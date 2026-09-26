@@ -88,7 +88,7 @@ function getSectionPages(sectionId: string): number {
   if (idx < 0) return 0
   const nextOffset = idx + 1 < SECTION_REGISTRY.length
     ? SECTION_REGISTRY[idx + 1].progressOffset
-    : 175
+    : SECTION_REGISTRY[idx].progressOffset + SECTION_REGISTRY[idx].pageCount
   return nextOffset - SECTION_REGISTRY[idx].progressOffset
 }
 

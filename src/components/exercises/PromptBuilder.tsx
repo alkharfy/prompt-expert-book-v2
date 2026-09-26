@@ -1,5 +1,7 @@
 'use client'
 
+import { renderPromptTemplate } from '@/lib/prompt-template'
+
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { supabaseProxy as supabase } from '@/lib/supabase_proxy'
@@ -141,13 +143,7 @@ export default function PromptBuilder({
         setValues(prev => ({ ...prev, [stepId]: value }))
     }
 
-    const buildPrompt = () => {
-        let prompt = templateFormat
-        Object.entries(values).forEach(([key, value]) => {
-            prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value)
-        })
-        return prompt
-    }
+    const buildPrompt = () => renderPromptTemplate(templateFormat, values)
 
     const handleSubmit = () => {
         if (isSubmitted) return

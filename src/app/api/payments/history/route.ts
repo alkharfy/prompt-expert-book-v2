@@ -1,9 +1,10 @@
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET(request: NextRequest) {
     try {
-        const userId = request.cookies.get('ebook_user_id')?.value
+        const userId = await getAuthenticatedUser()
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }

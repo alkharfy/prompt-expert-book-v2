@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { dbLogger } from '@/lib/logger'
+import { activateStoredPayment, paymentAmountMatches } from '@/lib/payment-activation'
+import { verifyPaymentSession } from '@/lib/kashier'
+import { POST as paymentWebhook } from '@/app/api/payment/webhook/route'
 
 /**
  * Kashier Webhook Handler — HMAC Signature Validation
@@ -86,63 +89,6 @@ function verifyKashierSignature(body: string, signature: string | null): boolean
  * @param paymentId - معرّف الدفع
  * @param paidAt - تاريخ الدفع
  */
-async function createSubscriptionFromWebhook(
-    userId: string,
-    sessionId: string,
-    planId: string,
-    paymentId: string,
-    paidAt: string
-) {
-    const supabaseAdmin = getSupabaseAdmin()
-
-    // حساب expires_at (+365 يوم)
-    const startsAt = new Date(paidAt)
-    const expiresAt = new Date(startsAt)
-    expiresAt.setDate(expiresAt.getDate() + 365)
-
-    // التحقق من وجود اشتراك مسبقاً (Idempotency)
-    const { data: existingSub } = await (supabaseAdmin as any)
-        .from('subscriptions')
-        .select('id')
-        .eq('payment_id', paymentId)
-        .single()
-
-    if (existingSub) {
-        dbLogger.info(`[Webhook] Subscription already exists for payment ${paymentId}`)
-        return { ok: true, alreadyExists: true }
-    }
-
-    // إنشاء الاشتراك
-    const { error: subError } = await (supabaseAdmin as any)
-        .from('subscriptions')
-        .insert({
-            user_id: userId,
-            plan_id: planId,
-            payment_id: paymentId,
-            status: 'active',
-            starts_at: startsAt.toISOString(),
-            expires_at: expiresAt.toISOString(),
-        })
-
-    if (subError) {
-        dbLogger.error('[Webhook] Subscription insert error:', subError)
-        throw subError
-    }
-
-    // تحديث users table وتفعيل الحساب
-    await (supabaseAdmin as any)
-        .from('users')
-        .update({
-            current_plan: planId,
-            plan_expires_at: expiresAt.toISOString(),
-            is_active: true,  // تفعيل الحساب تلقائياً بعد الدفع
-            is_verified: true, // تأكيد الحساب
-        })
-        .eq('id', userId)
-
-    dbLogger.info(`[Webhook] Subscription created for user ${userId}, plan ${planId}`)
-    return { ok: true }
-}
 
 // ─────────────────────────────────────────────
 // Webhook Route Handler
@@ -150,6 +96,8 @@ async function createSubscriptionFromWebhook(
 
 export async function POST(request: NextRequest) {
     try {
+        const payload = await request.clone().json()
+        if (payload.event && payload.data) return paymentWebhook(request)
         // 1. قراءة نص الطلب الخام (للتحقق من التوقيع)
         const bodyText = await request.text()
         const signature = request.headers.get('x-kashier-signature')
@@ -194,7 +142,7 @@ export async function POST(request: NextRequest) {
 
         const { data: payment, error: paymentError } = await (supabaseAdmin as any)
             .from('payments')
-            .select('id, user_id, plan_id, status, kashier_session_id')
+            .select('id, user_id, plan_id, status, kashier_session_id, amount, paid_at')
             .eq('kashier_order_id', orderId)
             .single()
 
@@ -224,32 +172,23 @@ export async function POST(request: NextRequest) {
 
         // 6. معالجة حسب الحالة
         if (status === 'SUCCESS' || status === 'PAID') {
+            if (payment.status !== 'success') {
+                const verified = payment.kashier_session_id ? await verifyPaymentSession(payment.kashier_session_id) : null
+                if (!verified?.ok || !verified.paid) return NextResponse.json({ error: 'Payment not verified' }, { status: 500 })
+                if (!paymentAmountMatches(verified.data?.amount, payment.amount)) return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 })
+            }
             // تحديث حالة الدفع
             const { error: updateError } = await (supabaseAdmin as any)
                 .from('payments')
                 .update({
                     status: 'success',
-                    paid_at: new Date().toISOString(),
+                    paid_at: payment.paid_at || new Date().toISOString(),
                 })
                 .eq('kashier_order_id', orderId)
 
-            if (updateError) {
-                dbLogger.error('[Webhook] Payment update error:', updateError)
-            }
-
-            // إنشاء اشتراك (إذا لم يكن موجوداً)
-            try {
-                await createSubscriptionFromWebhook(
-                    trustedUserId,
-                    payment.kashier_session_id,
-                    payment.plan_id,
-                    payment.id,
-                    new Date().toISOString()
-                )
-            } catch (subErr) {
-                dbLogger.error('[Webhook] Subscription creation failed:', subErr)
-                // لا نفشل الـ webhook — الدفع تم تسجيله
-            }
+            if (updateError) throw new Error('Payment update failed')
+            const activation = await activateStoredPayment(trustedUserId, payment.id, 'legacy-webhook')
+            if (!activation.ok) throw new Error(activation.error || 'Activation failed')
 
             return NextResponse.json({
                 success: true,
@@ -260,7 +199,7 @@ export async function POST(request: NextRequest) {
             await (supabaseAdmin as any)
                 .from('payments')
                 .update({ status: 'failed' })
-                .eq('kashier_order_id', orderId)
+                .eq('kashier_order_id', orderId).neq('status', 'success')
 
             return NextResponse.json({
                 success: true,

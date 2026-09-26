@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
+import { fetchPricingPlans } from '@/lib/pricing'
 import { useSubscription } from '@/context/SubscriptionContext'
 import '@/app/auth.css'
 
@@ -22,16 +23,14 @@ const PLAN_NAMES: Record<string, string> = {
     vip: 'المميزة — VIP',
 }
 
-// Display fallback; authoritative prices live in the admin-managed `plans` table.
-const PLAN_PRICES: Record<string, number> = {
-    basic: 99,
-    pro: 199,
-    vip: 399,
-}
 
 export default function SubscriptionPage() {
     const router = useRouter()
     const { currentPlan, expiresAt, status, features, isLoading: subLoading } = useSubscription()
+    const [planPrices, setPlanPrices] = useState<Record<string, number>>({})
+    useEffect(() => {
+        fetchPricingPlans().then(plans => setPlanPrices(Object.fromEntries(plans.map(p => [p.id, p.price])))).catch(() => {})
+    }, [])
     const [payments, setPayments] = useState<PaymentRecord[]>([])
     const [paymentsLoading, setPaymentsLoading] = useState(true)
 
@@ -50,7 +49,7 @@ export default function SubscriptionPage() {
     }, [])
 
     const planName = currentPlan ? (PLAN_NAMES[currentPlan] || currentPlan) : 'بدون اشتراك'
-    const planPrice = currentPlan ? (PLAN_PRICES[currentPlan] || 0) : 0
+    const planPrice = currentPlan ? (planPrices[currentPlan] || 0) : 0
     const expiresDate = expiresAt ? new Date(expiresAt).toLocaleDateString('ar-EG', {
         year: 'numeric', month: 'long', day: 'numeric'
     }) : '—'
@@ -90,7 +89,7 @@ export default function SubscriptionPage() {
                                         <span className="plan-info-icon">💳</span>
                                         <div>
                                             <span className="plan-info-label">السعر</span>
-                                            <span className="plan-info-value">{planPrice > 0 ? `${planPrice} ج.م / سنة` : '—'}</span>
+                                            <span className="plan-info-value">{planPrice > 0 ? `${planPrice || '—'} ج.م / سنة` : '—'}</span>
                                         </div>
                                     </div>
                                     <div className="plan-info-item">

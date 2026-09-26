@@ -1197,35 +1197,15 @@ class AuthSystem {
      * - Section 3 (3): pages 42-59 (18 pages)
      * - Section 4 (4): pages 60-77 (18 pages)
      * - Section 5 (5): pages 78-95 (18 pages)
-     * - Section 6 (6): pages 96-113 (18 pages)
-     * - Section 7 (7): pages 114-131 (18 pages)
-     * - Section 8 (8): pages 132-147 (16 pages)
-     * - Section 9 (9): pages 148-163 (16 pages)
-     * - Section 10 (10): pages 164-175 (12 pages)
-     * - Library (11): pages 176-187 (12 pages)
-     * - Appendix (12): pages 188-207 (20 pages)
-     * - Glossary: pages 208-215 (8 pages) [Optional bonus, not a numbered chapter]
-     * Total: 215 pages
+     * - Sections 6-10 end at 115, 133, 149, 165 and 182.
+     * - Library ends at 194; appendix at 214; glossary at 222.
+     * Total: 222 pages
      */
     private calculateCompletedChapters(currentPage: number): number[] {
         const completed: number[] = []
 
         // Chapter end pages (inclusive) - verified against bookData
-        const chapterEndPages = [
-            6,    // Intro ends at page 6 (6 pages)
-            23,   // Section 1 ends at page 23 (17 pages)
-            41,   // Section 2 ends at page 41 (18 pages)
-            59,   // Section 3 ends at page 59 (18 pages)
-            77,   // Section 4 ends at page 77 (18 pages)
-            95,   // Section 5 ends at page 95 (18 pages)
-            113,  // Section 6 ends at page 113 (18 pages)
-            131,  // Section 7 ends at page 131 (18 pages)
-            147,  // Section 8 ends at page 147 (16 pages)
-            163,  // Section 9 ends at page 163 (16 pages)
-            175,  // Section 10 ends at page 175 (12 pages)
-            187,  // Library ends at page 187 (12 pages)
-            207,  // Appendix ends at page 207 (20 pages)
-        ]
+        const chapterEndPages = [6, 23, 41, 59, 77, 95, 115, 133, 149, 165, 182, 194, 214]
 
         for (let i = 0; i < chapterEndPages.length; i++) {
             // A chapter is completed if user has read past its last page

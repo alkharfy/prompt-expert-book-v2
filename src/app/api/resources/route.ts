@@ -1,3 +1,4 @@
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { LEARNING_RESOURCES, AI_CHANGELOG_SEEDS } from '@/data/learningResources'
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     const level = searchParams.get('level')
     const search = searchParams.get('search')
     const saved = searchParams.get('saved') === 'true'
-    const userId = request.cookies.get('ebook_user_id')?.value
+    const userId = await getAuthenticatedUser()
 
     let query = supabaseAdmin
       .from('learning_resources')
@@ -75,10 +76,13 @@ export async function GET(request: NextRequest) {
 // POST /api/resources — seed المصادر الأولية (admin فقط)
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.cookies.get('ebook_user_id')?.value
+    const userId = await getAuthenticatedUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const { data: admin, error: adminError } = await supabaseAdmin.from('users').select('is_admin').eq('id', userId).maybeSingle()
+    if (adminError || !admin?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
 

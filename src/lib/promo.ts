@@ -8,6 +8,7 @@
  * Admin writes (updatePromoSettings) also run client-side from admin dashboard.
  */
 import { supabase } from './supabase'
+import { fetchPricingPlans } from './pricing'
 import { z } from 'zod'
 import { dbLogger } from './logger'
 
@@ -54,67 +55,6 @@ const DEFAULT_PROMO_SETTINGS: PromoSettings = {
     end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     promo_text: 'عرض افتتاحي: خصم 30% لفترة محدودة!'
 }
-
-// Default pricing plans (fallback)
-// Pricing realigned 2026-05: previous 299/499/999 with 98% discount triggered
-// "scam" perception. New ladder is honest sticker pricing aligned with the
-// Egyptian/Gulf market and competitor benchmarks.
-const DEFAULT_PRICING_PLANS: PricingPlan[] = [
-    {
-        id: 'basic',
-        name: 'الأساسية',
-        price: 99,
-        duration: 'سنة',
-        features: [
-            '📖 الكتاب كامل (188+ صفحة)',
-            '✏️ التمارين التفاعلية',
-            '🏆 نظام النقاط والإنجازات (60+)',
-            '🔥 Streak يومي ولوحة المتصدرين',
-            '🧭 مهام يومية (3 مهام/يوم)',
-            '📝 ملاحظات وتظليل النصوص',
-            '🔖 حفظ الإشارات المرجعية',
-            '⏳ وصول لمدة سنة كاملة'
-        ],
-        is_popular: false,
-        description: 'ابدأ رحلتك في احتراف البرومبت مع كل أدوات التعلم التفاعلي.',
-        cta_link: '/payment?plan=basic',
-        cta_text: 'ابدأ الآن'
-    },
-    {
-        id: 'pro',
-        name: 'المتقدمة',
-        price: 199,
-        duration: 'سنة',
-        features: [
-            '✅ كل مميزات الأساسية',
-            '📋 95 قالب جاهز للنسخ',
-            '🎓 شهادة إتمام معتمدة + QR',
-            '🛠️ أدوات AI (مولد + محلل البرومبت)',
-            '♾️ تحديثات مجانية مدى الحياة'
-        ],
-        is_popular: true,
-        description: 'الأكثر شيوعاً - كل الأدوات التي تحتاجها للاحتراف الحقيقي.',
-        cta_link: '/payment?plan=pro',
-        cta_text: 'احصل على العرض'
-    },
-    {
-        id: 'vip',
-        name: 'VIP',
-        price: 399,
-        duration: 'سنة',
-        features: [
-            '✅ كل مميزات المتقدمة',
-            '⚡ مقارن الردود AI (حصري)',
-            '🎯 استشارة خاصة 30 دقيقة',
-            '💬 دعم أولوية عبر WhatsApp',
-            '🚀 وصول مبكر للمحتوى الجديد'
-        ],
-        is_popular: false,
-        description: 'للمحترفين الجادين - دعم شخصي وأدوات AI حصرية.',
-        cta_link: '/payment?plan=vip',
-        cta_text: 'تواصل معنا'
-    }
-]
 
 // Fetch promo settings
 export async function getPromoSettings(): Promise<PromoSettings> {
@@ -190,23 +130,7 @@ export async function togglePromoActive(isActive: boolean): Promise<{ success: b
 
 // Fetch pricing plans
 export async function getPricingPlans(): Promise<PricingPlan[]> {
-    try {
-        const { data, error } = await supabase
-            .from('site_settings')
-            .select('value')
-            .eq('key', 'pricing_plans')
-            .single() as { data: { value: PricingPlan[] } | null; error: unknown }
-
-        if (error || !data) {
-            dbLogger.warn('Warning')
-            return DEFAULT_PRICING_PLANS
-        }
-
-        return data.value as PricingPlan[]
-    } catch (err) {
-        dbLogger.error('Error', err)
-        return DEFAULT_PRICING_PLANS
-    }
+    return fetchPricingPlans()
 }
 
 // Calculate discounted price

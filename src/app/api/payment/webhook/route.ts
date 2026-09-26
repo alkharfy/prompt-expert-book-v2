@@ -1,3 +1,4 @@
+import { activateStoredPayment, paymentAmountMatches } from '@/lib/payment-activation'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from '@/lib/logger'
@@ -84,6 +85,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ received: true }, { status: 200 })
         }
 
+        if (!paymentAmountMatches(data.amount, payment.amount) || data.currency !== 'EGP') return NextResponse.json({ error: 'Payment amount or currency mismatch' }, { status: 400 })
+
         // Already processed — idempotent
         if (payment.status === 'success') {
             dbLogger.info(`[webhook] Payment ${payment.id} already marked as success — idempotent skip`)
@@ -107,6 +110,7 @@ export async function POST(request: NextRequest) {
         if (updateError) {
             dbLogger.error('[webhook] Payment update error:', updateError)
             alertMoneyPath('webhook_payment_update_failed', { paymentId: payment.id, merchantOrderId, error: updateError.message })
+            throw new Error('Payment status update failed')
         }
 
         // Create subscription + activate user
@@ -145,10 +149,8 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         dbLogger.error('[webhook] Unexpected error:', error)
         alertMoneyPath('webhook_unexpected_error', { error: error instanceof Error ? error.message : String(error) })
-        // Return 200 to avoid Kashier infinite-retry loops on a deterministic error.
-        // Any payment left 'pending' by a transient failure is recovered by the
-        // reconcile-payments cron (≤15 min), so a missed activation is never silent.
-        return NextResponse.json({ received: true }, { status: 200 })
+        // Let Kashier retry transient database or activation failures.
+        return NextResponse.json({ error: 'Payment processing temporarily failed' }, { status: 500 })
     }
 }
 
@@ -164,7 +166,7 @@ function verifySignature(data: Record<string, unknown>, receivedSignature: strin
         }
 
         const signatureKeys = data.signatureKeys as string[]
-        if (!signatureKeys || !Array.isArray(signatureKeys)) {
+        if (!Array.isArray(signatureKeys) || !['amount', 'currency', 'merchantOrderId', 'status'].every(key => signatureKeys.includes(key) && key in data)) {
             return false
         }
 
@@ -184,7 +186,8 @@ function verifySignature(data: Record<string, unknown>, receivedSignature: strin
             .update(signaturePayload)
             .digest('hex')
 
-        return computedSignature === receivedSignature
+        if (!/^[a-f0-9]{64}$/i.test(receivedSignature)) return false
+        return crypto.timingSafeEqual(Buffer.from(computedSignature, 'hex'), Buffer.from(receivedSignature, 'hex'))
     } catch (err) {
         dbLogger.error('[webhook] Signature verification error:', err)
         return false
@@ -194,78 +197,7 @@ function verifySignature(data: Record<string, unknown>, receivedSignature: strin
 /**
  * Ensure subscription exists and user is activated
  */
-async function ensureSubscription(supabase: ReturnType<typeof getSupabaseAdmin>, userId: string, paymentId: string, planId: string) {
-    try {
-        // Idempotency: check if subscription already exists for this payment
-        const { data: existingSub } = await (supabase as any)
-            .from('subscriptions')
-            .select('id')
-            .eq('payment_id', paymentId)
-            .maybeSingle()
-
-        if (existingSub) {
-            dbLogger.info(`[webhook:ensureSubscription] Already exists for payment ${paymentId}`)
-            // Still ensure user is marked active
-            await (supabase as any)
-                .from('users')
-                .update({ is_active: true, current_plan: planId })
-                .eq('id', userId)
-            return
-        }
-
-        // Deactivate any existing active subscriptions (for upgrades)
-        const { data: activeSubs } = await (supabase as any)
-            .from('subscriptions')
-            .select('id, plan_id')
-            .eq('user_id', userId)
-            .eq('status', 'active')
-
-        if (activeSubs && activeSubs.length > 0) {
-            for (const sub of activeSubs) {
-                await (supabase as any)
-                    .from('subscriptions')
-                    .update({ status: 'upgraded', updated_at: new Date().toISOString() })
-                    .eq('id', sub.id)
-            }
-        }
-
-        const startsAt = new Date()
-        const expiresAt = new Date(startsAt)
-        expiresAt.setDate(expiresAt.getDate() + 365)
-
-        // Create subscription
-        const { error: subError } = await (supabase as any)
-            .from('subscriptions')
-            .insert({
-                user_id: userId,
-                plan_id: planId,
-                payment_id: paymentId,
-                status: 'active',
-                starts_at: startsAt.toISOString(),
-                expires_at: expiresAt.toISOString(),
-            })
-
-        if (subError) {
-            dbLogger.error('[webhook:ensureSubscription] Insert error:', subError)
-            return
-        }
-
-        // Update user — MUST set is_active: true
-        const { error: userError } = await (supabase as any)
-            .from('users')
-            .update({
-                current_plan: planId,
-                plan_expires_at: expiresAt.toISOString(),
-                is_active: true,
-            })
-            .eq('id', userId)
-
-        if (userError) {
-            dbLogger.error('[webhook:ensureSubscription] User update error:', userError)
-        }
-
-        dbLogger.info(`[webhook:ensureSubscription] Created for user ${userId}, plan ${planId}`)
-    } catch (err) {
-        dbLogger.error('[webhook:ensureSubscription] Unexpected error:', err)
-    }
+async function ensureSubscription(supabase: any, userId: string, paymentId: string, planId: string) {
+    const result = await activateStoredPayment(userId, paymentId, 'callback')
+    if (!result.ok) throw new Error(result.error || 'Subscription activation failed')
 }

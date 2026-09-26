@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Navigation from '@/components/Navigation'
+import { fetchPricingPlans } from '@/lib/pricing'
 import SubscriptionGateModal from '@/components/SubscriptionGateModal'
 import { trackInitiateCheckout } from '@/lib/meta-pixel'
 import { checkoutEventId } from '@/lib/tracking-config'
@@ -22,9 +23,9 @@ function PaymentContent() {
     // SECURITY: Read userId from cookie instead of URL param to prevent IDOR
     const [userId, setUserId] = useState<string | null>(null)
     const planParam = searchParams.get('plan')
-    const isUpgrade = searchParams.get('upgrade') === 'true'
+    const [currentPlanId, setCurrentPlanId] = useState<string | null>(null)
+    const isUpgrade = searchParams.get('upgrade') === 'true' || !!currentPlanId
     const requiredFeature = searchParams.get('feature')
-    const currentPlanId = searchParams.get('currentPlan')
 
     // Feature names in Arabic
     const FEATURE_NAMES: Record<string, string> = {
@@ -53,7 +54,7 @@ function PaymentContent() {
 
     const [plans, setPlans] = useState<PlanInfo[]>([])
     const suggestedPlan = requiredFeature ? (FEATURE_MIN_PLAN[requiredFeature] || 'pro') : 'pro'
-    const [selectedPlan, setSelectedPlan] = useState<string>(planParam || (isUpgrade ? suggestedPlan : 'pro'))
+    const [selectedPlan, setSelectedPlan] = useState<string>(['basic', 'pro', 'vip'].includes(planParam || '') ? planParam! : (isUpgrade ? suggestedPlan : 'basic'))
     const [isLoading, setIsLoading] = useState(false)
     const [plansLoading, setPlansLoading] = useState(true)
     const [error, setError] = useState('')
@@ -68,7 +69,7 @@ function PaymentContent() {
 
     useEffect(() => {
         // Show gate modal when user arrives via middleware redirect (only if not already paid)
-        if (!alreadyPaid && (redirectPath || requiredFeature)) {
+        if (redirectPath || requiredFeature) {
             setShowGateModal(true)
         }
 
@@ -129,10 +130,10 @@ function PaymentContent() {
             setUserId(cookieUserId)
         } else {
             // Preserve buy-intent across signup: come back to /payment with the plan.
-            const planQs = planParam ? `&plan=${planParam}` : ''
-            router.push(`/register?next=/payment${planQs}`)
+            const returnPath = '/payment' + (searchParams.toString() ? '?' + searchParams.toString() : '')
+            router.push('/register?next=' + encodeURIComponent(returnPath))
         }
-    }, [router, planParam])
+    }, [router, planParam, searchParams])
 
     // Auto-activate: check if user already paid but subscription wasn't created
     useEffect(() => {
@@ -147,6 +148,8 @@ function PaymentContent() {
                 const data = await res.json()
                 if (data.success && data.hasPaid) {
                     setAlreadyPaid(true)
+                    setCurrentPlanId(data.planId || data.plan || null)
+                    if (data.planId === "vip" || data.plan === "vip") setError("باقتك VIP نشطة وتشمل جميع المزايا الحالية. يمكنك العودة إلى الكتاب.")
                 }
             } catch { /* ignore, show payment page normally */ }
         }
@@ -157,16 +160,9 @@ function PaymentContent() {
     useEffect(() => {
         const fetchPlans = async () => {
             try {
-                const response = await fetch('/api/admin/plans')
-                const data = await response.json()
-
-                if (data.ok && data.plans) {
-                    setPlans(data.plans)
-                } else {
-                    console.error('Failed to fetch plans')
-                }
+                setPlans(await fetchPricingPlans())
             } catch (error) {
-                console.error('Error fetching plans:', error)
+                setError('تعذّر تحميل الأسعار الحالية. أعد تحميل الصفحة قبل الدفع.')
             } finally {
                 setPlansLoading(false)
             }
@@ -175,7 +171,17 @@ function PaymentContent() {
         fetchPlans()
     }, [])
 
-    const currentPlan = plans.find(p => p.id === selectedPlan) || plans[1]
+    useEffect(() => {
+        if (!isUpgrade || !currentPlanId || !plans.length) return
+        if ((PLAN_ORDER[selectedPlan] || 0) <= (PLAN_ORDER[currentPlanId] || 0)) {
+            const next = plans.find(p => (PLAN_ORDER[p.id] || 0) > (PLAN_ORDER[currentPlanId] || 0))
+            if (next) setSelectedPlan(next.id)
+        }
+    // Plan ranks are a static lookup.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isUpgrade, currentPlanId, selectedPlan, plans])
+
+    const currentPlan = plans.find(p => p.id === selectedPlan && (!isUpgrade || !currentPlanId || PLAN_ORDER[p.id] > PLAN_ORDER[currentPlanId]))
 
     // Reset promo when plan changes
     useEffect(() => {
@@ -187,7 +193,7 @@ function PaymentContent() {
     }, [selectedPlan])
 
     const handleApplyPromo = async () => {
-        if (!promoCode.trim() || !currentPlan || !userId) return
+        if (!promoCode.trim() || !currentPlan || !userId || isUpgrade && !currentPlanId) return
         setPromoValidating(true)
         setPromoResult(null)
 
@@ -198,7 +204,7 @@ function PaymentContent() {
                 body: JSON.stringify({
                     code: promoCode.trim(),
                     planId: selectedPlan,
-                    userId,
+                    isUpgrade,
                 }),
             })
 
@@ -224,13 +230,13 @@ function PaymentContent() {
     }
 
     const handlePayment = async () => {
-        if (!userId) return
+        if (!userId || !currentPlan || isUpgrade && !currentPlanId) return
         setError('')
         setIsLoading(true)
 
         // Track payment start
         const { trackPaymentStarted } = await import('@/lib/analytics')
-        trackPaymentStarted(selectedPlan, promoResult?.valid ? (promoResult.final_amount ?? 0) : 0)
+        trackPaymentStarted(selectedPlan, promoResult?.valid ? (promoResult.final_amount ?? currentPlan.price) : (isUpgrade && currentPlanId ? currentPlan.price - (plans.find(p => p.id === currentPlanId)?.price ?? 0) : currentPlan.price))
 
         try {
             const payload: any = {
@@ -240,7 +246,6 @@ function PaymentContent() {
             // Include upgrade info
             if (isUpgrade && currentPlanId) {
                 payload.isUpgrade = true
-                payload.currentPlanId = currentPlanId
             }
 
             // Include promo code if validated
@@ -257,13 +262,15 @@ function PaymentContent() {
             const data = await response.json()
 
             if (data.success && data.sessionUrl) {
+                const checkoutAmount = Number(data.amount)
+                if (!Number.isFinite(checkoutAmount) || checkoutAmount <= 0) throw new Error('Invalid checkout amount')
                 // Track checkout initiation in Meta Pixel + GA4.
                 // Shared event_id (checkoutEventId(orderId)) dedups against the
                 // server CAPI InitiateCheckout fired in create-session.
-                const icValue = promoResult?.valid ? (promoResult.final_amount ?? 0) : (currentPlan?.price ?? 0)
+                const icValue = checkoutAmount
                 trackInitiateCheckout(icValue, data.orderId ? checkoutEventId(data.orderId) : undefined)
                 import('@/lib/analytics').then(({ trackBeginCheckout }) => {
-                    trackBeginCheckout(promoResult?.valid ? (promoResult.final_amount ?? 0) : (currentPlan?.price ?? 0))
+                    trackBeginCheckout(checkoutAmount)
                 })
                 // التوجيه لصفحة كاشير للدفع
                 window.location.href = data.sessionUrl
@@ -398,7 +405,7 @@ function PaymentContent() {
                                     onClick={() => setSelectedPlan(plan.id)}
                                 >
                                     {plan.id === 'pro' && (
-                                        <span className="popular-badge">الأكثر شيوعاً</span>
+                                        <span className="popular-badge">أدوات وتدريب إضافي</span>
                                     )}
                                     <h3 className="plan-name">{plan.name_ar}</h3>
                                     <div className="plan-price">
@@ -537,7 +544,7 @@ function PaymentContent() {
                 <button
                     className="payment-btn"
                     onClick={handlePayment}
-                    disabled={isLoading}
+                    disabled={isLoading || !currentPlan || isUpgrade && !currentPlanId}
                 >
                     {isLoading ? (
                         <div className="payment-btn-loading">

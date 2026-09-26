@@ -20,9 +20,9 @@ export default function FinalCTA() {
                     className="final-cta-content"
                 >
                     <h2>جاهز تبدأ؟ افتح الكتاب كامل اليوم</h2>
-                    <p>10 فصول + 95 قالب جاهز + 48 تمرين عملي — مع ضمان استرداد 30 يوم</p>
+                    <p>10 فصول + 95 قالب جاهز + 45 تمرين عملي — مع ضمان استرداد 30 يوم</p>
                     <Link href="#pricing" className="btn btn-primary btn-lg" onClick={() => trackCtaClick('اشترك الآن', 'final_cta')}>
-                        اشترك الآن — ابدأ من 99 ج.م ←
+                        اشترك الآن — شاهد الباقات والأسعار ←
                     </Link>
                     <div style={{ marginTop: '16px' }}>
                         <Link href="/read/intro/1" className="final-cta-secondary" onClick={() => trackCtaClick('جرّب مجاناً', 'final_cta_secondary')}>

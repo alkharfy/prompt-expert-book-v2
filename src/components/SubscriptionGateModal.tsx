@@ -11,6 +11,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import './SubscriptionGateModal.css'
+import { fetchPricingPlans } from '@/lib/pricing'
 
 // ─────────────────────────────────────────────
 // Types
@@ -59,7 +60,7 @@ const FEATURE_INFO: Record<string, { name: string; icon: string; description: st
   certificate: {
     name: 'شهادة الإتمام',
     icon: '📜',
-    description: 'احصل على شهادة رسمية معتمدة عند إتمام الكتاب',
+    description: 'احصل على شهادة إتمام من PromptMaster عند إتمام الكتاب',
   },
   leaderboard: {
     name: 'لوحة المتصدرين',
@@ -72,7 +73,6 @@ const PLANS = [
   {
     id: 'basic',
     name: 'الأساسية',
-    price: 99,
     color: '#3B82F6',
     gradient: 'linear-gradient(135deg, #3B82F6, #1D4ED8)',
     icon: '📘',
@@ -82,32 +82,29 @@ const PLANS = [
   {
     id: 'pro',
     name: 'المتقدمة',
-    price: 199,
     color: '#FF6B35',
     gradient: 'linear-gradient(135deg, #FF6B35, #FF8C42)',
     icon: '🚀',
-    popular: true,
+    popular: false,
     features: [
       'كل مميزات الأساسية',
       'صندوق الأدوات الذكية',
       'الإنجازات والشهادات',
       'لوحة المتصدرين',
-      'المشروع التطبيقي',
+      'مكتبة المصادر',
     ],
     featureKeys: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises', 'gamification', 'leaderboard', 'certificate', 'tools'],
   },
   {
     id: 'vip',
     name: 'VIP',
-    price: 399,
     color: '#A855F7',
     gradient: 'linear-gradient(135deg, #A855F7, #7C3AED)',
     icon: '👑',
     features: [
       'كل مميزات المتقدمة',
       'المحادثة الذكية مع AI',
-      'أولوية الدعم الفني',
-      'وصول مبكر للتحديثات',
+      'تحديثات AI',
     ],
     featureKeys: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises', 'gamification', 'leaderboard', 'certificate', 'tools', 'chat'],
   },
@@ -127,6 +124,14 @@ export default function SubscriptionGateModal({
   onClose,
   onSelectPlan,
 }: SubscriptionGateModalProps) {
+  const [prices, setPrices] = useState<Record<string, number>>({})
+  useEffect(() => {
+    let cancelled = false
+    fetchPricingPlans().then(plans => {
+      if (!cancelled) setPrices(Object.fromEntries(plans.map(p => [p.id, p.price])))
+    }).catch(() => { /* The payment page will show its pricing error. */ })
+    return () => { cancelled = true }
+  }, [])
   const [isVisible, setIsVisible] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
 
@@ -150,7 +155,7 @@ export default function SubscriptionGateModal({
       const plan = PLANS.find(p => p.featureKeys.includes(feature))
       setSelectedPlan(plan?.id || 'basic')
     } else {
-      setSelectedPlan('pro')
+      setSelectedPlan('basic')
     }
   }, [feature, currentPlan, isUpgrade])
 
@@ -280,8 +285,8 @@ export default function SubscriptionGateModal({
             const isSelected = selectedPlan === plan.id
             const hasFeature = !feature || plan.featureKeys.includes(feature)
             const priceDiff = isUpgrade && currentPlan
-              ? plan.price - (PLANS.find(p => p.id === currentPlan)?.price || 0)
-              : plan.price
+              ? prices[plan.id] - prices[currentPlan]
+              : prices[plan.id]
 
             return (
               <button
@@ -306,14 +311,14 @@ export default function SubscriptionGateModal({
                   <div className="sgm-plan-price">
                     {isUpgrade && currentPlan ? (
                       <>
-                        <span className="sgm-price-old">{plan.price}</span>
-                        <span className="sgm-price-value">{priceDiff}</span>
+                        <span className="sgm-price-old">{prices[plan.id] ?? "—"}</span>
+                        <span className="sgm-price-value">{Number.isFinite(priceDiff) ? priceDiff : "—"}</span>
                         <span className="sgm-price-unit">ج.م</span>
                         <span className="sgm-price-label">فرق الترقية</span>
                       </>
                     ) : (
                       <>
-                        <span className="sgm-price-value">{plan.price}</span>
+                        <span className="sgm-price-value">{prices[plan.id] ?? "—"}</span>
                         <span className="sgm-price-unit">ج.م</span>
                       </>
                     )}

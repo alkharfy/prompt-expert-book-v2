@@ -79,11 +79,22 @@ export async function POST(request: NextRequest) {
             throw updateError
         }
 
-        // 5. تحديث users.current_plan إلى null
-        await (supabase as any)
+        // Cancelling an old payment must preserve any other valid subscription.
+        const { data: remaining, error: remainingError } = await (supabase as any)
+            .from('subscriptions').select('plan_id, expires_at')
+            .eq('user_id', subscription.user_id).eq('status', 'active')
+            .gt('expires_at', new Date().toISOString())
+            .order('created_at', { ascending: false }).limit(1).maybeSingle()
+        if (remainingError) throw remainingError
+        const { error: userUpdateError } = await (supabase as any)
             .from('users')
-            .update({ current_plan: null })
+            .update({
+                current_plan: remaining?.plan_id || null,
+                plan_expires_at: remaining?.expires_at || null,
+                is_active: !!remaining,
+            })
             .eq('id', subscription.user_id)
+        if (userUpdateError) throw userUpdateError
 
         dbLogger.info(`[Admin] Cancelled subscription ${subscriptionId}. Reason: ${reason || 'N/A'}`)
 

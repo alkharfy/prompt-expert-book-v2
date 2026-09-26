@@ -17,7 +17,7 @@ export default function GuestBanner() {
       <div className="guest-banner-content">
         <span className="guest-banner-icon">📚</span>
         <p className="guest-banner-text">
-          افتح الكتاب كامل + 95 قالب جاهز — اشترك الآن من 99 ج.م
+          افتح الكتاب كامل + 95 قالب جاهز — شاهد الباقات والأسعار
         </p>
         <div className="guest-banner-actions">
           <Link href="/payment?plan=pro" className="guest-banner-cta">

@@ -1,3 +1,5 @@
+import { getUserSubscription } from '@/lib/subscription'
+import { getCheckoutBasePrice } from '@/lib/payment-pricing'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
@@ -14,7 +16,7 @@ import { applyPromoDiscount } from '@/lib/pricing'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { code, planId } = body
+        const { code, planId, isUpgrade } = body
 
         // SECURITY: Rate limit to prevent promo code brute-force
         const clientIP = getClientIP(request)
@@ -27,9 +29,9 @@ export async function POST(request: NextRequest) {
         }
 
         // استخراج userId من cookies بدلاً من body لمنع الانتحال
-        const userId = await getAuthenticatedUser()
+        const userId = await getAuthenticatedUser({ skipActiveCheck: true })
 
-        if (!code || !planId) {
+        if (typeof code !== 'string' || !code.trim() || typeof planId !== 'string' || !['basic', 'pro', 'vip'].includes(planId) || isUpgrade != null && typeof isUpgrade !== 'boolean') {
             return NextResponse.json({ valid: false, error: 'بيانات ناقصة' }, { status: 400 })
         }
 
@@ -99,6 +101,7 @@ export async function POST(request: NextRequest) {
         const { data: plan } = await (supabase as any)
             .from('plans')
             .select('price')
+            .eq('is_active', true)
             .eq('id', planId)
             .single()
 
@@ -106,7 +109,17 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ valid: false, error: 'الباقة غير موجودة' })
         }
 
-        const originalAmount = plan.price
+        let originalAmount = Number(plan.price)
+        if (isUpgrade) {
+            if (!userId) return NextResponse.json({ valid: false, error: 'يرجى تسجيل الدخول' }, { status: 401 })
+            const subscription = await getUserSubscription(userId)
+            const { data: activePlans } = await (supabase as any).from('plans').select('id, price').eq('is_active', true)
+            try {
+                originalAmount = getCheckoutBasePrice(Object.fromEntries((activePlans || []).map((p: any) => [p.id, Number(p.price)])), planId, true, subscription)
+            } catch (error) {
+                return NextResponse.json({ valid: false, error: error instanceof Error ? error.message : 'ترقية غير صالحة' }, { status: 400 })
+            }
+        }
 
         // 7. التحقق من الحد الأدنى
         if (promo.min_amount && originalAmount < promo.min_amount) {

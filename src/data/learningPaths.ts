@@ -11,7 +11,7 @@ function countPages(sectionIds: string[]): number {
         const nextOffset =
             i + 1 < SECTION_REGISTRY.length
                 ? SECTION_REGISTRY[i + 1].progressOffset
-                : 175 // total book pages
+                : SECTION_REGISTRY[i].progressOffset + SECTION_REGISTRY[i].pageCount
         total += nextOffset - SECTION_REGISTRY[i].progressOffset
     }
     return total
@@ -137,7 +137,7 @@ export function getPathCompletion(
     const pathEndPage =
         lastSectionIdx + 1 < SECTION_REGISTRY.length
             ? SECTION_REGISTRY[lastSectionIdx + 1].progressOffset
-            : 175
+            : lastSection.progressOffset + lastSection.pageCount
 
     const clamped = Math.min(currentPage, pathEndPage)
     return Math.round((clamped / pathEndPage) * 100)

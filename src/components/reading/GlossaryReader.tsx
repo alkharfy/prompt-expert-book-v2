@@ -44,8 +44,8 @@ export default function GlossaryReader({ data, initialHasAccess = false, initial
         if (!initialHasAccess) {
             setIsLockOverlayOpen(true)
         } else {
-            // Save progress (Intro:6 + S1:17 + S2-7:18×6 + S8:16 + S9:16 + S10:12 + Library:12 + Appendix:20 = 207 pages before Glossary)
-            authSystem.updateReadingProgress(207 + pageNum).catch(err => {
+            // Save progress after 214 preceding pages.
+            authSystem.updateReadingProgress(214 + pageNum).catch(err => {
                 console.error('Failed to save progress:', err)
             })
         }
@@ -64,9 +64,9 @@ export default function GlossaryReader({ data, initialHasAccess = false, initial
         if (!isLastPage) {
             router.push(`/read/glossary/${pageNum + 1}`)
         } else {
-            // Explicitly mark Glossary as completed (Page 215 = last page)
+            // Explicitly mark Glossary as completed (Page 222 = last page)
             if (isAuthed) {
-                await authSystem.updateReadingProgress(215)
+                await authSystem.updateReadingProgress(222)
             }
             router.push('/toc')
         }

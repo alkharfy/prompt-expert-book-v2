@@ -45,8 +45,8 @@ export default function LibraryReader({ data, initialHasAccess = false, initialA
         if (!initialHasAccess) {
             setIsLockOverlayOpen(true)
         } else {
-            // Save progress (Intro:6 + S1:17 + S2-7:18×6 + S8:16 + S9:16 + S10:12 = 175 pages before Library)
-            authSystem.updateReadingProgress(175 + pageNum).catch(err => {
+            // Save progress after 182 preceding pages.
+            authSystem.updateReadingProgress(182 + pageNum).catch(err => {
                 console.error('Failed to save progress:', err)
             })
         }
@@ -74,7 +74,7 @@ export default function LibraryReader({ data, initialHasAccess = false, initialA
         if (!isFirstPage) {
             router.push(`/library/${pageNum - 1}`)
         } else {
-            router.push('/read/section-10/12')
+            router.push('/read/section-10/17')
         }
     }
 

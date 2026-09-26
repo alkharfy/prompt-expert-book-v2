@@ -135,14 +135,14 @@ const dripTemplates = [
     {
         day: 10,
         type: 'upgrade_drip_5' as const,
-        subject: () => `⏰ جاهز تبدأ احتراف AI؟ الكتاب كامل من 99 ج.م`,
+        subject: () => `⏰ جاهز تبدأ احتراف AI؟ شاهد الباقات والأسعار الحالية`,
         body: (name: string) => `
             <div class="card">
                 <span class="emoji-large">⏰</span>
                 <h2>خطوة واحدة وتبدأ!</h2>
-                <p>يا <strong>${escapeHtml(name)}</strong>، الكتاب كامل (10 فصول + 95 قالب + 48 تمرين + شهادة إتمام) في انتظارك.</p>
+                <p>يا <strong>${escapeHtml(name)}</strong>، الكتاب كامل (10 فصول + 95 قالب + 45 تمرين + شهادة إتمام في الباقات التي تشملها) في انتظارك.</p>
                 <div style="background:rgba(255,107,53,0.08); border:1px solid rgba(255,107,53,0.2); border-radius:8px; padding:16px; text-align:center; margin:16px 0;">
-                    <p style="font-size:24px; font-weight:bold; color:#FF6B35; margin:0;">من 99 ج.م</p>
+                    <p style="font-size:24px; font-weight:bold; color:#FF6B35; margin:0;">بالسعر الموضّح قبل الدفع</p>
                     <p style="color:#888; margin:8px 0 0 0;">وصول سنة كاملة — أقل من سعر كوباية قهوة في الأسبوع</p>
                 </div>
                 <hr class="divider">
@@ -160,9 +160,9 @@ const dripTemplates = [
                 <span class="emoji-large">⚡</span>
                 <h2>آخر تذكير!</h2>
                 <p>يا <strong>${escapeHtml(name)}</strong>، لسه ما بدأتش رحلتك في احتراف الذكاء الاصطناعي؟</p>
-                <p>ده آخر تذكير مننا — المحتوى كامل في انتظارك من 99 ج.م.</p>
+                <p>ده آخر تذكير مننا — المحتوى كامل في انتظارك بالسعر الموضّح قبل الدفع.</p>
                 <div style="background:rgba(255,107,53,0.08); border:1px solid rgba(255,107,53,0.2); border-radius:8px; padding:16px; margin:16px 0;">
-                    <p style="color:#ccc; margin:0;">🎯 48 تمرين تفاعلي</p>
+                    <p style="color:#ccc; margin:0;">🎯 45 تمرين تفاعلي</p>
                     <p style="color:#ccc; margin:8px 0 0 0;">📜 شهادة قابلة للمشاركة</p>
                     <p style="color:#ccc; margin:8px 0 0 0;">🏆 Leaderboard + إنجازات</p>
                     <p style="color:#ccc; margin:8px 0 0 0;">💬 مجتمع المتعلمين</p>

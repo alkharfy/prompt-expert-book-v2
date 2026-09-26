@@ -14,10 +14,10 @@ export default function CertificatePreview() {
                         transition={{ duration: 0.6 }}
                         className="certificate-content"
                     >
-                        <span className="section-badge">🎓 شهادة معتمدة</span>
+                        <span className="section-badge">🎓 شهادة إتمام من PromptMaster</span>
                         <h2 className="section-title">احصل على شهادة إتمام</h2>
                         <p className="section-description">
-                            عند إتمامك لـ PromptMaster بنسبة 100%، تحصل على شهادة معتمدة
+                            عند إتمامك لـ PromptMaster بنسبة 100%، تحصل على شهادة إتمام من PromptMaster
                             برقم فريد قابل للتحقق ورابط عام للمشاركة على LinkedIn ومنصات التواصل.
                         </p>
 

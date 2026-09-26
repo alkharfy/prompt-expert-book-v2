@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from '@/lib/logger'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { checkRateLimitAsync, getClientIP, RATE_LIMITS } from '@/lib/rate-limit'
-import { activatePaidSubscription } from '@/lib/payment-activation'
+import { activateStoredPayment, paymentAmountMatches } from '@/lib/payment-activation'
 
 /**
  * Verify payment by merchantOrderId (Kashier callback param)
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         const supabase = getSupabaseAdmin()
         const { data: payment, error: dbError } = await (supabase
             .from('payments') as any)
-            .select('id, kashier_session_id, status, user_id, plan_id, amount')
+            .select('id, kashier_session_id, status, user_id, plan_id, amount, paid_at')
             .eq('kashier_order_id', orderId)
             .eq('user_id', userId)
             .single()
@@ -61,14 +61,8 @@ export async function POST(request: NextRequest) {
         // backfill — closes the is_active bypass for payments marked success by an
         // older code path) then return.
         if (payment.status === 'success') {
-            await activatePaidSubscription({
-                userId,
-                paymentId: payment.id,
-                planId: payment.plan_id,
-                owedAmount: payment.amount,
-                paidAmount: payment.amount,
-                source: 'verify-by-order:existing',
-            })
+            const activation = await activateStoredPayment(userId, payment.id, 'verify-by-order:existing')
+            if (!activation.ok) return NextResponse.json({ error: 'تعذّر تفعيل الاشتراك' }, { status: 500 })
             return NextResponse.json({
                 success: true,
                 status: 'SUCCESS',
@@ -82,25 +76,22 @@ export async function POST(request: NextRequest) {
             const verifyResult = await verifyPaymentSession(payment.kashier_session_id)
 
             if (verifyResult.ok && verifyResult.paid) {
+                if (!paymentAmountMatches(verifyResult.data?.amount, payment.amount)) return NextResponse.json({ error: 'مبلغ الدفع غير مطابق للطلب' }, { status: 400 })
                 // Update payment status
-                await (supabase.from('payments') as any)
+                const paidAt = payment.paid_at || new Date().toISOString()
+                const { error: updateError } = await (supabase.from('payments') as any)
                     .update({
                         status: 'success',
-                        paid_at: new Date().toISOString(),
+                        paid_at: paidAt,
                         payment_method: verifyResult.data?.method || null
                     })
                     .eq('id', payment.id)
 
                 // Activate via the unified source (sets is_active + amount guard)
-                await activatePaidSubscription({
-                    userId,
-                    paymentId: payment.id,
-                    planId: payment.plan_id,
-                    owedAmount: payment.amount,
-                    paidAmount: verifyResult.data?.amount ?? null,
-                    source: 'verify-by-order',
-                })
+                if (updateError) return NextResponse.json({ error: 'تعذّر حفظ تأكيد الدفع' }, { status: 500 })
+                const activation = await activateStoredPayment(userId, payment.id, 'verify-by-order')
 
+                if (!activation.ok) return NextResponse.json({ error: 'تعذّر تفعيل الاشتراك' }, { status: 500 })
                 return NextResponse.json({
                     success: true,
                     status: 'SUCCESS',

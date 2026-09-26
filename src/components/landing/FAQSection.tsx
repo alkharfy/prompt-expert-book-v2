@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BOOK_PAGES_DISPLAY } from '@/lib/config'
+import { PRODUCT_STATS } from '@/lib/pricing'
 
 const FAQ_ICONS: Record<number, string> = {
     0: '💻',
@@ -21,7 +22,7 @@ const faqs = [
     },
     {
         question: 'ما الذي أحصل عليه بالضبط؟',
-        answer: `تحصل على: الكتاب كاملاً (${BOOK_PAGES_DISPLAY} صفحة تفاعلية)، نظام مهام يومية (3 مهام/يوم)، نظام إنجازات وبادجات، نظام نقاط ومستويات، Streak يومي، لوحة متصدرين، مساعد AI ذكي، ملاحظات وتظليل. في الخطة المتقدمة تضاف: 95 قالب وشهادة إتمام وأدوات AI متقدمة.`,
+        answer: 'تحصل على محتوى عربي تفاعلي ومكتبة قوالب وتمارين. الأساسية تشمل القراءة والقوالب والتمارين، والمتقدمة تضيف أدوات البرومبت والإنجازات وشهادة إتمام من PromptMaster، وVIP تشمل المحادثة الذكية. راجع مقارنة الباقات قبل الشراء.',
     },
     {
         question: 'هل يمكنني استرداد أموالي إذا لم أكن راضياً؟',
@@ -29,11 +30,11 @@ const faqs = [
     },
     {
         question: 'هل المحتوى يُحدَّث؟',
-        answer: 'نعم، نحدث المحتوى باستمرار مع تطور أدوات الذكاء الاصطناعي. مشتركو الخطة المتقدمة و VIP يحصلون على جميع التحديثات مجاناً مدى الحياة.',
+        answer: 'نعم، نحدث المحتوى باستمرار مع تطور أدوات الذكاء الاصطناعي. التحديثات المتاحة مشمولة خلال فترة الاشتراك السنوي. انتهاء الاشتراك يتطلب التجديد لاستمرار الوصول.',
     },
     {
         question: 'كم من الوقت أحتاج لإنهاء الكتاب؟',
-        answer: 'يمكنك إنهاء الكتاب في أسبوعين إلى شهر بمعدل 30 دقيقة يومياً. لكن المنصة مصممة لتتعلم بالسرعة المناسبة لك — لا يوجد ضغط وقت.',
+        answer: 'ابدأ بجلسات قصيرة من 20 إلى 30 دقيقة، وطبّق مثالًا على مهمة تخصك بعد كل درس. الوقت الكلي يختلف حسب خبرتك والتطبيق؛ لا نضمن إتقان AI خلال مدة محددة. الاشتراك يتيح الوصول لمدة سنة.',
     },
     {
         question: 'هل يمكنني الوصول للمحتوى من الموبايل؟',
@@ -119,7 +120,7 @@ export default function FAQSection() {
                         </div>
                         <div className="fq-side-card">
                             <div className="fq-side-icon">✏️</div>
-                            <div className="fq-side-stat">48</div>
+                            <div className="fq-side-stat">{PRODUCT_STATS.exercises}</div>
                             <div className="fq-side-label">تمرين عملي</div>
                         </div>
                         <Link href="/refund-policy" className="fq-side-card">

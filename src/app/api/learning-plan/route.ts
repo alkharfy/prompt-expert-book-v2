@@ -1,3 +1,4 @@
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import {
   generatePlanTasks,
@@ -12,7 +13,7 @@ import type { LearningPathId, LearningDurationId } from '@/types/learning'
 // GET — جلب خطة اليوم أو الخطة الكاملة
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.cookies.get('ebook_user_id')?.value
+    const userId = await getAuthenticatedUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 // POST — توليد وحفظ خطة جديدة
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.cookies.get('ebook_user_id')?.value
+    const userId = await getAuthenticatedUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
 // PATCH — تحديث حالة مهمة
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = request.cookies.get('ebook_user_id')?.value
+    const userId = await getAuthenticatedUser()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

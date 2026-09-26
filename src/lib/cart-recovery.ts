@@ -108,7 +108,7 @@ const cartEmails = [
             <div class="card">
                 <span class="emoji-large">🚀</span>
                 <h2>خطوة واحدة وتبدأ!</h2>
-                <p>يا <strong>${escapeHtml(name)}</strong>، وصلت لصفحة الاشتراك ومكمّلتش — الكتاب كامل (10 فصول + 95 قالب + 48 تمرين + شهادة إتمام) مستنيك.</p>
+                <p>يا <strong>${escapeHtml(name)}</strong>، وصلت لصفحة الاشتراك ومكمّلتش — الكتاب كامل (10 فصول + 95 قالب + 45 تمرين + شهادة إتمام في الباقات التي تشملها) مستنيك.</p>
                 <p>اشترك دلوقتي وابدأ تتعلّم تكتب برومبتات تجيب نتيجة صح من أول مرة.</p>
                 <hr class="divider">
                 <div style="text-align:center;">

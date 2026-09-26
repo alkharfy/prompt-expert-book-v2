@@ -343,7 +343,7 @@ function LoginContent() {
 
                 <div className="auth-footer">
                     <span>ليس لديك حساب؟ </span>
-                    <Link id="register-link" href={`/register${nextPath !== '/toc' ? `?next=${nextPath}` : ''}`}>
+                    <Link id="register-link" href={`/register${nextPath !== '/toc' ? `?next=${encodeURIComponent(nextPath)}` : ''}`}>
                         إنشاء حساب جديد
                     </Link>
                 </div>

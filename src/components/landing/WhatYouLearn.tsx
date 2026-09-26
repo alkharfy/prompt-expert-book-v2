@@ -82,8 +82,8 @@ const industries = [
 
 const stats = [
     { val: '10', label: 'فصول' },
-    { val: '30+', label: 'قالب' },
-    { val: '55+', label: 'تمرين' },
+    { val: '95', label: 'قالب' },
+    { val: '45', label: 'تمرين' },
     { val: String(BOOK_PAGES_DISPLAY), label: 'صفحة' },
 ]
 
@@ -116,8 +116,16 @@ export default function WhatYouLearn() {
                 >
                     <span className="wyl-badge">📚 محتوى الكتاب</span>
                     <h2 className="wyl-title">ماذا ستتعلم؟</h2>
-                    <p className="wyl-sub">محتوى حقيقي من 10 فصول يغطي كل مجال متأثر بالـ AI</p>
+                    <p className="wyl-sub">10 فصول للتعلّم والتطبيق، مع أمثلة للدراسة والعمل ومكتبة قوالب قابلة للتعديل.</p>
                 </motion.div>
+
+                <div className="glass-card" style={{ padding: '24px', marginBottom: '28px', lineHeight: 1.9 }}>
+                    <h3>مثال من المحتوى: من ملاحظات اجتماع إلى خطوات واضحة</h3>
+                    <p><strong>الملاحظات:</strong> اتفق الفريق أن سارة تجهّز مسودة الإعلان يوم الثلاثاء، وأحمد يراجع الميزانية يوم الأربعاء.</p>
+                    <p><strong>البرومبت:</strong> حوّل هذه الملاحظات إلى جدول: المهمة، المسؤول، الموعد. استخدم المعلومات المذكورة فقط، وحدّد أي معلومة ناقصة.</p>
+                    <p><strong>مثال النتيجة:</strong> مسودة الإعلان — سارة — الثلاثاء. مراجعة الميزانية — أحمد — الأربعاء.</p>
+                    <p>تراجع النتيجة ثم تعدّل القالب ليناسب اجتماعك. النتائج تتغير حسب الأداة ودقة المعلومات.</p>
+                </div>
 
                 {/* Section Label: Techniques */}
                 <motion.p
