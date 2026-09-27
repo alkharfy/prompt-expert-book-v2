@@ -11,7 +11,7 @@
  * 3.3: تقنيات متقدمة (صفحات 11-14)
  * 3.4: حالات استخدام متخصصة (صفحات 15-18)
  * 
- * آخر تحديث: فبراير 2026
+ * آخر تحديث: سبتمبر 2026
  * 
  * ملاحظة: هذه الوحدة تنقل المتعلم من المستوى المبتدئ للمتوسط
  * بتعليمه إطار منظم وتقنيات احترافية
@@ -902,7 +902,7 @@ export const unit3Info = {
         badges: ['GOLDS Beginner', 'GOLDS Practitioner', 'Technique Master', 'Framework Expert']
     },
     practicalExercises: 13,
-    lastUpdated: 'فبراير 2026',
+    lastUpdated: 'سبتمبر 2026',
     prerequisites: ['الوحدة 1: عالم الذكاء الاصطناعي', 'الوحدة 2: تجربتك الأولى'],
     scientificReferences: [
         'Wei et al. (2022) - Chain of Thought Prompting - Google Research, NeurIPS 2022',

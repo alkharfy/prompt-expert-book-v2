@@ -498,7 +498,7 @@ export const libraryData: PageContent[] = [
 🟢 محتوى (3 أسئلة)
 
 س: المعلومات قديمة ولا محدثة؟
-ج: محدثة فبراير 2026. يغطي GPT-5، Claude 4، Gemini 2.5، MCP، Cursor. أي تحديث جديد ينزل في الكورس مجاناً.
+ج: محدّثة سبتمبر 2026. يغطي GPT-6، Claude Opus 5.5 / Fable 5.1، Gemini 3.1، MCP، Cursor. أي تحديث جديد ينزل في الكورس مجاناً.
 
 س: هل في تمارين عملية ولا قراءة بس؟
 ج: 45 تمرين تطبيقي + 95 قالب جاهز للنسخ. كل قالب فيه مثال مدخلات/مخرجات حقيقي تقدر تجربه دلوقتي.
@@ -1468,7 +1468,7 @@ export const glossaryData: PageContent[] = [
             {
                 type: 'card' as const,
                 title: 'Reasoning Models — نماذج التفكير',
-                content: 'نماذج متخصصة (مثل o3, o4-mini, DeepSeek R1) تقوم بالتفكير خطوة بخطوة قبل الإجابة، مما يحسن دقتها في المهام المعقدة مثل الرياضيات والمنطق والبرمجة.'
+                content: 'نماذج متخصصة (مثل GPT-6 Astra، ووضع التفكير في Claude و Gemini، و DeepSeek V4 Pro) تقوم بالتفكير خطوة بخطوة قبل الإجابة، مما يحسن دقتها في المهام المعقدة مثل الرياضيات والمنطق والبرمجة.'
             },
             {
                 type: 'card' as const,
@@ -1507,7 +1507,7 @@ export const glossaryData: PageContent[] = [
             {
                 type: 'card' as const,
                 title: 'Multimodal — متعدد الوسائط',
-                content: 'قدرة نموذج AI على فهم وتوليد أنواع مختلفة من البيانات: نص، صور، صوت، فيديو. النماذج الحديثة مثل GPT-5 وClaude 4 وGemini 2.5 كلها متعددة الوسائط.'
+                content: 'قدرة نموذج AI على فهم وتوليد أنواع مختلفة من البيانات: نص، صور، صوت، فيديو. النماذج الحديثة مثل GPT-6 وClaude Opus 5.5 وGemini 3.1 كلها متعددة الوسائط.'
             },
             {
                 type: 'card' as const,
@@ -1542,7 +1542,7 @@ export const glossaryData: PageContent[] = [
             {
                 type: 'card' as const,
                 title: 'Computer Use — استخدام الحاسوب',
-                content: 'قدرة AI على التحكم في الحاسوب مباشرة: النقر، الكتابة، تصفح الإنترنت، استخدام البرامج. مثل Claude Computer Use وOpenAI Operator.'
+                content: 'قدرة AI على التحكم في الحاسوب مباشرة: النقر، الكتابة، تصفح الإنترنت، استخدام البرامج. مثل Claude Computer Use ووضع الوكيل في ChatGPT (ChatGPT agent).'
             },
             {
                 type: 'card' as const,

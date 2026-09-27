@@ -17,7 +17,7 @@ interface Chapter {
 const chapters: Chapter[] = [
     {
         num: 1,
-        title: 'كيف يفكر الذكاء الاصطناعي فعلاً (GPT-5, Claude, Gemini)',
+        title: 'كيف يفكر الذكاء الاصطناعي فعلاً (GPT-6, Claude, Gemini)',
         description: 'فهم كيف يعمل الذكاء الاصطناعي التوليدي وأنواعه',
         pages: 17,
         icon: '🧠',

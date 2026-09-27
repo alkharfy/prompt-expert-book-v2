@@ -11,7 +11,7 @@
  * 8.3: تطبيقات RAG العملية (صفحات 9-12)
  * 8.4: تحسين جودة RAG ومشروع تطبيقي (صفحات 13-16)
  *
- * آخر تحديث: فبراير 2026
+ * آخر تحديث: سبتمبر 2026
  */
 
 import { PageContent } from '@/types/book';
@@ -204,7 +204,7 @@ export const unit8Data: PageContent[] = [
             {
                 type: 'text' as const,
                 title: 'نماذج Embedding الشائعة',
-                content: '• text-embedding-3-small (OpenAI): سريع ورخيص، 1536 بُعد\n• text-embedding-3-large (OpenAI): أدق، 3072 بُعد\n• voyage-3 (Anthropic/Voyage): أداء ممتاز للنصوص الطويلة\n• gecko (Google): خفيف وسريع\n• multilingual-e5 (Microsoft): ممتاز للغة العربية'
+                content: '• text-embedding-3-small (OpenAI): سريع ورخيص، 1536 بُعد\n• text-embedding-3-large (OpenAI): أدق، 3072 بُعد\n• voyage-3 وأحدث (Voyage AI — توصي بها Anthropic): أداء ممتاز للنصوص الطويلة\n• gemini-embedding (Google): متعدد اللغات ويدعم العربية\n• multilingual-e5 (Microsoft): ممتاز للغة العربية'
             },
             {
                 type: 'card' as const,

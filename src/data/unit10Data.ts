@@ -10,7 +10,7 @@
  * 10.1: اتجاهات 2026-2027 (صفحات 1-6)
  * 10.2: كيف تبقى محدثاً + المجتمع + الختام (صفحات 7-12)
  *
- * آخر تحديث: فبراير 2026
+ * آخر تحديث: سبتمبر 2026
  */
 
 import { PageContent } from '@/types/book';
@@ -39,7 +39,7 @@ export const unit10Data: PageContent[] = [
             {
                 type: 'card' as const,
                 title: 'سرعة التطور: الخط الزمني',
-                content: '• 2020: GPT-3 — أول نموذج لغوي كبير يذهل العالم\n• 2022 نوفمبر: ChatGPT — أسرع تطبيق يصل 100 مليون مستخدم\n• 2023: GPT-4 + Claude 2 + Gemini — سباق النماذج\n• 2024: Claude 3 + Gemini 1.5 + GPT-4o — متعددة الوسائط\n• 2025: GPT-5 + Claude 4 + Gemini 2.5 — تفكير عميق\n• 2026: GPT-5.5 + Claude Opus 4.8 / Fable 5 + Gemini 3.1 Pro + Grok 4.3 — ووكلاء مستقلون (Agentic AI)\n• 2027: ??? — التوقعات أدناه'
+                content: '• 2020: GPT-3 — أول نموذج لغوي كبير يذهل العالم\n• 2022 نوفمبر: ChatGPT — أسرع تطبيق يصل 100 مليون مستخدم\n• 2023: GPT-4 + Claude 2 + Gemini — سباق النماذج\n• 2024: Claude 3 + Gemini 1.5 + GPT-4o — متعددة الوسائط\n• 2025: GPT-5 + Claude 4 + Gemini 2.5 — تفكير عميق\n• 2026: GPT-6 + Claude Fable 5.1 / Opus 5.5 + Gemini 3.1 Pro + Grok 4.7 — ووكلاء مستقلون (Agentic AI)\n• 2027: ??? — التوقعات أدناه'
             },
             {
                 type: 'text' as const,
@@ -63,7 +63,7 @@ export const unit10Data: PageContent[] = [
             {
                 type: 'text' as const,
                 title: 'ما هي نماذج التفكير؟',
-                content: 'النماذج العادية (الطبقات السريعة/القياسية) تجيب مباشرة — مثل شخص يرد بسرعة.\n\nنماذج التفكير (مثل GPT-5.5 Pro، وClaude Opus 4.8 مع Extended Thinking، وGemini مع وضع الاستدلال) تفكر قبل أن تجيب — مثل شخص يأخذ وقته ويحلل.\n\nالفرق واضح في المهام المعقدة: الرياضيات، المنطق، البرمجة، التخطيط الاستراتيجي.'
+                content: 'النماذج العادية (الطبقات السريعة/القياسية) تجيب مباشرة — مثل شخص يرد بسرعة.\n\nنماذج التفكير (مثل GPT-6 Astra، وClaude Opus 5.5 مع Extended Thinking، وGemini مع وضع الاستدلال) تفكر قبل أن تجيب — مثل شخص يأخذ وقته ويحلل.\n\nالفرق واضح في المهام المعقدة: الرياضيات، المنطق، البرمجة، التخطيط الاستراتيجي.'
             },
             {
                 type: 'card' as const,
@@ -388,7 +388,7 @@ export const unit10Data: PageContent[] = [
             {
                 type: 'card' as const,
                 title: 'الخدمة 6: تحليل بيانات وعمل تقارير',
-                content: '📌 إيه الخدمة: تحليل Excel/CSV وعمل insights وتقارير\n🛠️ الأدوات: ChatGPT Code Interpreter + Claude\n\n💰 السعر: $100-500 / مشروع\n\n💡 ليه ده طلب عالي: أصحاب البيزنس عندهم بيانات — بس مش عارفين يطلعوا منها insights. إنت بتطلب الملف، ترفعه لـ AI، وبتطلع تقرير بـ charts وتوصيات.'
+                content: '📌 إيه الخدمة: تحليل Excel/CSV وعمل insights وتقارير\n🛠️ الأدوات: ChatGPT (تحليل البيانات) + Claude\n\n💰 السعر: $100-500 / مشروع\n\n💡 ليه ده طلب عالي: أصحاب البيزنس عندهم بيانات — بس مش عارفين يطلعوا منها insights. إنت بتطلب الملف، ترفعه لـ AI، وبتطلع تقرير بـ charts وتوصيات.'
             },
             {
                 type: 'card' as const,

@@ -68,7 +68,7 @@ export default function CertificatePreview() {
                                     </div>
 
                                     <div className="certificate-footer">
-                                        <div className="cert-date">التاريخ: فبراير 2026</div>
+                                        <div className="cert-date">التاريخ: سبتمبر 2026</div>
                                         <div className="cert-signature">
                                             <span className="signature">التوقيع الرقمي</span>
                                             <span className="signer">PromptMaster</span>

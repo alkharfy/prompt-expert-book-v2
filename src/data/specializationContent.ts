@@ -135,7 +135,7 @@ const design_s1: SectionSpecContent = {
     },
     {
       title: 'أدوات AI لتوليد الصور',
-      prompt: 'قارنلي بين Midjourney و DALL-E و Stable Diffusion — من حيث: جودة الصور، سهولة الاستخدام، التحكم في النتيجة، الأنسب لتصميم الشعارات.',
+      prompt: 'قارنلي بين Midjourney و GPT Image و Stable Diffusion — من حيث: جودة الصور، سهولة الاستخدام، التحكم في النتيجة، الأنسب لتصميم الشعارات.',
       expectedOutput: 'جدول مقارنة شامل مع توصية حسب نوع المشروع',
       tips: ['حدد معايير المقارنة', 'اذكر حالة استخدام محددة (الشعارات)', 'الأدوات بتتغير — تحقق من التحديثات'],
       modelSpecific: true,
@@ -555,7 +555,7 @@ const design_s3: SectionSpecContent = {
     },
     {
       title: 'GOLDS لتوليد صور بالـ AI',
-      prompt: 'Goal: صورة hero لموقع تطبيق تأمل وصحة نفسية.\nOutput: شخص يتأمل → خلفية طبيعية هادئة → إضاءة ناعمة → ألوان مريحة.\nLength: إجابة مركّزة بالحجم المناسب للمهمة.\nDetails: اللغة والتقنية: وصف بالإنجليزي (لاستخدامه في Midjourney أو DALL-E). أسلوب: flat illustration مش واقعي. ألوان: lavender + sage green. نسبة: 16:9.\nStyle: مسالم وإيجابي — يشجع على الهدوء.',
+      prompt: 'Goal: صورة hero لموقع تطبيق تأمل وصحة نفسية.\nOutput: شخص يتأمل → خلفية طبيعية هادئة → إضاءة ناعمة → ألوان مريحة.\nLength: إجابة مركّزة بالحجم المناسب للمهمة.\nDetails: اللغة والتقنية: وصف بالإنجليزي (لاستخدامه في Midjourney أو GPT Image). أسلوب: flat illustration مش واقعي. ألوان: lavender + sage green. نسبة: 16:9.\nStyle: مسالم وإيجابي — يشجع على الهدوء.',
       expectedOutput: 'Prompt إنجليزي جاهز لأداة توليد صور مع كل التفاصيل',
       tips: ['لتوليد الصور: الوصف بالإنجليزي أفضل', 'حدد الأسلوب (واقعي/illustration/3D)', 'اذكر النسبة والألوان بدقة'],
       modelSpecific: true,

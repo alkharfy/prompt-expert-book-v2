@@ -21,8 +21,8 @@ interface ComparisonMetrics {
 }
 
 const modelOptions = [
-  { id: 'gpt4', name: 'GPT-4', icon: '🟢' },
-  { id: 'gpt35', name: 'GPT-3.5', icon: '🔵' },
+  { id: 'chatgpt', name: 'ChatGPT', icon: '🟢' },
+  { id: 'deepseek', name: 'DeepSeek', icon: '🔵' },
   { id: 'claude', name: 'Claude', icon: '🟣' },
   { id: 'gemini', name: 'Gemini', icon: '🔴' },
   { id: 'other', name: 'آخر', icon: '⚪' },
@@ -30,7 +30,7 @@ const modelOptions = [
 
 export default function ResponseComparator() {
   const [items, setItems] = useState<ComparisonItem[]>([
-    { id: '1', prompt: '', response: '', model: 'gpt4', timestamp: new Date() },
+    { id: '1', prompt: '', response: '', model: 'chatgpt', timestamp: new Date() },
     { id: '2', prompt: '', response: '', model: 'claude', timestamp: new Date() },
   ]);
   const [activeTab, setActiveTab] = useState<'input' | 'compare'>('input');
@@ -131,7 +131,7 @@ export default function ResponseComparator() {
 
   const resetComparator = () => {
     setItems([
-      { id: '1', prompt: '', response: '', model: 'gpt4', timestamp: new Date() },
+      { id: '1', prompt: '', response: '', model: 'chatgpt', timestamp: new Date() },
       { id: '2', prompt: '', response: '', model: 'claude', timestamp: new Date() },
     ]);
     setSharedPrompt('');

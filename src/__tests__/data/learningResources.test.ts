@@ -111,8 +111,8 @@ describe('LEARNING_RESOURCES seed data', () => {
 })
 
 describe('AI_CHANGELOG_SEEDS seed data', () => {
-  it('should have exactly 5 changelog entries', () => {
-    expect(AI_CHANGELOG_SEEDS).toHaveLength(5)
+  it('should have exactly 7 changelog entries', () => {
+    expect(AI_CHANGELOG_SEEDS).toHaveLength(7)
   })
 
   it('should have all required fields in every entry', () => {

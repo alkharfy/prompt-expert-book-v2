@@ -12,7 +12,7 @@
  * 6.3: توليد الصور باحترافية (صفحات 9-12)
  * 6.4: الصوت والفيديو + مشروع متكامل (صفحات 13-18)
  * 
- * آخر تحديث: فبراير 2026
+ * آخر تحديث: سبتمبر 2026
  * 
  * ملاحظة: هذه الوحدة توسع مهارات المتعلم من النص إلى الوسائط المتعددة
  * 
@@ -59,7 +59,7 @@ export const unit6Data: PageContent[] = [
             {
                 type: 'card' as const,
                 title: '🌐 ما هو Multi-modal AI؟',
-                content: "**الذكاء الاصطناعي متعدد الوسائط** = AI يفهم ويتعامل مع أنواع متعددة من البيانات:\n\n📝 **نص** (ما أتقنته في الوحدات 1-5)\n🖼️ **صور** (تحليل وتوليد)\n🎵 **صوت** (تحويل وتوليد)\n🎬 **فيديو** (الحدود الجديدة)\n\n**لماذا هذا مهم؟**\n• النماذج الحديثة (GPT-4o, Claude 3, Gemini) أصبحت متعددة الوسائط\n• تطبيقات لا حصر لها: تحليل مستندات، توليد محتوى، أتمتة المهام البصرية"
+                content: "**الذكاء الاصطناعي متعدد الوسائط** = AI يفهم ويتعامل مع أنواع متعددة من البيانات:\n\n📝 **نص** (ما أتقنته في الوحدات 1-5)\n🖼️ **صور** (تحليل وتوليد)\n🎵 **صوت** (تحويل وتوليد)\n🎬 **فيديو** (الحدود الجديدة)\n\n**لماذا هذا مهم؟**\n• النماذج الحديثة (GPT-6, Claude, Gemini) أصبحت متعددة الوسائط\n• تطبيقات لا حصر لها: تحليل مستندات، توليد محتوى، أتمتة المهام البصرية"
             },
             {
                 type: 'card' as const,
@@ -71,11 +71,11 @@ export const unit6Data: PageContent[] = [
                 title: '📊 إحصائيات 2026',
                 content: '',
                 items: [
-                    { title: 'GPT-5.5', content: 'يفهم نص + صور + صوت في طلب واحد' },
-                    { title: 'Claude Opus 4.8', content: 'تحليل بصري ومستندات عالي الدقة (سياق حتى مليون توكن)' },
+                    { title: 'GPT-6', content: 'يفهم نص + صور + صوت في طلب واحد' },
+                    { title: 'Claude Opus 5.5', content: 'تحليل بصري ومستندات عالي الدقة (سياق حتى مليون توكن)' },
                     { title: 'Gemini 3.1 Pro', content: 'نافذة سياق مليون token تشمل فيديو!' },
                     { title: 'توليد الصور', content: 'نماذج توليد صور بجودة احترافية من وصف نصي' },
-                    { title: 'توليد الفيديو', content: 'نماذج (مثل Sora) تولّد فيديو عالي الجودة لعدة ثوانٍ/دقائق' }
+                    { title: 'توليد الفيديو', content: 'نماذج (مثل Veo 3.1 وKling 3.0) تولّد فيديو عالي الجودة بصوت مدمج لعدة ثوانٍ' }
                 ]
             },
             {
@@ -155,17 +155,17 @@ export const unit6Data: PageContent[] = [
             {
                 type: 'card' as const,
                 title: '👁️ نماذج الفهم البصري (Vision)',
-                content: "**لتحليل وفهم الصور:**\n\n| النموذج | الشركة | نقطة القوة |\n|---------|--------|----------|\n| GPT-5.5 | OpenAI | تحليل شامل + فهم سياقي |\n| Claude (الجيل الحالي) | Anthropic | دقة عالية + تحليل مستندات |\n| Gemini 3.1 Pro | Google | نافذة سياق ضخمة للفيديو |\n\n💡 **الاستخدام:** تحليل صور، استخراج بيانات، فهم رسوم بيانية"
+                content: "**لتحليل وفهم الصور:**\n\n| النموذج | الشركة | نقطة القوة |\n|---------|--------|----------|\n| GPT-6 | OpenAI | تحليل شامل + فهم سياقي |\n| Claude (الجيل الحالي) | Anthropic | دقة عالية + تحليل مستندات |\n| Gemini 3.1 Pro | Google | نافذة سياق ضخمة للفيديو |\n\n💡 **الاستخدام:** تحليل صور، استخراج بيانات، فهم رسوم بيانية"
             },
             {
                 type: 'card' as const,
                 title: '🎨 نماذج توليد الصور',
-                content: "**لإنشاء صور جديدة:**\n\n| النموذج | نقطة القوة | الأفضل لـ |\n|---------|-----------|----------|\n| DALL-E 3 | دقة في اتباع التعليمات | صور واقعية، شعارات |\n| Midjourney | جودة فنية عالية | فن، تصميم، إبداع |\n| Stable Diffusion | مفتوح + قابل للتخصيص | تحكم كامل، تكلفة أقل |\n| Ideogram | نص داخل الصور | شعارات بنص عربي |\n\n💡 **نصيحة:** DALL-E للدقة، Midjourney للجمال"
+                content: "**لإنشاء صور جديدة:**\n\n| النموذج | نقطة القوة | الأفضل لـ |\n|---------|-----------|----------|\n| GPT Image 2 (داخل ChatGPT) | دقة في اتباع التعليمات + نص داخل الصور | صور واقعية، إعلانات، شعارات |\n| Nano Banana Pro (Gemini) | واقعية عالية + تعديل الصور | منتجات، تعديل صور موجودة |\n| Midjourney V8 | جودة فنية عالية | فن، تصميم، إبداع |\n| Stable Diffusion / FLUX | مفتوح + قابل للتخصيص | تحكم كامل، تكلفة أقل |\n| Ideogram | نص داخل الصور | شعارات بنص عربي |\n\n💡 **نصيحة:** GPT Image للدقة، Midjourney للجمال (DALL-E أُوقف في مايو 2026 وحلّ محله GPT Image)"
             },
             {
                 type: 'card' as const,
                 title: '🎵🎬 نماذج الصوت والفيديو',
-                content: "**الصوت:**\n• **Whisper** (OpenAI): تفريغ صوتي بـ 99 لغة\n• **ElevenLabs**: أفضل TTS طبيعي\n• **OpenAI TTS**: جودة عالية + تكلفة أقل\n\n**الفيديو:**\n• **Sora** (OpenAI): الأقوى - حتى دقيقة كاملة\n• **Runway Gen-3**: سريع + تحرير متقدم\n• **Pika**: سهل الاستخدام للمبتدئين\n• **Kling**: منافس صيني قوي"
+                content: "**الصوت:**\n• **Whisper** (OpenAI): تفريغ صوتي بـ 99 لغة\n• **ElevenLabs**: أفضل TTS طبيعي\n• **OpenAI TTS**: جودة عالية + تكلفة أقل\n\n**الفيديو:**\n• **Veo 3.1** (Google): الأقوى في اتباع الوصف + صوت مدمج\n• **Kling 3.0**: جودة سينمائية بسعر مناسب\n• **Runway Gen-4.5**: تحكم وتحرير متقدم\n• **Hailuo** (MiniMax): الأرخص للبداية\n\n⚠️ Sora من OpenAI أُوقف في 2026"
             },
             {
                 type: 'card' as const,
@@ -213,17 +213,17 @@ export const unit6Data: PageContent[] = [
             {
                 type: 'card' as const,
                 title: '🌳 شجرة القرار للصور',
-                content: "```\n❓ ما نوع المهمة؟\n│\n├─ تحليل صورة موجودة\n│  ├─ مستند/جدول → Claude Vision\n│  ├─ صورة عامة → GPT-4V\n│  └─ فيديو طويل → Gemini Pro\n│\n└─ توليد صورة جديدة\n   ├─ واقعية/دقيقة → DALL-E 3\n   ├─ فنية/إبداعية → Midjourney\n   ├─ تحكم كامل → Stable Diffusion\n   └─ نص عربي داخل الصورة → Ideogram\n```"
+                content: "```\n❓ ما نوع المهمة؟\n│\n├─ تحليل صورة موجودة\n│  ├─ مستند/جدول → Claude Vision\n│  ├─ صورة عامة → ChatGPT (GPT-6)\n│  └─ فيديو طويل → Gemini Pro\n│\n└─ توليد صورة جديدة\n   ├─ واقعية/دقيقة → GPT Image 2\n   ├─ فنية/إبداعية → Midjourney\n   ├─ تحكم كامل → Stable Diffusion\n   └─ نص عربي داخل الصورة → Ideogram\n```"
             },
             {
                 type: 'card' as const,
                 title: '🎯 قواعد الاختيار السريع',
-                content: "**للتحليل:**\n• مستندات + جداول = Claude Vision\n• صور عامة + سياق = GPT-4V\n• فيديو طويل = Gemini\n\n**للتوليد:**\n• دقة في التفاصيل = DALL-E 3\n• جمال فني = Midjourney\n• ميزانية محدودة = Stable Diffusion\n\n**للصوت:**\n• تفريغ = Whisper\n• صوت طبيعي = ElevenLabs\n• تكلفة أقل = OpenAI TTS"
+                content: "**للتحليل:**\n• مستندات + جداول = Claude Vision\n• صور عامة + سياق = ChatGPT (GPT-6)\n• فيديو طويل = Gemini\n\n**للتوليد:**\n• دقة في التفاصيل = GPT Image 2\n• جمال فني = Midjourney\n• ميزانية محدودة = Stable Diffusion\n\n**للصوت:**\n• تفريغ = Whisper\n• صوت طبيعي = ElevenLabs\n• تكلفة أقل = OpenAI TTS"
             },
             {
                 type: 'card' as const,
                 title: '💰 التكلفة مقابل الجودة',
-                content: "| الحاجة | الخيار الاقتصادي | الخيار الممتاز |\n|--------|-----------------|---------------|\n| تحليل صور | نموذج صغير (mini/Flash) | GPT-5.5 / Gemini 3.1 Pro |\n| توليد صور | DALL-E 3 | Midjourney |\n| تفريغ صوتي | Whisper | Whisper (نفسه!) |\n| TTS | OpenAI TTS | ElevenLabs |\n| فيديو | Pika | Sora |\n\n💡 **نصيحة:** ابدأ بالخيار الاقتصادي، ثم ارتقِ حسب الحاجة"
+                content: "| الحاجة | الخيار الاقتصادي | الخيار الممتاز |\n|--------|-----------------|---------------|\n| تحليل صور | نموذج صغير (Luna/Flash) | GPT-6 / Gemini 3.1 Pro |\n| توليد صور | Gemini (Nano Banana) المجاني | GPT Image 2 / Midjourney |\n| تفريغ صوتي | Whisper | Whisper (نفسه!) |\n| TTS | OpenAI TTS | ElevenLabs |\n| فيديو | Hailuo / Kling | Veo 3.1 |\n\n💡 **نصيحة:** ابدأ بالخيار الاقتصادي، ثم ارتقِ حسب الحاجة"
             },
             {
                 type: 'card' as const,
@@ -729,7 +729,7 @@ export const unit6Data: PageContent[] = [
         chapterNumber: 6,
         pageNumber: 15,
         title: "عصر الفيديو بالذكاء الاصطناعي",
-        description: "Sora, Runway, Pika - أساسيات توليد الفيديو",
+        description: "Veo, Kling, Runway - أساسيات توليد الفيديو",
         contentBlocks: [
             {
                 type: 'image' as const,
@@ -739,12 +739,12 @@ export const unit6Data: PageContent[] = [
             },
             {
                 type: 'text' as const,
-                content: "أحمد: \"سارة، رأيت فيديوهات مذهلة من Sora! هل يمكنني تعلم ذلك؟\"\n\nسارة: \"بالطبع! الفيديو AI تطور بشكل مذهل. لكنه يتطلب مهارات خاصة - الصور ثابتة، الفيديو يتحرك في الزمن.\"\n\nأحمد: \"يعني أحتاج التفكير في الحركة؟\"\n\nسارة: \"بالضبط! ستصف: ماذا يحدث في البداية، ماذا يتغير، كيف ينتهي المشهد. مثل إخراج فيلم!\"\n\nأحمد: \"رائع! سأكون مخرجاً افتراضياً!\"\n\nسارة: \"هذا بالضبط ما يفعله مهندسو البرومبت للفيديو.\""
+                content: "أحمد: \"سارة، رأيت فيديوهات مذهلة مصنوعة بـ Veo! هل يمكنني تعلم ذلك؟\"\n\nسارة: \"بالطبع! الفيديو AI تطور بشكل مذهل. لكنه يتطلب مهارات خاصة - الصور ثابتة، الفيديو يتحرك في الزمن.\"\n\nأحمد: \"يعني أحتاج التفكير في الحركة؟\"\n\nسارة: \"بالضبط! ستصف: ماذا يحدث في البداية، ماذا يتغير، كيف ينتهي المشهد. مثل إخراج فيلم!\"\n\nأحمد: \"رائع! سأكون مخرجاً افتراضياً!\"\n\nسارة: \"هذا بالضبط ما يفعله مهندسو البرومبت للفيديو.\""
             },
             {
                 type: 'card' as const,
                 title: '🎬 أدوات توليد الفيديو',
-                content: "**أهم الأدوات (2025-2026):**\n\n🎬 **Sora (OpenAI)**\n• الأعلى جودة\n• دقائق من الفيديو\n• فهم فيزيائي للعالم\n\n🎬 **Runway Gen-3**\n• سهل الاستخدام\n• تحويل صورة لفيديو\n• Motion Brush للتحكم\n\n🎬 **Pika Labs**\n• مجاني للبدء\n• مجتمع نشط\n\n🎬 **Kling (Kuaishou)**\n• منافس قوي لـ Sora\n• 2 دقيقة فيديو"
+                content: "**أهم الأدوات (2026):**\n\n🎬 **Veo 3.1 (Google)**\n• الأعلى في اتباع الوصف\n• صوت مدمج + دقة 4K\n• فهم فيزيائي للعالم\n\n🎬 **Kling 3.0 (Kuaishou)**\n• جودة سينمائية بسعر مناسب\n• وضع Storyboard لعدة لقطات\n\n🎬 **Runway Gen-4.5**\n• تحكم دقيق في الحركة\n• تحويل صورة لفيديو\n\n🎬 **Seedance 2.5 (ByteDance)**\n• ممتاز لتحويل الصور لفيديو أطول\n\n⚠️ Sora من OpenAI أُوقف في 2026"
             },
             {
                 type: 'card' as const,
@@ -775,23 +775,23 @@ export const unit6Data: PageContent[] = [
         contentBlocks: [
             {
                 type: 'text' as const,
-                content: "أحمد: \"سارة، شفت فيديوهات مصنوعة بالـ AI وما قدرت أفرق بينها وبين الحقيقية!\"\n\nسارة: \"صح! 2025 كان سنة ثورة الفيديو بالذكاء الاصطناعي. خليني أعرفك على أهم الأدوات...\""
+                content: "أحمد: \"سارة، شفت فيديوهات مصنوعة بالـ AI وما قدرت أفرق بينها وبين الحقيقية!\"\n\nسارة: \"صح! آخر سنتين كانوا ثورة في الفيديو بالذكاء الاصطناعي. خليني أعرفك على أهم الأدوات...\""
             },
             {
                 type: 'card' as const,
                 title: '🎬 أدوات توليد الفيديو (2026)',
                 content: '',
                 items: [
-                    { title: 'Sora (OpenAI)', content: 'الأقوى في جودة الفيديو. ينتج مقاطع تصل لدقيقة واحدة. يفهم الفيزياء والحركة بشكل واقعي.' },
-                    { title: 'Veo (Google)', content: 'مدمج مع نظام Google. جودة عالية جداً. يدعم أنماط سينمائية متعددة.' },
-                    { title: 'Runway Gen-3', content: 'الأسهل في الاستخدام. يدعم text-to-video و image-to-video. مناسب للمبتدئين.' },
-                    { title: 'Kling (Kuaishou)', content: 'قوي في حركة الشخصيات. مجاني جزئياً. جودة مفاجئة.' },
-                    { title: 'Minimax/Hailuo', content: 'سريع جداً في الإنتاج. جيد للمحتوى القصير. مجاني للاستخدام الأساسي.' }
+                    { title: 'Veo 3.1 (Google)', content: 'الأقوى في اتباع الوصف. صوت مدمج ودقة حتى 4K. متاح عبر Gemini و Google AI.' },
+                    { title: 'Kling 3.0 (Kuaishou)', content: 'قوي في حركة الشخصيات والإضاءة السينمائية. أفضل قيمة مقابل السعر.' },
+                    { title: 'Runway Gen-4.5', content: 'أفضل تحكم في الحركة والتحرير. يدعم text-to-video و image-to-video.' },
+                    { title: 'Seedance 2.5 (ByteDance)', content: 'ممتاز لتحويل الصور لفيديو أطول. من الأعلى تقييماً في 2026.' },
+                    { title: 'Minimax/Hailuo', content: 'سريع جداً في الإنتاج. جيد للمحتوى القصير. الأرخص للبداية.' }
                 ]
             },
             {
                 type: 'code' as const,
-                title: '✅ برومبت فيديو فعال (Sora/Runway)',
+                title: '✅ برومبت فيديو فعال (Veo/Runway)',
                 code: '"A slow-motion aerial shot of old Jeddah (Al-Balad district) at golden hour.\nThe camera glides over traditional Hejazi architecture with wooden mashrabiya windows.\nWarm sunlight creates long shadows on narrow alleyways.\nA few people walk slowly below.\nCinematic quality, 4K, shallow depth of field.\nStyle: documentary, National Geographic aesthetic."',
                 content: 'لاحظ: برومبتات الفيديو تُكتب بالإنجليزية حالياً للحصول على أفضل نتيجة.'
             },
@@ -819,7 +819,7 @@ export const unit6Data: PageContent[] = [
         chapterNumber: 6,
         pageNumber: 17,
         title: "Prompts جاهزة لكل أداة فيديو",
-        description: "برومبتات عملية جاهزة للاستخدام مع Runway, Sora, Kling وغيرها.",
+        description: "برومبتات عملية جاهزة للاستخدام مع Runway, Veo, Kling وغيرها.",
         contentBlocks: [
             {
                 type: 'text' as const,
@@ -828,12 +828,12 @@ export const unit6Data: PageContent[] = [
             },
             {
                 type: 'card' as const,
-                title: '🎬 Runway Gen-3 Alpha — الأسهل للمبتدئين',
+                title: '🎬 Runway Gen-4.5 — تحكم سهل للمبتدئين',
                 content: '**Prompt 1 — فيديو منتج:**\n"Close-up product shot of an Arabic coffee cup on a marble table. Steam rising gently. Warm golden lighting from the right. Camera slowly orbits 180 degrees. Shallow depth of field. 4K cinematic."\n\n**Prompt 2 — فيديو سوشيال ميديا:**\n"A young woman in a modern Cairo café looking at her phone screen, smiling. Soft natural window light. Camera gently pushes in. Warm color grading. Instagram Reel style, 9:16 vertical."\n\n**Prompt 3 — فيديو تعليمي:**\n"Overhead shot of hands typing on a laptop keyboard. Screen shows colorful code. Soft desk lamp lighting. Camera slowly pulls back to reveal the full desk setup. Clean, minimal aesthetic."'
             },
             {
                 type: 'card' as const,
-                title: '🎥 Sora (OpenAI) — للجودة السينمائية',
+                title: '🎥 Veo 3.1 (Google) — للجودة السينمائية',
                 content: '**Prompt 1 — مشهد طبيعة:**\n"Aerial drone shot sweeping over the Nile at sunset in Cairo. Golden hour light reflecting off the water. Feluccas with white sails gliding peacefully. Camera moves from left to right at medium speed. Cinematic color grading, film grain, 24fps feel."\n\n**Prompt 2 — مشهد حضري:**\n"Time-lapse of a bustling Middle Eastern souk transitioning from day to night. Colorful spice stalls and hanging lanterns. People flowing through narrow passages. Camera fixed, wide angle. Colors shift from warm golden to cool blue ambient lighting."'
             },
             {
@@ -858,17 +858,17 @@ export const unit6Data: PageContent[] = [
             {
                 type: 'card' as const,
                 title: '📊 جدول مقارنة أدوات الفيديو (2026)',
-                content: '| الأداة | الأفضل لـ | المدة القصوى | الجودة | السعر |\n|--------|----------|-------------|--------|-------|\n| Runway Gen-3 | محتوى سوشيال + منتجات | 10 ثواني | عالية | $12/شهر |\n| Sora | مشاهد سينمائية | 60 ثانية | أعلى جودة | مع ChatGPT Plus |\n| Veo | فيديوهات واقعية | 60+ ثانية | عالية جداً | مع Google AI |\n| Kling | حركة شخصيات | 10 ثواني | جيدة جداً | $5/شهر |\n| Minimax/Hailuo | محتوى سريع | 6 ثواني | جيدة | مجاني/محدود |'
+                content: '| الأداة | الأفضل لـ | المدة القصوى | الجودة | السعر |\n|--------|----------|-------------|--------|-------|\n| Runway Gen-4.5 | محتوى سوشيال + منتجات | ثوانٍ لكل مقطع | عالية | اشتراك شهري |\n| Veo 3.1 | مشاهد سينمائية بصوت | ثوانٍ لكل مقطع | أعلى جودة | مع Google AI Pro |\n| Kling 3.0 | حركة شخصيات | ثوانٍ لكل مقطع | عالية جداً | اشتراك منخفض |\n| Minimax/Hailuo | محتوى سريع | ثوانٍ لكل مقطع | جيدة | الأرخص |\n\n💡 المدد والأسعار تتغير باستمرار — راجع موقع كل أداة قبل الاشتراك.'
             },
             {
                 type: 'card' as const,
                 title: '❓ كيف تختار الأداة المناسبة؟',
-                content: '🔸 عايز فيديو سريع ومجاني؟ → **Minimax/Hailuo**\n🔸 عايز تتعلم وتجرب؟ → **Runway Gen-3** (الأسهل)\n🔸 عايز جودة سينمائية؟ → **Sora**\n🔸 عايز حركة شخصيات واقعية؟ → **Kling**\n🔸 عايز تدمج مع مشروع Google؟ → **Veo**\n\n💡 نصيحة: ابدأ بـ Runway (الأسهل) وجرب Sora لما تحتاج جودة أعلى.'
+                content: '🔸 عايز فيديو سريع ومجاني؟ → **Minimax/Hailuo**\n🔸 عايز تتعلم وتجرب؟ → **Runway Gen-4.5** (تحكم سهل)\n🔸 عايز جودة سينمائية بصوت؟ → **Veo 3.1**\n🔸 عايز حركة شخصيات واقعية بسعر مناسب؟ → **Kling 3.0**\n🔸 عايز تحوّل صورك لفيديو أطول؟ → **Seedance 2.5**\n\n💡 نصيحة: ابدأ بـ Hailuo أو Kling (الأرخص) وجرب Veo لما تحتاج جودة أعلى.'
             },
             {
                 type: 'text' as const,
                 title: '⚡ Workflow عملي: من فكرة لفيديو في 10 دقائق',
-                content: 'الخطوة 1 (دقيقة واحدة): اكتب السكريبت بـ ChatGPT\n"اكتبلي سكريبت فيديو Reels مدته 30 ثانية عن [موضوعك]. Hook + مشكلة + حل + CTA."\n\nالخطوة 2 (3 دقائق): ولّد الصور بـ Midjourney أو DALL-E\nولّد 3-5 صور حسب مشاهد السكريبت\n\nالخطوة 3 (دقيقتين): حوّل الصور لفيديو بـ Runway\nارفع كل صورة وأضف حركة (Image-to-Video)\n\nالخطوة 4 (دقيقتين): أضف صوت بـ ElevenLabs\nانسخ السكريبت → اختار صوت → حمّل الملف\n\nالخطوة 5 (دقيقتين): اجمع كل حاجة في CapCut\nادمج المقاطع + أضف الموسيقى + التصدير النهائي'
+                content: 'الخطوة 1 (دقيقة واحدة): اكتب السكريبت بـ ChatGPT\n"اكتبلي سكريبت فيديو Reels مدته 30 ثانية عن [موضوعك]. Hook + مشكلة + حل + CTA."\n\nالخطوة 2 (3 دقائق): ولّد الصور بـ Midjourney أو GPT Image\nولّد 3-5 صور حسب مشاهد السكريبت\n\nالخطوة 3 (دقيقتين): حوّل الصور لفيديو بـ Runway\nارفع كل صورة وأضف حركة (Image-to-Video)\n\nالخطوة 4 (دقيقتين): أضف صوت بـ ElevenLabs\nانسخ السكريبت → اختار صوت → حمّل الملف\n\nالخطوة 5 (دقيقتين): اجمع كل حاجة في CapCut\nادمج المقاطع + أضف الموسيقى + التصدير النهائي'
             },
             {
                 type: 'card' as const,
@@ -900,12 +900,12 @@ export const unit6Data: PageContent[] = [
             {
                 type: 'card' as const,
                 title: '🔄 Multimedia Pipeline',
-                content: "**سلسلة إنتاج فيديو تعليمي:**\n\n1️⃣ **SCRIPT** - ChatGPT/Claude\n→ نص السيناريو\n\n2️⃣ **STORYBOARD** - Midjourney/DALL-E\n→ صور المشاهد\n\n3️⃣ **VOICEOVER** - ElevenLabs/TTS\n→ ملفات صوتية\n\n4️⃣ **ANIMATION** - Runway/Pika\n→ مقاطع متحركة\n\n5️⃣ **ASSEMBLY** - CapCut/Premiere\n→ الفيديو النهائي"
+                content: "**سلسلة إنتاج فيديو تعليمي:**\n\n1️⃣ **SCRIPT** - ChatGPT/Claude\n→ نص السيناريو\n\n2️⃣ **STORYBOARD** - Midjourney/GPT Image\n→ صور المشاهد\n\n3️⃣ **VOICEOVER** - ElevenLabs/TTS\n→ ملفات صوتية\n\n4️⃣ **ANIMATION** - Runway/Kling\n→ مقاطع متحركة\n\n5️⃣ **ASSEMBLY** - CapCut/Premiere\n→ الفيديو النهائي"
             },
             {
                 type: 'card' as const,
                 title: '📱 أمثلة سلاسل العمل',
-                content: "**سوشيال ميديا (30 دقيقة):**\nChatGPT → Midjourney → CapCut\n\n**كتاب إلكتروني (2-3 ساعات):**\nClaude → DALL-E → Canva\n\n**بودكاست (1 ساعة):**\nChatGPT → ElevenLabs → Audacity\n\n**إعلان قصير (2-4 ساعات):**\nChatGPT → Sora → ElevenLabs → Premiere\n\n**5 قواعد للدمج الناجح:**\n✅ حافظ على الاتساق\n✅ ابدأ بالنص دائماً\n✅ استخدم Seed/Reference\n✅ خطط للانتقالات\n✅ راجع كل خطوة"
+                content: "**سوشيال ميديا (30 دقيقة):**\nChatGPT → Midjourney → CapCut\n\n**كتاب إلكتروني (2-3 ساعات):**\nClaude → GPT Image → Canva\n\n**بودكاست (1 ساعة):**\nChatGPT → ElevenLabs → Audacity\n\n**إعلان قصير (2-4 ساعات):**\nChatGPT → Veo → ElevenLabs → Premiere\n\n**5 قواعد للدمج الناجح:**\n✅ حافظ على الاتساق\n✅ ابدأ بالنص دائماً\n✅ استخدم Seed/Reference\n✅ خطط للانتقالات\n✅ راجع كل خطوة"
             },
             {
                 type: 'card' as const,
@@ -959,9 +959,9 @@ export const unit6Data: PageContent[] = [
                 title: 'أسئلة شائعة',
                 content: '',
                 items: [
-                    { title: 'أفضل أداة لتوليد صور بالنص العربي؟', content: 'حالياً Ideogram و DALL-E 3 الأفضل في التعامل مع النص العربي في الصور. Midjourney ممتاز بصرياً لكن ضعيف مع النص العربي.' },
-                    { title: 'هل يفهم AI الخط العربي في الصور؟', content: 'نعم! GPT-4 Vision و Claude Vision يقرأون النص العربي في الصور بدقة جيدة. خط النسخ أسهل من الديواني والثلث.' },
-                    { title: 'هل يمكنني إنشاء فيديو كامل بالـ AI؟', content: 'حالياً يمكنك إنشاء مقاطع قصيرة (5-30 ثانية) بأدوات مثل Sora و Runway. الفيديوهات الطويلة تحتاج تجميع يدوي.' },
+                    { title: 'أفضل أداة لتوليد صور بالنص العربي؟', content: 'حالياً Ideogram و GPT Image 2 الأفضل في التعامل مع النص العربي في الصور. Midjourney ممتاز بصرياً لكن ضعيف مع النص العربي. راجع دائماً شكل الحروف قبل النشر.' },
+                    { title: 'هل يفهم AI الخط العربي في الصور؟', content: 'نعم! ChatGPT و Claude و Gemini يقرأون النص العربي في الصور بدقة جيدة. خط النسخ أسهل من الديواني والثلث.' },
+                    { title: 'هل يمكنني إنشاء فيديو كامل بالـ AI؟', content: 'حالياً يمكنك إنشاء مقاطع قصيرة (ثوانٍ لكل مقطع) بأدوات مثل Veo و Kling و Runway. الفيديوهات الطويلة تحتاج تجميع يدوي.' },
                     { title: 'هل الصور المولدة بالـ AI ملكي؟', content: 'حسب شروط كل منصة. أغلبها يعطيك حق الاستخدام التجاري مع الاشتراك المدفوع. تحقق من شروط المنصة التي تستخدمها.' }
                 ]
             },
@@ -1010,18 +1010,18 @@ export const unit6Info = {
     },
     newFrameworks: ['SSCT', 'SPICE', 'MASC'],
     practicalExercises: 11,
-    lastUpdated: 'فبراير 2026',
+    lastUpdated: 'سبتمبر 2026',
     prerequisites: [
         'الوحدة 1-5 (خاصة إطار GOLDS من الوحدة 3)',
         'الوحدة 4: Prompt Chaining',
         'الوحدة 5: Structured Outputs'
     ],
     tools: [
-        'GPT-5.5 / Claude (الجيل الحالي) / Gemini 3.1 Pro (Vision)',
-        'DALL-E 3 / Midjourney / Stable Diffusion (Image Generation)',
+        'GPT-6 / Claude (الجيل الحالي) / Gemini 3.1 Pro (Vision)',
+        'GPT Image 2 / Midjourney / Nano Banana / Stable Diffusion (Image Generation)',
         'Whisper / ElevenLabs / OpenAI TTS / Azure Speech (Audio)',
         'Suno / Udio / Mubert (Music Generation)',
-        'Sora / Veo / Runway / Kling / Minimax (Video)'
+        'Veo / Kling / Runway / Seedance / Minimax (Video)'
     ]
 };
 

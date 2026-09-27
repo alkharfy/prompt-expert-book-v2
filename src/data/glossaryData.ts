@@ -5,7 +5,7 @@
  * يحتوي على شرح تفصيلي مع أمثلة لكل مصطلح تقني
  * يُستخدم مع GlossaryTerm component
  * 
- * آخر تحديث: فبراير 2026
+ * آخر تحديث: سبتمبر 2026
  */
 
 export interface GlossaryTerm {
@@ -42,7 +42,7 @@ const glossaryData: Record<string, GlossaryTerm> = {
 • الأرقام والرموز لها توكنات خاصة
 
 **لماذا مهم؟**
-• كل نموذج له حد أقصى من التوكنات (مثلاً: GPT-4 = 128,000 توكن)
+• كل نموذج له حد أقصى من التوكنات (مثلاً: GPT-6 ≈ 1,050,000 توكن، بينما GPT-4 Turbo الأقدم = 128,000 توكن)
 • كلما زادت التوكنات = زادت التكلفة في الAPI
 • الإدخال + الإخراج = إجمالي التوكنات المستخدمة`,
         examples: [
@@ -65,13 +65,15 @@ const glossaryData: Record<string, GlossaryTerm> = {
             },
             {
                 title: '💰 التكلفة',
-                content: `GPT-4o (فبراير 2026):
-• الإدخال: $2.5 / مليون توكن
+                content: `GPT-6 Luna (سبتمبر 2026):
+• الإدخال: $0.10 / مليون توكن
+• الإخراج: $0.50 / مليون توكن
+
+Claude Sonnet 5:
+• الإدخال: $2 / مليون توكن
 • الإخراج: $10 / مليون توكن
 
-Claude 3.5 Sonnet:
-• الإدخال: $3 / مليون توكن
-• الإخراج: $15 / مليون توكن`
+↳ الأسعار تتغير باستمرار — راجع صفحة الأسعار الرسمية`
             }
         ],
         relatedTerms: ['context-window', 'prompt', 'completion']
@@ -178,8 +180,8 @@ Temperature = 0.9 (إبداعي):
         fullExplanation: `نافذة السياق هي "ذاكرة" النموذج - كم من النص يمكنه تذكره ومعالجته في نفس الوقت.
 
 **الحدود الحالية (2026):**
-• GPT-5.5: ≈ 1,000,000 توكن
-• Claude Opus 4.8: 1,000,000 توكن (النماذج الأقدم/الاقتصادية: 200,000)
+• GPT-6: ≈ 1,050,000 توكن
+• Claude Opus 5.5 / Fable 5.1: 1,000,000 توكن (Haiku 4.5 الاقتصادي: 200,000)
 • Gemini 3.1 Pro: 1,000,000 توكن
 • LLaMA 4 Scout: حتى 10,000,000 توكن (رقم نظري معلن)
 
@@ -334,7 +336,7 @@ Top P = 0.9:
 • تكلفة أقل للاستخدام الكثيف
 
 **أشهر APIs للذكاء الاصطناعي:**
-• OpenAI API (GPT-4, DALL-E)
+• OpenAI API (GPT-6, GPT Image)
 • Anthropic API (Claude)
 • Google AI (Gemini)
 • Azure OpenAI`,
@@ -345,7 +347,7 @@ Top P = 0.9:
 import openai
 
 response = openai.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-6-luna",
     messages=[
         {"role": "user", "content": "مرحباً!"}
     ]
@@ -355,7 +357,7 @@ print(response.choices[0].message.content)`
             },
             {
                 title: '💰 مقارنة التكلفة',
-                content: `ChatGPT Plus: $20/شهر (استخدام غير محدود تقريباً)
+                content: `ChatGPT Plus: $20/شهر (حدود استخدام عالية)
 
 API (لنفس الاستخدام):
 • 1000 رسالة قصيرة ≈ $2-5
@@ -592,9 +594,10 @@ API (لنفس الاستخدام):
             },
             {
                 title: '💰 التكلفة',
-                content: `GPT-4 Fine-tuning:
-• التدريب: ~$0.03 / 1000 توكن
-• الاستخدام: ~$0.12 / 1000 توكن
+                content: `تكلفة الـ Fine-tuning:
+• تدفع مقابل التدريب (حسب عدد التوكنات)
+• واستخدام النموذج المخصص أغلى عادة من الأساسي
+• الأسعار تختلف حسب النموذج والمنصة
 
 ↳ أغلى من API العادي
 ↳ لكن نتائج أدق للمهام المتخصصة`
@@ -679,7 +682,7 @@ RAG يفعل:
         id: 'llm',
         term: 'نموذج لغوي كبير',
         termEn: 'LLM',
-        shortDef: 'البرنامج الذي يولد النصوص مثل GPT-4 وClaude',
+        shortDef: 'البرنامج الذي يولد النصوص مثل GPT-6 وClaude',
         icon: '🤖',
         category: 'ai-basics',
         fullExplanation: `LLM (Large Language Model) هو الدماغ وراء ChatGPT وClaude وGemini!
@@ -690,8 +693,8 @@ RAG يفعل:
 • يتوقع الكلمة التالية بناءً على السياق
 
 **أشهر النماذج (2026):**
-• GPT-5.5 (OpenAI)
-• Claude Opus 4.8 / Fable 5 (Anthropic)
+• GPT-6 (OpenAI)
+• Claude Opus 5.5 / Fable 5.1 (Anthropic)
 • Gemini 3.1 Pro (Google)
 • Llama 4 (Meta, مفتوح المصدر)`,
         examples: [
@@ -701,7 +704,7 @@ RAG يفعل:
 2023: GPT-4 (تريليونات؟ غير معلن)
 2024: Claude 3, Gemini 1.5
 2025: GPT-5, Claude 4, Gemini 2.5
-2026: GPT-5.5, Claude Opus 4.8 / Fable 5, Gemini 3.1 Pro
+2026: GPT-6, Claude Fable 5.1 / Opus 5.5, Gemini 3.1 Pro
 
 ↳ كل جيل أذكى من السابق!`
             }

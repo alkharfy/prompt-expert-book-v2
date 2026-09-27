@@ -34,7 +34,7 @@ const chapters: Chapter[] = [
     {
         number: '01',
         title: 'كيف يفكر AI؟',
-        description: 'كيف يفكر الذكاء الاصطناعي فعلاً (GPT-5, Claude, Gemini)',
+        description: 'كيف يفكر الذكاء الاصطناعي فعلاً (GPT-6, Claude, Gemini)',
         href: '/read/section-1/1',
         icon: '🧠',
         isFree: true
