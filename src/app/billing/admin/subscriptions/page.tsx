@@ -91,7 +91,7 @@ export default function AdminSubscriptionsPage() {
             sub.status,
             new Date(sub.starts_at).toLocaleDateString('ar-EG'),
             new Date(sub.expires_at).toLocaleDateString('ar-EG'),
-            `${sub.payments?.amount || 0} ${sub.payments?.currency || 'EGP'}`,
+            sub.payment_id ? `${sub.payments?.amount || 0} ${sub.payments?.currency || 'EGP'}` : 'مجاني',
         ])
 
         const csvContent = [headers, ...rows].map((row) => row.join(',')).join('\n')
@@ -312,7 +312,9 @@ export default function AdminSubscriptionsPage() {
                                         fontWeight: 600,
                                     }}
                                 >
-                                    {sub.payments?.amount || 0} {sub.payments?.currency || 'EGP'}
+                                    {sub.payment_id
+                                        ? `${sub.payments?.amount || 0} ${sub.payments?.currency || 'EGP'}`
+                                        : <span style={{ color: '#10b981' }}>مجاني</span>}
                                 </td>
                             </tr>
                         ))}

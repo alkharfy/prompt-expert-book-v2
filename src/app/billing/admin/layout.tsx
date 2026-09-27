@@ -85,6 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { href: '/billing/admin/plans', label: 'إدارة الباقات', icon: '📦' },
         { href: '/billing/admin/promos', label: 'أكواد الخصم', icon: '🏷️' },
         { href: '/billing/admin/subscriptions', label: 'الاشتراكات', icon: '💳' },
+        { href: '/billing/admin/free-accounts', label: 'الحسابات المجانية', icon: '🎁' },
         { href: '/billing/admin/testimonials', label: 'شهادات العملاء', icon: '⭐' },
         { href: '/billing/admin/site-stats', label: 'إحصائيات الموقع', icon: '📈' },
         { href: '/billing/admin/chat', label: 'إحصائيات الشات', icon: '💬' },

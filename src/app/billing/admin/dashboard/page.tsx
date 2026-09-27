@@ -17,28 +17,38 @@
  */
 
 import { useEffect, useState, useRef, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
-import type { Database } from '@/lib/database.types'
 
-type Subscription = Database['public']['Tables']['subscriptions']['Row']
-type Payment = Database['public']['Tables']['payments']['Row']
+interface AdminSubscription {
+    status: string
+    plan_id: string
+    payment_id: string | null
+    expires_at: string
+    created_at: string
+    payments: { amount: number } | null
+}
 
 interface Stats {
     totalActive: number
+    freeActive: number
     totalExpired: number
     totalCancelled: number
     mrr: number
     planDistribution: Record<string, number>
+    growth: { label: string; count: number }[]
 }
 
 export default function BillingAdminDashboard() {
     const [stats, setStats] = useState<Stats>({
         totalActive: 0,
+        freeActive: 0,
         totalExpired: 0,
         totalCancelled: 0,
         mrr: 0,
         planDistribution: {},
+        growth: [],
     })
+    const [loadError, setLoadError] = useState<string | null>(null)
+    const chartsRef = useRef<{ destroy: () => void }[]>([])
     const [loading, setLoading] = useState(true)
     const pieChartRef = useRef<HTMLCanvasElement>(null)
     const lineChartRef = useRef<HTMLCanvasElement>(null)
@@ -62,13 +72,17 @@ export default function BillingAdminDashboard() {
     const fetchStats = useCallback(async () => {
         setLoading(true)
 
-        // جلب الاشتراكات
-        const { data: subscriptions, error: subError } = await (supabase as any)
-            .from('subscriptions')
-            .select('status, plan_id, expires_at')
-
-        if (subError) {
-            console.error('Error fetching subscriptions:', subError)
+        // جلب الاشتراكات عبر API الأدمن (service_role) — قراءة الجدول مباشرة من
+        // المتصفح بمفتاح anon ممنوعة بسياسات RLS فكانت ترجع أصفاراً.
+        let subscriptions: AdminSubscription[]
+        try {
+            const res = await fetch('/api/admin/subscriptions', { cache: 'no-store' })
+            const data = await res.json()
+            if (!data.ok) throw new Error(data.error || 'failed')
+            subscriptions = data.subscriptions
+        } catch (err) {
+            console.error('Error fetching subscriptions:', err)
+            setLoadError('تعذّر تحميل بيانات الاشتراكات')
             setLoading(false)
             return
         }
@@ -76,38 +90,44 @@ export default function BillingAdminDashboard() {
         // حساب الإحصائيات
         const now = new Date()
         const activeSubs = subscriptions.filter(
-            (sub: any) => sub.status === 'active' && new Date(sub.expires_at) > now
+            (sub) => sub.status === 'active' && new Date(sub.expires_at) > now
         )
         const expiredSubs = subscriptions.filter(
-            (sub: any) => sub.status === 'expired' || new Date(sub.expires_at) <= now
+            (sub) => sub.status === 'expired' || (sub.status === 'active' && new Date(sub.expires_at) <= now)
         )
-        const cancelledSubs = subscriptions.filter((sub: any) => sub.status === 'cancelled')
+        const cancelledSubs = subscriptions.filter((sub) => sub.status === 'cancelled')
+        // الحسابات المجانية = اشتراك بدون دفعة (يصدرها الأدمن)
+        const paidActive = activeSubs.filter((sub) => sub.payment_id)
 
         // توزيع الباقات
         const planDistribution: Record<string, number> = {}
-        activeSubs.forEach((sub: any) => {
+        activeSubs.forEach((sub) => {
             planDistribution[sub.plan_id] = (planDistribution[sub.plan_id] || 0) + 1
         })
 
-        // حساب MRR (Monthly Recurring Revenue)
-        // MRR = (إجمالي الإيرادات السنوية / 12)
-        // Estimate; authoritative prices live in the admin-managed `plans` table.
-        const planPrices: Record<string, number> = {
-            basic: 99,
-            pro: 199,
-            vip: 399,
-        }
-        const annualRevenue = activeSubs.reduce((sum: number, sub: any) => {
-            return sum + (planPrices[sub.plan_id] || 0)
-        }, 0)
+        // MRR = المبالغ المدفوعة فعلاً في الاشتراكات السنوية النشطة ÷ 12
+        // (الحسابات المجانية لا تدخل في الإيرادات)
+        const annualRevenue = paidActive.reduce((sum, sub) => sum + (Number(sub.payments?.amount) || 0), 0)
         const mrr = Math.round(annualRevenue / 12)
+
+        // نمو الاشتراكات: عدد الاشتراكات الجديدة في آخر 6 أشهر
+        const growth = Array.from({ length: 6 }, (_, i) => {
+            const month = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+            const count = subscriptions.filter((sub) => {
+                const created = new Date(sub.created_at)
+                return created.getFullYear() === month.getFullYear() && created.getMonth() === month.getMonth()
+            }).length
+            return { label: month.toLocaleDateString('ar-EG', { month: 'long' }), count }
+        })
 
         setStats({
             totalActive: activeSubs.length,
+            freeActive: activeSubs.length - paidActive.length,
             totalExpired: expiredSubs.length,
             totalCancelled: cancelledSubs.length,
             mrr,
             planDistribution,
+            growth,
         })
 
         setLoading(false)
@@ -117,12 +137,16 @@ export default function BillingAdminDashboard() {
         // @ts-ignore - Chart.js loaded from CDN
         if (!window.Chart) return
 
+        // Chart.js refuses to reuse a canvas that still has a chart on it.
+        chartsRef.current.forEach((chart) => chart.destroy())
+        chartsRef.current = []
+
         // Pie Chart: توزيع الباقات
         if (pieChartRef.current) {
             const pieCtx = pieChartRef.current.getContext('2d')
             if (pieCtx) {
                 // @ts-ignore
-                new window.Chart(pieCtx, {
+                chartsRef.current.push(new window.Chart(pieCtx, {
                     type: 'pie',
                     data: {
                         labels: Object.keys(stats.planDistribution).map((plan) => {
@@ -158,23 +182,23 @@ export default function BillingAdminDashboard() {
                             },
                         },
                     },
-                })
+                }))
             }
         }
 
-        // Line Chart: نمو الاشتراكات (مثال ثابت)
+        // Line Chart: نمو الاشتراكات (اشتراكات جديدة لكل شهر)
         if (lineChartRef.current) {
             const lineCtx = lineChartRef.current.getContext('2d')
             if (lineCtx) {
                 // @ts-ignore
-                new window.Chart(lineCtx, {
+                chartsRef.current.push(new window.Chart(lineCtx, {
                     type: 'line',
                     data: {
-                        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                        labels: stats.growth.map((m) => m.label),
                         datasets: [
                             {
-                                label: 'عدد الاشتراكات',
-                                data: [5, 12, 18, 25, 30, stats.totalActive],
+                                label: 'اشتراكات جديدة',
+                                data: stats.growth.map((m) => m.count),
                                 borderColor: '#8b5cf6',
                                 backgroundColor: 'rgba(139, 92, 246, 0.1)',
                                 tension: 0.4,
@@ -191,7 +215,7 @@ export default function BillingAdminDashboard() {
                             },
                             title: {
                                 display: true,
-                                text: 'نمو الاشتراكات (2026)',
+                                text: 'اشتراكات جديدة — آخر 6 أشهر',
                                 color: '#e5e7eb',
                                 font: { size: 16, weight: 'bold' },
                             },
@@ -199,7 +223,7 @@ export default function BillingAdminDashboard() {
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: { color: '#9ca3af' },
+                                ticks: { color: '#9ca3af', precision: 0 },
                                 grid: { color: '#374151' },
                             },
                             x: {
@@ -208,7 +232,7 @@ export default function BillingAdminDashboard() {
                             },
                         },
                     },
-                })
+                }))
             }
         }
     }, [stats])
@@ -218,13 +242,19 @@ export default function BillingAdminDashboard() {
     }, [fetchStats])
 
     useEffect(() => {
-        if (chartLoaded && stats.totalActive > 0) {
+        if (chartLoaded && stats.growth.length > 0) {
             renderCharts()
         }
     }, [chartLoaded, stats, renderCharts])
 
+    useEffect(() => () => chartsRef.current.forEach((chart) => chart.destroy()), [])
+
     if (loading) {
         return <div style={{ padding: '2rem', textAlign: 'center' }}>جاري التحميل...</div>
+    }
+
+    if (loadError) {
+        return <div role="alert" style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>{loadError}</div>
     }
 
     return (
@@ -259,6 +289,11 @@ export default function BillingAdminDashboard() {
                     <div style={{ fontSize: '2rem', fontWeight: 700, color: '#10b981' }}>
                         {stats.totalActive}
                     </div>
+                    {stats.freeActive > 0 && (
+                        <div style={{ fontSize: '0.8rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                            منها {stats.freeActive} حساب مجاني
+                        </div>
+                    )}
                 </div>
 
                 <div
@@ -270,7 +305,7 @@ export default function BillingAdminDashboard() {
                     }}
                 >
                     <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginBottom: '0.5rem' }}>
-                        MRR (إيرادات شهرية)
+                        MRR (إيرادات شهرية — المدفوع فقط)
                     </div>
                     <div style={{ fontSize: '2rem', fontWeight: 700, color: '#8b5cf6' }}>
                         {stats.mrr.toLocaleString('ar-EG')} EGP

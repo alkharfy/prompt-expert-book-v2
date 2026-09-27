@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         // 3. جلب الاشتراك الحالي
         const { data: subscription, error: fetchError } = await (supabase as any)
             .from('subscriptions')
-            .select('id, user_id, expires_at, status')
+            .select('id, user_id, plan_id, expires_at, status')
             .eq('id', subscriptionId)
             .single()
 
@@ -77,9 +77,10 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // 4. حساب تاريخ الانتهاء الجديد
+        // 4. حساب تاريخ الانتهاء الجديد — من اليوم إذا كان الاشتراك منتهياً بالفعل،
+        // وإلا فالتمديد قد يقع كله في الماضي.
         const currentExpiry = new Date(subscription.expires_at)
-        const newExpiry = new Date(currentExpiry)
+        const newExpiry = new Date(Math.max(currentExpiry.getTime(), Date.now()))
         newExpiry.setDate(newExpiry.getDate() + days)
 
         // 5. تحديث الاشتراك
@@ -96,10 +97,14 @@ export async function POST(request: NextRequest) {
             throw updateError
         }
 
-        // 6. تحديث users.plan_expires_at
+        // 6. مزامنة حقول الوصول في users (الإلغاء يصفّرها، فالتمديد بعده يجب أن يعيدها)
         await (supabase as any)
             .from('users')
-            .update({ plan_expires_at: newExpiry.toISOString() })
+            .update({
+                current_plan: subscription.plan_id,
+                plan_expires_at: newExpiry.toISOString(),
+                is_active: true,
+            })
             .eq('id', subscription.user_id)
 
         dbLogger.info(`[Admin] Extended subscription ${subscriptionId} by ${days} days`)
