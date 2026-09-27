@@ -267,21 +267,6 @@ export default function LockedOverlay({
                             </motion.div>
                         )}
 
-                        {/* شهادة قارئ */}
-                        {showValueProps && (
-                            <motion.div
-                                className="lock-testimonial"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                            >
-                                <p className="lock-testimonial-text">
-                                    &ldquo;الكتاب غيّر طريقة تفكيري في استخدام AI تماماً! بعد الفصل الرابع قدرت أبني نظام أتمتة كامل.&rdquo;
-                                </p>
-                                <p className="lock-testimonial-author">— أحمد، صاحب مشروع</p>
-                            </motion.div>
-                        )}
-
                         {/* عرض الباقة الحالية إذا كان المستخدم لديه اشتراك */}
                         {currentPlan && status === 'wrong_plan' && (
                             <div style={{

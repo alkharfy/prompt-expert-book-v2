@@ -16,12 +16,11 @@ interface ModelConfig {
     baseURL?: string
 }
 
+// Same model set as app/api/chat/route.ts (see the retirement notes there).
 const MODEL_CONFIG: Record<string, ModelConfig> = {
-    'gpt-4o-mini': { provider: 'openai', apiModel: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-    'gemini-2.0-flash': { provider: 'google', apiModel: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-    'grok-3-mini': { provider: 'openai', apiModel: 'grok-3-mini', label: 'Grok 3 Mini', baseURL: 'https://api.x.ai/v1' },
-    'llama-3.3-70b': { provider: 'groq', apiModel: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B' },
-    'deepseek-chat': { provider: 'openai', apiModel: 'deepseek-chat', label: 'DeepSeek Chat', baseURL: 'https://api.deepseek.com' },
+    'gpt-oss-120b': { provider: 'groq', apiModel: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B' },
+    'gpt-6-luna': { provider: 'openai', apiModel: 'gpt-6-luna', label: 'GPT-6 Luna' },
+    'gemini-3.8-flash': { provider: 'google', apiModel: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash' },
 }
 
 const validModels = Object.keys(MODEL_CONFIG) as [string, ...string[]]
@@ -82,8 +81,9 @@ async function callOpenAI(config: ModelConfig, prompt: string): Promise<string> 
             { role: 'system', content: HOSPITAL_SYSTEM_PROMPT },
             { role: 'user', content: `شخّص هذا البرومبت:\n\n${prompt}` },
         ],
-        temperature: 0.4,
-        max_tokens: 2048,
+        // Reasoning model: no custom temperature; reasoning shares this budget.
+        reasoning_effort: 'low',
+        max_completion_tokens: 4096,
     })
 
     return response.choices[0]?.message?.content || ''
@@ -99,7 +99,7 @@ async function callGemini(config: ModelConfig, prompt: string): Promise<string> 
     const model = genAI.getGenerativeModel({
         model: config.apiModel,
         systemInstruction: HOSPITAL_SYSTEM_PROMPT,
-        generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
+        generationConfig: { temperature: 0.4, maxOutputTokens: 4096 },
     })
 
     const result = await model.generateContent(`شخّص هذا البرومبت:\n\n${prompt}`)
@@ -121,7 +121,9 @@ async function callGroq(config: ModelConfig, prompt: string): Promise<string> {
             { role: 'user', content: `شخّص هذا البرومبت:\n\n${prompt}` },
         ],
         temperature: 0.4,
-        max_tokens: 2048,
+        reasoning_effort: 'low',
+        include_reasoning: false,
+        max_completion_tokens: 4096,
     })
 
     return response.choices[0]?.message?.content || ''

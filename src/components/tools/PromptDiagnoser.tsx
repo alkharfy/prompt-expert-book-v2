@@ -24,12 +24,11 @@ interface DiagnosisResult {
 
 type Phase = 'admission' | 'diagnosing' | 'report'
 
+// Must match MODEL_CONFIG keys in app/api/prompt-hospital/diagnose/route.ts.
 const MODEL_OPTIONS = [
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-    { value: 'llama-3.3-70b', label: 'Llama 3.3 70B' },
-    { value: 'grok-3-mini', label: 'Grok 3 Mini' },
-    { value: 'deepseek-chat', label: 'DeepSeek Chat' },
+    { value: 'gpt-oss-120b', label: 'GPT-OSS 120B (سريع)' },
+    { value: 'gpt-6-luna', label: 'GPT-6 Luna' },
+    { value: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash' },
 ]
 
 const VITAL_SIGN_LABELS: Record<string, { name: string; icon: string }> = {
@@ -51,7 +50,7 @@ function getHealthColor(score: number): string {
 export default function PromptDiagnoser() {
     const [phase, setPhase] = useState<Phase>('admission')
     const [prompt, setPrompt] = useState('')
-    const [selectedModel, setSelectedModel] = useState('gpt-4o-mini')
+    const [selectedModel, setSelectedModel] = useState(MODEL_OPTIONS[0].value)
     const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [copied, setCopied] = useState(false)

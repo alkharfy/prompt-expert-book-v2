@@ -18,12 +18,11 @@ interface Message {
 
 // ===== Constants =====
 
+// Must match MODEL_CONFIG keys in app/api/chat/route.ts.
 const MODEL_OPTIONS = [
-    { value: 'llama-3.3-70b', label: 'Llama 3.3 70B (Free)' },
-    { value: 'deepseek-chat', label: 'DeepSeek Chat' },
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
-    { value: 'grok-3-mini', label: 'Grok 3 Mini' },
+    { value: 'gpt-oss-120b', label: 'GPT-OSS 120B (سريع)' },
+    { value: 'gpt-6-luna', label: 'GPT-6 Luna' },
+    { value: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash' },
 ] as const
 
 const STORAGE_KEY = 'book-chat-messages'
@@ -94,7 +93,7 @@ export default function ChatWindow() {
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const [model, setModel] = useState<string>('llama-3.3-70b')
+    const [model, setModel] = useState<string>(MODEL_OPTIONS[0].value)
     const [remaining, setRemaining] = useState<number | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [sessionId, setSessionId] = useState<string>('')

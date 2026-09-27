@@ -177,31 +177,6 @@
   flex-shrink: 0;
 }
 
-/* شهادة القارئ */
-.lock-testimonial {
-  margin-bottom: 20px;
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border-right: 3px solid var(--color-orange-primary);
-  border-radius: 8px;
-  text-align: start;
-}
-
-.lock-testimonial-text {
-  font-size: 0.95rem;
-  color: #ccc;
-  line-height: 1.7;
-  margin: 0 0 6px 0;
-  font-style: italic;
-}
-
-.lock-testimonial-author {
-  font-size: 0.8rem;
-  color: var(--color-orange-primary);
-  margin: 0;
-  font-weight: 600;
-}
-
 /* ضمان الاسترداد */
 .lock-guarantee {
   display: flex;
@@ -306,18 +281,15 @@
 }
 
 @media (max-width: 480px) {
+  /* Two columns keep the primary button above the fold on small phones. */
   .lock-value-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
 
   .lock-stat-item {
-    padding: 8px 12px;
-    font-size: 0.85rem;
-  }
-
-  .lock-testimonial {
-    padding: 12px 14px;
+    padding: 8px 10px;
+    font-size: 0.8rem;
   }
 
   .lock-chapters-toggle {

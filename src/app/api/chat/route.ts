@@ -19,33 +19,26 @@ interface ModelConfig {
     baseURL?: string
 }
 
+// Keep in sync with MODEL_OPTIONS in components/chat/ChatWindow.tsx and the
+// prompt-hospital route. Retired upstream (404) as of 2026-09: gemini-2.0-flash
+// (Google, 2026-06-01) and llama-3.3-70b-versatile (Groq, 2026-08-16).
+// Grok / DeepSeek need XAI_API_KEY / DEEPSEEK_API_KEY — re-add here and in the
+// UI option lists once those keys are set in Vercel.
 const MODEL_CONFIG: Record<string, ModelConfig> = {
-    'gpt-4o-mini': {
-        provider: 'openai',
-        apiModel: 'gpt-4o-mini',
-        label: 'GPT-4o Mini',
-    },
-    'gemini-2.0-flash': {
-        provider: 'google',
-        apiModel: 'gemini-2.0-flash',
-        label: 'Gemini 2.0 Flash',
-    },
-    'grok-3-mini': {
-        provider: 'openai',
-        apiModel: 'grok-3-mini',
-        label: 'Grok 3 Mini',
-        baseURL: 'https://api.x.ai/v1',
-    },
-    'llama-3.3-70b': {
+    'gpt-oss-120b': {
         provider: 'groq',
-        apiModel: 'llama-3.3-70b-versatile',
-        label: 'Llama 3.3 70B',
+        apiModel: 'openai/gpt-oss-120b',
+        label: 'GPT-OSS 120B',
     },
-    'deepseek-chat': {
+    'gpt-6-luna': {
         provider: 'openai',
-        apiModel: 'deepseek-chat',
-        label: 'DeepSeek Chat',
-        baseURL: 'https://api.deepseek.com',
+        apiModel: 'gpt-6-luna',
+        label: 'GPT-6 Luna',
+    },
+    'gemini-3.8-flash': {
+        provider: 'google',
+        apiModel: 'gemini-3.8-flash',
+        label: 'Gemini 3.8 Flash',
     },
 }
 
@@ -143,6 +136,8 @@ async function streamOpenAI(
         baseURL: config.baseURL,
     })
 
+    // GPT-6 models reason before answering: no custom temperature, and the
+    // reasoning tokens count toward max_completion_tokens.
     const stream = await client.chat.completions.create({
         model: config.apiModel,
         messages: [
@@ -150,8 +145,8 @@ async function streamOpenAI(
             ...messages,
         ],
         stream: true,
-        temperature: 0.3,
-        max_completion_tokens: 1024,
+        reasoning_effort: 'low',
+        max_completion_tokens: 2048,
     })
 
     const encoder = new TextEncoder()
@@ -191,7 +186,8 @@ async function streamGemini(
         systemInstruction: systemPrompt,
         generationConfig: {
             temperature: 0.3,
-            maxOutputTokens: 1024,
+            // Gemini 3.x thinks by default and thinking tokens share this budget.
+            maxOutputTokens: 2048,
         },
     })
 
@@ -244,7 +240,11 @@ async function streamGroq(
         ],
         stream: true,
         temperature: 0.3,
-        max_tokens: 1024,
+        // gpt-oss is a reasoning model: keep reasoning short and out of the
+        // answer stream; its tokens count toward max_completion_tokens.
+        reasoning_effort: 'low',
+        include_reasoning: false,
+        max_completion_tokens: 2048,
     })
 
     const encoder = new TextEncoder()

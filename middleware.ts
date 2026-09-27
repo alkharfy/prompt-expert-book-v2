@@ -31,22 +31,29 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
   }
   // Content-Security-Policy: unsafe-inline retained for next/script + framer-motion;
   // upgrade-insecure-requests + strict default-src cuts the obvious XSS surface.
-  // Adjust connect-src/img-src as 3P services are added.
+  // This is the ONLY CSP the site sends — browsers enforce every CSP header they
+  // receive, so a second policy (e.g. in next.config.js) silently blocks anything
+  // it omits. Every third party below is load-bearing:
+  //   Firebase Auth (Google sign-in): apis.google.com script + firebaseapp.com / accounts.google.com frames
+  //   GA4: googletagmanager + google-analytics + analytics.google.com + g/collect on google.com / doubleclick
+  //   Meta Pixel: connect.facebook.net script + facebook.com connect/frame/form (noscript + iframe fallbacks)
+  //   Kashier checkout, Supabase, and Chart.js (cdn.jsdelivr.net) on the admin dashboard.
   if (process.env.NODE_ENV === 'production') {
     response.headers.set(
       'Content-Security-Policy',
       [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://*.kashier.io",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://*.firebaseapp.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://*.kashier.io https://cdn.jsdelivr.net",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' data: https://fonts.gstatic.com",
         "img-src 'self' data: blob: https: http:",
         "media-src 'self' blob: https:",
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.firebaseio.com https://*.googleapis.com https://www.google-analytics.com https://*.facebook.com https://*.kashier.io",
-        "frame-src 'self' https://*.kashier.io https://www.google.com",
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://analytics.google.com https://stats.g.doubleclick.net https://www.google.com https://www.google.com.eg https://connect.facebook.net https://*.facebook.com https://*.kashier.io https://cdn.jsdelivr.net",
+        "frame-src 'self' https://*.kashier.io https://www.google.com https://*.firebaseapp.com https://accounts.google.com https://www.facebook.com",
         "frame-ancestors 'none'",
         "base-uri 'self'",
-        "form-action 'self' https://*.kashier.io",
+        "object-src 'none'",
+        "form-action 'self' https://*.kashier.io https://www.facebook.com",
         "upgrade-insecure-requests",
       ].join('; ')
     )
