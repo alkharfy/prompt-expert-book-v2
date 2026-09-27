@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
         }
 
         // منح نقاط Gamification (fire and forget)
-        recordNoteCreation(userId).catch((err: unknown) => {
+        recordNoteCreation(userId, supabase).catch((err: unknown) => {
             apiLogger.error('Error recording note gamification', err)
         })
 

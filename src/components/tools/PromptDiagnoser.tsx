@@ -24,11 +24,10 @@ interface DiagnosisResult {
 
 type Phase = 'admission' | 'diagnosing' | 'report'
 
-// Must match MODEL_CONFIG keys in app/api/prompt-hospital/diagnose/route.ts.
+// Values must be MODEL_CONFIG keys in app/api/prompt-hospital/diagnose/route.ts.
+// Only models with a working production key are listed (see ChatWindow.tsx).
 const MODEL_OPTIONS = [
     { value: 'gpt-oss-120b', label: 'GPT-OSS 120B (سريع)' },
-    { value: 'gpt-6-luna', label: 'GPT-6 Luna' },
-    { value: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash' },
 ]
 
 const VITAL_SIGN_LABELS: Record<string, { name: string; icon: string }> = {

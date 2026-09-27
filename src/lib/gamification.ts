@@ -10,6 +10,11 @@
 import { supabaseProxy as supabase } from './supabase_proxy'
 import { dbLogger } from './logger'
 
+// Browser callers use the proxy (default). Server callers — API routes and the
+// missions engine — must pass their service-role client: the proxy fetches a
+// relative /api URL, which only resolves in the browser.
+type GamificationDb = { rpc: (...args: any[]) => any; from: (table: string) => any }
+
 // Helper type for upsert operations
 type UpsertTable = {
     upsert: (data: Record<string, unknown>, options?: { onConflict?: string }) => Promise<{ error: { message: string } | null }>
@@ -169,11 +174,12 @@ async function updateExerciseStatsFallback(
 export async function updateGamification(
     userId: string,
     pointsEarned: number,
-    actionType: string = 'exercise_complete'
+    actionType: string = 'exercise_complete',
+    db: GamificationDb = supabase
 ): Promise<void> {
     try {
         // Try atomic RPC first
-        const { data: rpcResult, error: rpcError } = await supabase.rpc('update_gamification_atomic', {
+        const { data: rpcResult, error: rpcError } = await db.rpc('update_gamification_atomic', {
             p_user_id: userId,
             p_points_earned: pointsEarned,
             p_action_type: actionType,
@@ -181,13 +187,13 @@ export async function updateGamification(
 
         if (rpcError) {
             dbLogger.error('RPC update_gamification_atomic failed, using fallback', rpcError)
-            await updateGamificationFallback(userId, pointsEarned, actionType)
+            await updateGamificationFallback(userId, pointsEarned, actionType, db)
         } else {
             dbLogger.debug('Gamification updated (atomic)', rpcResult)
         }
 
         // حفظ في سجل النقاط
-        await (supabase
+        await (db
             .from('points_history') as unknown as { insert: (data: unknown) => Promise<{ error: unknown }> })
             .insert({
                 user_id: userId,
@@ -205,9 +211,10 @@ export async function updateGamification(
 async function updateGamificationFallback(
     userId: string,
     pointsEarned: number,
-    actionType: string = 'exercise_complete'
+    actionType: string = 'exercise_complete',
+    db: GamificationDb = supabase
 ): Promise<void> {
-    const { data: currentData, error: fetchError } = await supabase
+    const { data: currentData, error: fetchError } = await db
         .from('user_gamification')
         .select('*')
         .eq('user_id', userId)
@@ -265,7 +272,7 @@ async function updateGamificationFallback(
         updated_at: new Date().toISOString()
     }
 
-    const { error: upsertError } = await (supabase
+    const { error: upsertError } = await (db
         .from('user_gamification') as unknown as UpsertTable)
         .upsert(gamificationData, { onConflict: 'user_id' })
 
@@ -302,12 +309,17 @@ export async function onExerciseComplete(
     await updateExerciseStats(userId, exerciseType, isCorrect, pointsEarned)
     await updateGamification(userId, pointsEarned, 'exercise_complete')
 
-    // تحديث تقدم المهام اليومية
+    // تحديث تقدم المهام اليومية — عبر الـ API: هذه الدالة تعمل في المتصفح،
+    // ومحرك المهام يحتاج مفتاح service_role الموجود على الخادم فقط.
     try {
-        const { updateMissionProgress } = await import('./missions')
-        await updateMissionProgress(userId, 'complete_exercise')
-        if (isCorrect && exerciseType === 'quiz') {
-            await updateMissionProgress(userId, 'perfect_score')
+        const actions = ['complete_exercise', ...(isCorrect && exerciseType === 'quiz' ? ['perfect_score'] : [])]
+        for (const action_type of actions) {
+            await fetch('/api/missions/progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ action_type }),
+            })
         }
     } catch (err) {
         dbLogger.error('Error updating mission progress from exercise', err)
@@ -319,7 +331,8 @@ export async function onExerciseComplete(
  * 5 نقاط لكل ملاحظة، حد أقصى 10 ملاحظات يومياً (50 نقطة)
  */
 export async function recordNoteCreation(
-    userId: string
+    userId: string,
+    db: GamificationDb = supabase
 ): Promise<{ pointsAwarded: number; dailyLimitReached: boolean }> {
     try {
         // 1. حساب عدد الملاحظات المُنشأة اليوم
@@ -327,7 +340,7 @@ export async function recordNoteCreation(
         const todayStart = `${today}T00:00:00.000Z`
         const todayEnd = `${today}T23:59:59.999Z`
 
-        const { data: todayNotes, error: countError } = await supabase
+        const { data: todayNotes, error: countError } = await db
             .from('user_notes')
             .select('id')
             .eq('user_id', userId)
@@ -349,10 +362,10 @@ export async function recordNoteCreation(
 
         // 2. منح 5 نقاط
         const pointsEarned = 5
-        await updateGamification(userId, pointsEarned, 'note_created')
+        await updateGamification(userId, pointsEarned, 'note_created', db)
 
         // 3. التحقق من إجمالي الملاحظات للإنجازات
-        const { data: totalNotes, error: totalError } = await supabase
+        const { data: totalNotes, error: totalError } = await db
             .from('user_notes')
             .select('id, section_id')
             .eq('user_id', userId) as { data: { id: string; section_id: string }[] | null; error: { message: string } | null }
@@ -368,26 +381,26 @@ export async function recordNoteCreation(
         // 4. التحقق من الإنجازات
         // أول ملاحظة (first_note)
         if (totalCount === 1) {
-            await updateGamification(userId, 20, 'achievement_first_note')
+            await updateGamification(userId, 20, 'achievement_first_note', db)
             dbLogger.info(`User ${userId} earned achievement: first_note (20 pts)`)
         }
 
         // 10 ملاحظات (note_taker)
         if (totalCount === 10) {
-            await updateGamification(userId, 50, 'achievement_note_taker')
+            await updateGamification(userId, 50, 'achievement_note_taker', db)
             dbLogger.info(`User ${userId} earned achievement: note_taker (50 pts)`)
         }
 
         // 50 ملاحظة (scholar)
         if (totalCount === 50) {
-            await updateGamification(userId, 150, 'achievement_scholar')
+            await updateGamification(userId, 150, 'achievement_scholar', db)
             dbLogger.info(`User ${userId} earned achievement: scholar (150 pts)`)
         }
 
         // ملاحظات في 5 فصول مختلفة (notes_5_sections)
         if (uniqueSections === 5) {
             // نتحقق أنه لم يحصل على هذا الإنجاز من قبل
-            const { data: existingAchievement } = await supabase
+            const { data: existingAchievement } = await db
                 .from('points_history')
                 .select('id')
                 .eq('user_id', userId)
@@ -395,7 +408,7 @@ export async function recordNoteCreation(
                 .maybeSingle() as { data: { id: string } | null }
 
             if (!existingAchievement) {
-                await updateGamification(userId, 100, 'achievement_notes_5_sections')
+                await updateGamification(userId, 100, 'achievement_notes_5_sections', db)
                 dbLogger.info(`User ${userId} earned achievement: notes_5_sections (100 pts)`)
             }
         }
@@ -412,12 +425,13 @@ export async function recordNoteCreation(
  */
 export async function recordChapterCompletion(
     userId: string,
-    sectionId: string
+    sectionId: string,
+    db: GamificationDb = supabase
 ): Promise<{ pointsAwarded: number; alreadyViewed: boolean }> {
     try {
         // التحقق إن المستخدم ما شاف الملخص قبل كده
         const actionType = `recap_viewed_${sectionId}`
-        const { data: existing } = await supabase
+        const { data: existing } = await db
             .from('points_history')
             .select('id')
             .eq('user_id', userId)
@@ -429,11 +443,11 @@ export async function recordChapterCompletion(
         }
 
         // منح 15 نقطة
-        await updateGamification(userId, 15, actionType)
+        await updateGamification(userId, 15, actionType, db)
         dbLogger.info(`User ${userId} viewed recap for ${sectionId} (+15 pts)`)
 
         // التحقق من مشاهدة كل الملخصات (إنجاز "الملخّص")
-        const { data: allRecaps } = await supabase
+        const { data: allRecaps } = await db
             .from('points_history')
             .select('action_type')
             .eq('user_id', userId)
@@ -442,7 +456,7 @@ export async function recordChapterCompletion(
         const viewedCount = allRecaps?.length || 0
         if (viewedCount >= 10) {
             // تحقق إنه لم يحصل على الإنجاز من قبل
-            const { data: existingAch } = await supabase
+            const { data: existingAch } = await db
                 .from('points_history')
                 .select('id')
                 .eq('user_id', userId)
@@ -450,7 +464,7 @@ export async function recordChapterCompletion(
                 .maybeSingle() as { data: { id: string } | null }
 
             if (!existingAch) {
-                await updateGamification(userId, 100, 'achievement_all_recaps')
+                await updateGamification(userId, 100, 'achievement_all_recaps', db)
                 dbLogger.info(`User ${userId} earned achievement: all_recaps (100 pts)`)
             }
         }
@@ -467,10 +481,11 @@ export async function recordChapterCompletion(
  */
 export async function syncReadingToGamification(
     userId: string,
-    completedChaptersCount: number
+    completedChaptersCount: number,
+    db: GamificationDb = supabase
 ): Promise<void> {
     try {
-        const { data: currentData } = await supabase
+        const { data: currentData } = await db
             .from('user_gamification')
             .select('*')
             .eq('user_id', userId)
@@ -488,10 +503,10 @@ export async function syncReadingToGamification(
             const newChapters = completedChaptersCount - currentChapters
             const pointsEarned = newChapters * 50 // 50 نقطة لكل فصل
 
-            await updateGamification(userId, pointsEarned, 'chapter_complete')
+            await updateGamification(userId, pointsEarned, 'chapter_complete', db)
 
             // تحديث عدد الفصول بشكل صريح
-            await (supabase
+            await (db
                 .from('user_gamification') as unknown as UpsertTable)
                 .upsert({
                     user_id: userId,

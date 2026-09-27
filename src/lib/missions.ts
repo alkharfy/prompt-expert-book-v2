@@ -307,7 +307,7 @@ export async function updateMissionProgress(
 
                 // منح النقاط عبر gamification
                 const { updateGamification } = await import('./gamification')
-                await updateGamification(userId, pointsEarned, 'mission_complete')
+                await updateGamification(userId, pointsEarned, 'mission_complete', supabase)
 
                 dbLogger.info(`Mission ${mission.id} completed! +${pointsEarned} pts`)
             }
@@ -330,7 +330,7 @@ export async function updateMissionProgress(
 
                     // مكافأة All Clear
                     const { updateGamification } = await import('./gamification')
-                    await updateGamification(userId, ALL_CLEAR_BONUS, 'all_clear_bonus')
+                    await updateGamification(userId, ALL_CLEAR_BONUS, 'all_clear_bonus', supabase)
                     result.totalPointsEarned += ALL_CLEAR_BONUS
 
                     dbLogger.info(`User ${userId} achieved All Clear! +${ALL_CLEAR_BONUS} bonus pts`)
@@ -435,7 +435,7 @@ async function checkAllClearStreak(userId: string): Promise<void> {
             .maybeSingle()
 
         if (!firstMissionCheck) {
-            await updateGamification(userId, 20, 'achievement_first_mission')
+            await updateGamification(userId, 20, 'achievement_first_mission', supabase)
             dbLogger.info(`User ${userId} earned achievement: first_mission`)
         }
 
@@ -449,7 +449,7 @@ async function checkAllClearStreak(userId: string): Promise<void> {
                 .maybeSingle()
 
             if (!existing3) {
-                await updateGamification(userId, 100, 'achievement_all_clear_3')
+                await updateGamification(userId, 100, 'achievement_all_clear_3', supabase)
                 dbLogger.info(`User ${userId} earned achievement: all_clear_3 (3 days)`)
             }
         }
@@ -464,7 +464,7 @@ async function checkAllClearStreak(userId: string): Promise<void> {
                 .maybeSingle()
 
             if (!existing7) {
-                await updateGamification(userId, 200, 'achievement_all_clear_7')
+                await updateGamification(userId, 200, 'achievement_all_clear_7', supabase)
                 dbLogger.info(`User ${userId} earned achievement: all_clear_7 (7 days)`)
             }
         }
@@ -479,7 +479,7 @@ async function checkAllClearStreak(userId: string): Promise<void> {
                 .maybeSingle()
 
             if (!existing30) {
-                await updateGamification(userId, 500, 'achievement_all_clear_30')
+                await updateGamification(userId, 500, 'achievement_all_clear_30', supabase)
                 dbLogger.info(`User ${userId} earned achievement: all_clear_30 (30 days!)`)
             }
         }

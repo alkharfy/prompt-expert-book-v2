@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
             // Sync to gamification
             const chaptersCount = Array.isArray(completed_chapters) ? completed_chapters.length : 0
             if (chaptersCount > 0) {
-                await syncReadingToGamification(userId, chaptersCount)
+                await syncReadingToGamification(userId, chaptersCount, supabase)
             }
         }
 

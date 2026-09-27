@@ -18,11 +18,12 @@ interface Message {
 
 // ===== Constants =====
 
-// Must match MODEL_CONFIG keys in app/api/chat/route.ts.
+// Values must be MODEL_CONFIG keys in app/api/chat/route.ts. Only models whose
+// production API key works are listed: 'gpt-6-luna' (OPENAI_API_KEY rejected)
+// and 'gemini-3.8-flash' (Google project denied) are configured server-side —
+// add them back here once those keys are fixed.
 const MODEL_OPTIONS = [
     { value: 'gpt-oss-120b', label: 'GPT-OSS 120B (سريع)' },
-    { value: 'gpt-6-luna', label: 'GPT-6 Luna' },
-    { value: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash' },
 ] as const
 
 const STORAGE_KEY = 'book-chat-messages'
