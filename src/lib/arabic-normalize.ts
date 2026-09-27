@@ -36,16 +36,20 @@ const ARABIC_STOP_WORDS = new Set([
     'بعد', 'قبل', 'حتي', 'عند', 'كل', 'بعض', 'لي', 'لك',
     'ال', 'انا', 'نحن', 'هم', 'هن', 'انت', 'انتم',
     'ايش', 'شو', 'يعني', 'فيه', 'فيها', 'منه', 'منها',
+    // Question framing words: they match unrelated "X مقابل Y" pages, not the topic.
+    'الفرق', 'فرق', 'ايه', 'ازاي', 'اشرح', 'اشرحلي',
 ])
 
 /**
  * Extract meaningful keywords from an Arabic query.
- * Removes stop words and short words, normalizes text.
+ * Removes punctuation, stop words and short words, normalizes text.
  */
 export function extractKeywords(query: string): string[] {
     const normalized = normalizeArabic(query)
     return normalized
         .split(/\s+/)
+        // "Few-shot؟" must match "Few-shot" — keep inner hyphens, drop edge punctuation.
+        .map(w => w.replace(/^[؟?!.,،:;"'«»()]+|[؟?!.,،:;"'«»()]+$/g, ''))
         .filter(w => w.length > 2 && !ARABIC_STOP_WORDS.has(w))
 }
 
