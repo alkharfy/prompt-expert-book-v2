@@ -145,7 +145,8 @@ export async function POST(request: NextRequest) {
             paid_at: new Date().toISOString(),
         }
         if (paymentMethod) updateData.payment_method = paymentMethod
-        if (transactionId) updateData.kashier_transaction_id = transactionId
+        // No kashier_transaction_id column on payments — writing it failed the update.
+        dbLogger.info(`[process-callback] Kashier transaction ${transactionId || 'n/a'} for payment ${payment.id}`)
 
         const { error: updateError } = await (supabase.from('payments') as any)
             .update(updateData)

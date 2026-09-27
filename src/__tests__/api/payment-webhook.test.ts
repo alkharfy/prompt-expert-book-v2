@@ -32,6 +32,13 @@ describe('signed payment notifications', () => {
     expect((await POST(request(data))).status).toBe(200)
     expect(h.activate).toHaveBeenCalledWith('u1', 'p1', 'callback')
   })
+  it('only writes existing payments columns for a real Kashier payload (with transactionId)', async () => {
+    h.results.push({ data: { id: 'p1', user_id: 'u1', plan_id: 'pro', amount: 499, status: 'pending' } })
+    const res = await POST(request({ ...data, transactionId: 'TX-123', method: 'card' }))
+    expect(res.status).toBe(200)
+    const written = h.updates.mock.calls[0][0]
+    expect(Object.keys(written).sort()).toEqual(['paid_at', 'payment_method', 'status'])
+  })
   it('rejects signatures that omit amount or currency', async () => {
     expect((await POST(request({ ...data, signatureKeys: ['merchantOrderId', 'status'] }))).status).toBe(403)
     expect(h.updates).not.toHaveBeenCalled()

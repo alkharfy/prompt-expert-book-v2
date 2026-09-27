@@ -101,7 +101,9 @@ export async function POST(request: NextRequest) {
             paid_at: new Date().toISOString(),
         }
         if (method) updateData.payment_method = method
-        if (transactionId) updateData.kashier_transaction_id = transactionId
+        // payments has no kashier_transaction_id column — writing it made every real
+        // (signed, SUCCESS) webhook fail with 500. Keep the id in the log instead.
+        dbLogger.info(`[webhook] Kashier transaction ${transactionId || 'n/a'} for payment ${payment.id}`)
 
         const { error: updateError } = await (supabase.from('payments') as any)
             .update(updateData)
