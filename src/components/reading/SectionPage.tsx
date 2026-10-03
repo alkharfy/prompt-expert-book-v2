@@ -12,6 +12,8 @@ import { verifySession } from '@/lib/auth'
 import LockedOverlay from '@/components/reading/LockedOverlay'
 import GuestBanner from '@/components/GuestBanner'
 import ReadingPagination from '@/components/reading/ReadingPagination'
+import { completeChapterWithProgress } from '@/components/reading/completeChapterWithProgress'
+import { claimReadingReward } from '@/components/reading/claimReadingReward'
 import { trackPaywallHit, trackGuestReading } from '@/lib/analytics'
 import CopyButton from '@/components/reading/CopyButton'
 import BookmarkButton from '@/components/reading/BookmarkButton'
@@ -19,7 +21,6 @@ import ScrollProgress from '@/components/reading/ScrollProgress'
 import BackToTop from '@/components/reading/BackToTop'
 import FontSizeControl from '@/components/reading/FontSizeControl'
 import type { FontSize } from '@/components/reading/FontSizeControl'
-import { updateGamification } from '@/lib/gamification'
 import StreakBanner from '@/components/gamification/StreakBanner'
 import TextHighlighter from '@/components/reading/TextHighlighter'
 import type { HighlightSelection } from '@/components/reading/TextHighlighter'
@@ -87,8 +88,14 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
     const [isDirectAccess, setIsDirectAccess] = useState(false)
     const [claimedRewards, setClaimedRewards] = useState<string[]>([])
     const [showRewardCelebration, setShowRewardCelebration] = useState<string | null>(null)
+    const [claimingReward, setClaimingReward] = useState<string | null>(null)
+    const [rewardClaimError, setRewardClaimError] = useState<string | null>(null)
+    const rewardClaimBusyRef = useRef(false)
     const [glossaryLoaded, setGlossaryLoaded] = useState(!config.hasGlossary)
     const [readingFontSize, setReadingFontSize] = useState<FontSize>('medium')
+    const [isCompletingChapter, setIsCompletingChapter] = useState(false)
+    const [completionError, setCompletionError] = useState<string | null>(null)
+    const completionBusyRef = useRef(false)
 
     // Notes & Highlights state
     const [pageNotes, setPageNotes] = useState<NoteData[]>([])
@@ -219,17 +226,12 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                 fetch('/api/achievements/claimed')
                     .then(res => res.ok ? res.json() : null)
                     .then(data => {
-                        if (data?.rewards) {
-                            setClaimedRewards(data.rewards)
+                        if (Array.isArray(data?.rewards)) {
+                            const confirmed: string[] = data.rewards.filter((reward: unknown): reward is string => typeof reward === 'string')
+                            setClaimedRewards(prev => [...new Set([...prev, ...confirmed])])
                         }
                     })
-                    .catch(() => {
-                        // fallback: قراءة من localStorage
-                        const savedRewards = localStorage.getItem('claimed_rewards')
-                        if (savedRewards) {
-                            setClaimedRewards(JSON.parse(savedRewards))
-                        }
-                    })
+                    .catch(() => { /* A local cache cannot confirm a server award. */ })
             }
 
             // Fetch notes for this page
@@ -345,7 +347,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
     }, [fetchPageNotes])
 
     const handleNext = useCallback(async () => {
-        if (isNextPageLocked) {
+        if (completionBusyRef.current) return
+        setCompletionError(null)
+        if (isNextPageLocked && !isLastPage) {
             setIsLockOverlayOpen(true)
             setIsDirectAccess(false)
             return
@@ -359,7 +363,24 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
             router.push(`/read/${config.id}/${pageNum + 1}`)
         } else {
             if (isAuthed) {
-                await authSystem.completeChapter(config.chapterIndex)
+                completionBusyRef.current = true
+                setIsCompletingChapter(true)
+                const error = await completeChapterWithProgress(
+                    authSystem,
+                    isIntro ? pageNum : config.progressOffset + pageNum,
+                    isIntro ? null : config.chapterIndex,
+                )
+                completionBusyRef.current = false
+                setIsCompletingChapter(false)
+                if (error) {
+                    setCompletionError(error)
+                    return
+                }
+            }
+            if (isNextPageLocked) {
+                setIsLockOverlayOpen(true)
+                setIsDirectAccess(false)
+                return
             }
             if (config.nextSection) {
                 router.push(config.nextSection.path)
@@ -367,10 +388,10 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                 router.push('/toc')
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pageNum, isNextPageLocked, isLastPage, isAuthed, hasPaid])
+    }, [pageNum, isNextPageLocked, isLastPage, isAuthed, isIntro, hasFreePages, needsAccess, router, config])
 
     const handlePrev = useCallback(() => {
+        if (completionBusyRef.current) return
         if (!isFirstPage) {
             router.push(`/read/${config.id}/${pageNum - 1}`)
         } else if (config.prevSection) {
@@ -516,33 +537,28 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
         return null
     }
 
-    const handleClaimReward = async (rewardId: string, points: number) => {
+    const handleClaimReward = async (rewardId: string) => {
         if (!isAuthed) {
             setIsLockOverlayOpen(true)
             return
         }
-        if (claimedRewards.includes(rewardId)) return
+        if (claimedRewards.includes(rewardId) || rewardClaimBusyRef.current) return
 
+        rewardClaimBusyRef.current = true
+        setClaimingReward(rewardId)
+        setRewardClaimError(null)
         try {
-            const userId = authSystem.getCurrentUserId()
-            if (userId) {
-                await updateGamification(userId, points, 'mission_complete')
-                const newClaimed = [...claimedRewards, rewardId]
-                setClaimedRewards(newClaimed)
-                // حفظ في الخادم (المصدر الرئيسي) مع localStorage كـ cache
-                fetch('/api/achievements/claimed', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rewardId }),
-                }).catch(() => {
-                    // fallback: حفظ في localStorage إذا فشل الاتصال
-                    localStorage.setItem('claimed_rewards', JSON.stringify(newClaimed))
-                })
+            const result = await claimReadingReward(rewardId)
+            setClaimedRewards(prev => prev.includes(rewardId) ? prev : [...prev, rewardId])
+            if (!result.alreadyClaimed) {
                 setShowRewardCelebration(rewardId)
                 setTimeout(() => setShowRewardCelebration(null), 3000)
             }
-        } catch (err) {
-            console.error('Failed to claim reward:', err)
+        } catch {
+            setRewardClaimError('تعذّر تسجيل المكافأة. أعد المحاولة؛ لم يتم تأكيد منح النقاط.')
+        } finally {
+            rewardClaimBusyRef.current = false
+            setClaimingReward(null)
         }
     }
 
@@ -569,6 +585,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
 
             <main id="main-content" style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', paddingTop: '0' }}>
                 <div className="container" style={{ paddingBottom: '40px', maxWidth: '1400px' }}>
+                    {rewardClaimError && <p role="alert" style={{ color: '#fca5a5' }}>{rewardClaimError}</p>}
                     {/* Reading Actions Bar */}
                     <div className="reading-actions-bar">
                         <FontSizeControl onChange={setReadingFontSize} />
@@ -626,7 +643,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                             marginBottom: '16px',
                             flexWrap: 'wrap',
                         }}>
-                            <h1 ref={titleRef} tabIndex={-1} className="chapter-title" style={{ fontSize: '3.5rem', margin: 0, fontWeight: '800', lineHeight: 1.2, outline: 'none' }}>
+                            <h1 ref={titleRef} tabIndex={-1} className="chapter-title" style={{ fontSize: '3.5rem', margin: 0, fontWeight: '800', lineHeight: 1.6, outline: 'none' }}>
                                 {currentPage.title}
                             </h1>
                             {!hasPageImage && <Robot size={config.robotSize} />}
@@ -1153,7 +1170,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                             <motion.button
                                                                 whileHover={{ scale: 1.05 }}
                                                                 whileTap={{ scale: 0.95 }}
-                                                                onClick={() => handleClaimReward(block.rewardId!, block.points || 0)}
+                                                                onClick={() => handleClaimReward(block.rewardId!)}
+                                                                disabled={claimingReward !== null}
+                                                                aria-busy={claimingReward === block.rewardId}
                                                                 style={{
                                                                     background: '#FF6B35',
                                                                     color: '#fff',
@@ -1166,7 +1185,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                                     boxShadow: '0 4px 15px rgba(255, 107, 53, 0.3)',
                                                                 }}
                                                             >
-                                                                {'\u0647\u0644 \u0623\u0643\u0645\u0644\u062a \u0627\u0644\u0645\u0647\u0645\u0629\u061f \u0627\u062d\u0635\u0644 \u0639\u0644\u0649 '}{block.points}{' \u0646\u0642\u0627\u0637'}
+                                                                {claimingReward === block.rewardId ? 'جاري تسجيل المكافأة...' : <>{'\u0647\u0644 \u0623\u0643\u0645\u0644\u062a \u0627\u0644\u0645\u0647\u0645\u0629\u061f \u0627\u062d\u0635\u0644 \u0639\u0644\u0649 '}{block.points}{' \u0646\u0642\u0627\u0637'}</>}
                                                             </motion.button>
                                                         )}
 
@@ -1348,6 +1367,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                     )}
 
                     {/* Navigation Buttons & Progress Dots */}
+                    {completionError && <p role="alert" style={{ color: '#fca5a5', textAlign: 'center' }}>{completionError}</p>}
                     <ReadingPagination
                         currentIndex={pageNum - 1}
                         total={totalPages}
@@ -1356,10 +1376,8 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                         isFirst={isFirstPage}
                         isLast={isLastPage}
                         isNextLocked={isNextPageLocked}
-                        onLockedClick={() => {
-                            setIsLockOverlayOpen(true)
-                            setIsDirectAccess(false)
-                        }}
+                        isNextBusy={isCompletingChapter}
+                        onLockedClick={handleNext}
                     />
 
                     <div style={{ textAlign: 'center', marginTop: '40px' }}>

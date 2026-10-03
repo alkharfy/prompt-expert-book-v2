@@ -7,22 +7,20 @@ import { dbLogger } from '@/lib/logger';
 
 interface CertificateProps {
   userName: string;
+  courseName?: string;
   completionDate: Date;
   certificateId: string;
-  totalPoints?: number;
-  completedExercises?: number;
-  readingTime?: number; // بالدقائق
+  previousRequirements?: boolean;
   onDownload?: () => void;
   onShare?: () => void;
 }
 
 export default function Certificate({
   userName,
+  courseName = 'PromptMaster',
   completionDate,
   certificateId,
-  totalPoints = 0,
-  completedExercises = 0,
-  readingTime = 0,
+  previousRequirements = false,
   onDownload,
   onShare,
 }: CertificateProps) {
@@ -36,15 +34,6 @@ export default function Certificate({
       month: 'long',
       day: 'numeric',
     }).format(date);
-  };
-
-  const formatReadingTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours} ساعة ${mins > 0 ? `و ${mins} دقيقة` : ''}`;
-    }
-    return `${mins} دقيقة`;
   };
 
   const handleDownload = async () => {
@@ -147,33 +136,13 @@ export default function Certificate({
 
           {/* النص */}
           <p className="certificate-text">
-            قد أتم بنجاح دراسة كتاب
+            سجّل إتمام متطلبات القراءة في
           </p>
-          <h3 className="certificate-book">PromptMaster</h3>
+          <h3 className="certificate-book">{courseName}</h3>
           <p className="certificate-book-subtitle">
-            دليلك الشامل لاحتراف هندسة البرومبت وبناء المواقع والتطبيقات بالذكاء الاصطناعي
+            {previousRequirements ? 'صدرت وفق متطلبات الإتمام السابقة' : 'إتمام قراءة الفصول الأساسية العشرة'}
           </p>
-
-          {/* الإحصائيات */}
-          <div className="certificate-stats">
-            <div className="stat-item">
-              <span className="stat-icon">🏆</span>
-              <span className="stat-value">{totalPoints.toLocaleString()}</span>
-              <span className="stat-label">نقطة</span>
-            </div>
-            <div className="stat-divider">|</div>
-            <div className="stat-item">
-              <span className="stat-icon">✅</span>
-              <span className="stat-value">{completedExercises}</span>
-              <span className="stat-label">تمرين</span>
-            </div>
-            <div className="stat-divider">|</div>
-            <div className="stat-item">
-              <span className="stat-icon">⏱️</span>
-              <span className="stat-value">{formatReadingTime(readingTime)}</span>
-              <span className="stat-label">قراءة</span>
-            </div>
-          </div>
+          <p className="certificate-text">شهادة إتمام من PromptMaster تستند إلى سجل قراءة ذاتي؛ لا تثبت اجتياز اختبار مهارة أو اعتمادًا مهنيًا.</p>
 
           {/* الخط الزخرفي */}
           <div className="decorative-line small">
@@ -183,7 +152,7 @@ export default function Certificate({
           {/* التاريخ والتوقيع */}
           <div className="certificate-footer">
             <div className="footer-section">
-              <p className="footer-label">تاريخ الإتمام</p>
+              <p className="footer-label">تاريخ الإصدار</p>
               <p className="footer-value">{formatDate(completionDate)}</p>
             </div>
             <div className="footer-section signature">

@@ -4,9 +4,9 @@ import { motion } from 'framer-motion'
 import type { LearningPathId, LearningDurationId } from '@/types/learning'
 
 const paths: { id: LearningPathId; label: string; desc: string; icon: string }[] = [
-  { id: 'quick', label: 'سريع', desc: 'أساسيات في أسبوع', icon: '⚡' },
+  { id: 'quick', label: 'سريع', desc: 'المقدمة وأول فصلين', icon: '⚡' },
   { id: 'intermediate', label: 'متوسط', desc: 'تطبيقات عملية', icon: '📘' },
-  { id: 'comprehensive', label: 'شامل', desc: 'إتقان كامل', icon: '🏆' },
+  { id: 'comprehensive', label: 'شامل', desc: 'الفصول العشرة والمراجع', icon: '🏆' },
 ]
 
 const durations: { id: LearningDurationId; label: string }[] = [
@@ -83,6 +83,7 @@ export default function StepPathAndDuration({
             </button>
           ))}
         </div>
+        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.85rem', lineHeight: 1.7, marginTop: 12 }}>المدة تختار توزيع الصفحات على الأيام. المسار الشامل في أسبوع يحتاج عدة ساعات يوميًا مع التطبيق؛ اختر شهرًا أو شهرين إذا وقتك محدود. التمارين والمشروع يُضافان بحسب باقتك، وإتمام الجدول لا يثبت الإتقان.</p>
       </div>
 
       {/* أزرار */}

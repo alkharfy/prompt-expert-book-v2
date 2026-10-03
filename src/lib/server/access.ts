@@ -5,6 +5,7 @@ import type { PageContent } from '@/data/bookData'
 import type { SectionConfig } from '@/config/sections'
 import { getRecapForSection } from '@/data/recapsData'
 import { hasSpecContent } from '@/data/specializationContent'
+import { userHasFeature } from '@/lib/subscription'
 
 /**
  * Server-side entitlement resolver — the single source of truth for "can this
@@ -12,11 +13,8 @@ import { hasSpecContent } from '@/data/specializationContent'
  * /api/auth/verify-session but read-only (no cookie renewal) so it can run
  * inside Server Components. FAIL-CLOSED: any error → no access.
  *
- * hasAccess sources (any one grants access):
- *   1) a payments row with status 'success'
- *   2) users.current_plan with a future plan_expires_at
- *   3) users.is_active === true  (the flag the activation path flips on payment)
- *   4) an active subscriptions row
+ * Paid access requires the canonical reading feature of an active subscription
+ * with a valid future expiry. A historical payment or account flag is insufficient.
  */
 export async function getServerAccess(): Promise<{
   userId: string | null
@@ -55,42 +53,11 @@ export async function getServerAccess(): Promise<{
       session = data
     }
     if (!session) return { userId: null, isAuthed: false, hasAccess: false }
-    if (new Date(session.expires_at) < new Date()) {
+    if (!(Date.parse(session.expires_at) > Date.now())) {
       return { userId: null, isAuthed: false, hasAccess: false }
     }
 
-    // Authed — now resolve payment entitlement.
-    let hasAccess = false
-
-    const { data: payment } = await (supabase.from('payments') as any)
-      .select('status')
-      .eq('user_id', userId)
-      .eq('status', 'success')
-      .maybeSingle()
-    if (payment) hasAccess = true
-
-    if (!hasAccess) {
-      const { data: user } = await (supabase.from('users') as any)
-        .select('current_plan, plan_expires_at, is_active')
-        .eq('id', userId)
-        .maybeSingle()
-      if (user) {
-        if (user.current_plan && user.plan_expires_at && new Date(user.plan_expires_at) > new Date()) {
-          hasAccess = true
-        } else if (user.is_active === true) {
-          hasAccess = true
-        }
-      }
-    }
-
-    if (!hasAccess) {
-      const { data: sub } = await (supabase.from('subscriptions') as any)
-        .select('id')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .maybeSingle()
-      if (sub) hasAccess = true
-    }
+    const hasAccess = await userHasFeature(userId, 'reading')
 
     return { userId, isAuthed: true, hasAccess }
   } catch {

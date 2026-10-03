@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { authSystem } from '@/lib/auth_system'
 import { onExerciseComplete } from '@/lib/gamification'
+import { supabaseProxy as supabase } from '@/lib/supabase_proxy'
 import {
     runningProjects,
     evaluatePhaseCriterion,
@@ -21,6 +22,10 @@ interface PhaseProgress {
     score: number
     pointsEarned: number
     userPrompt?: string
+    trialOutput?: string
+    reviewedCriteria?: string[]
+    reviewNotes?: string
+    completionVersion?: number
 }
 
 interface ProjectProgress {
@@ -50,7 +55,7 @@ const difficultyLabels: Record<string, string> = {
 
 function loadSelectedProject(): string | null {
     if (typeof window === 'undefined') return null
-    return localStorage.getItem('running_project_selected')
+    try { return localStorage.getItem('running_project_selected') } catch { return null }
 }
 
 function saveSelectedProject(projectId: string) {
@@ -59,10 +64,25 @@ function saveSelectedProject(projectId: string) {
 
 function loadProgress(): ProjectProgress | null {
     if (typeof window === 'undefined') return null
-    const raw = localStorage.getItem('running_project_progress')
-    if (!raw) return null
     try {
-        return JSON.parse(raw)
+        const raw = localStorage.getItem('running_project_progress')
+        if (!raw) return null
+        const saved = JSON.parse(raw) as ProjectProgress
+        const project = runningProjects.find(p => p.id === saved?.projectId)
+        if (!project || !saved.phases || typeof saved.phases !== 'object') return null
+        const phases: ProjectProgress['phases'] = {}
+        project.phases.forEach((phase, index) => {
+            const entry = saved.phases[index]
+            if (!entry) return
+            const completed = entry.completed && entry.completionVersion === 2
+                && typeof entry.trialOutput === 'string' && entry.trialOutput.trim().length >= 20
+                && typeof entry.reviewNotes === 'string' && entry.reviewNotes.trim().length >= 10
+                && Array.isArray(entry.reviewedCriteria)
+                && phase.scoringCriteria.every(c => entry.reviewedCriteria!.includes(c.id))
+            phases[index] = { ...entry, completed: !!completed, pointsEarned: completed ? entry.pointsEarned || 0 : 0 }
+        })
+        const firstIncomplete = project.phases.findIndex((_, i) => !phases[i]?.completed)
+        return { ...saved, phases, currentPhaseIndex: firstIncomplete < 0 ? project.phases.length : firstIncomplete }
     } catch {
         return null
     }
@@ -108,31 +128,39 @@ export default function RunningProjectHub() {
     })
     const [activePhaseIndex, setActivePhaseIndex] = useState<number | null>(null)
     const [userPrompt, setUserPrompt] = useState('')
+    const [trialOutput, setTrialOutput] = useState('')
+    const [savedTrialOutput, setSavedTrialOutput] = useState('')
+    const [reviewedCriteria, setReviewedCriteria] = useState<string[]>([])
+    const [reviewNotes, setReviewNotes] = useState('')
+    const [saveError, setSaveError] = useState<string | null>(null)
+    const completionBusyRef = useRef(false)
     const [showHints, setShowHints] = useState(false)
     const [showIdeal, setShowIdeal] = useState(false)
     const [evaluationResult, setEvaluationResult] = useState<{
         score: number
         passed: boolean
-        partial: boolean
         criteriaResults: { criterion: PhaseScoringCriterion; passed: boolean }[]
-        pointsEarned: number
     } | null>(null)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     // ============ Project Selection ============
 
     const handleSelectProject = useCallback((project: RunningProject) => {
-        setSelectedProject(project)
-        saveSelectedProject(project.id)
-
         const newProgress: ProjectProgress = {
             projectId: project.id,
             currentPhaseIndex: 0,
             phases: {},
         }
-        setProgress(newProgress)
-        saveProgress(newProgress)
-        setView('dashboard')
+        try {
+            saveSelectedProject(project.id)
+            saveProgress(newProgress)
+            setSelectedProject(project)
+            setProgress(newProgress)
+            setSaveError(null)
+            setView('dashboard')
+        } catch {
+            setSaveError('تعذّر حفظ المشروع في هذا المتصفح. اسمح بالتخزين المحلي ثم أعد المحاولة.')
+        }
     }, [])
 
     // ============ Change Project ============
@@ -153,6 +181,11 @@ export default function RunningProjectHub() {
         if (phaseIndex > progress.currentPhaseIndex) return
         setActivePhaseIndex(phaseIndex)
         setUserPrompt(progress.phases[phaseIndex]?.userPrompt || '')
+        setTrialOutput(progress.phases[phaseIndex]?.trialOutput || '')
+        setSavedTrialOutput(progress.phases[phaseIndex]?.trialOutput || '')
+        setReviewedCriteria(progress.phases[phaseIndex]?.reviewedCriteria || [])
+        setReviewNotes(progress.phases[phaseIndex]?.reviewNotes || '')
+        setSaveError(null)
         setShowHints(false)
         setShowIdeal(false)
         setEvaluationResult(null)
@@ -161,11 +194,9 @@ export default function RunningProjectHub() {
 
     // ============ Submit / Evaluate ============
 
-    const handleSubmit = useCallback(async () => {
+    const handleSubmit = useCallback(() => {
         if (!selectedProject || activePhaseIndex === null || !progress) return
         if (userPrompt.trim().length < 20) return
-
-        setIsSubmitting(true)
 
         const phase = selectedProject.phases[activePhaseIndex]
 
@@ -180,68 +211,94 @@ export default function RunningProjectHub() {
         const earnedWeight = criteriaResults
             .filter(r => r.passed)
             .reduce((sum, r) => sum + r.criterion.weight, 0)
-        const scorePercent = Math.round((earnedWeight / totalWeight) * 100)
+        const scorePercent = totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 100) : 0
 
-        // Determine result
+        // فحص مؤشرات البنية فقط؛ لا يثبت صحة الناتج أو جودة الطلب.
         const passed = scorePercent >= 60
-        const partial = scorePercent >= 60 && scorePercent < 80
-        const fullSuccess = scorePercent >= 80
-
-        // Calculate points
-        let pointsEarned = 0
-        if (fullSuccess) {
-            pointsEarned = phase.points
-        } else if (partial) {
-            pointsEarned = Math.round(phase.points * 0.7)
-        }
-
-        // Update progress
-        const newProgress = { ...progress }
-        newProgress.phases = { ...newProgress.phases }
-        newProgress.phases[activePhaseIndex] = {
-            completed: passed,
-            score: scorePercent,
-            pointsEarned,
-            userPrompt,
-        }
-
-        // Advance to next phase if passed and this is the current phase
-        if (passed && activePhaseIndex === progress.currentPhaseIndex) {
-            newProgress.currentPhaseIndex = Math.min(
-                activePhaseIndex + 1,
-                selectedProject.phases.length - 1
-            )
-            // If last phase is completed, keep index at last
-            if (activePhaseIndex === selectedProject.phases.length - 1) {
-                newProgress.currentPhaseIndex = selectedProject.phases.length
-            }
-        }
-
-        setProgress(newProgress)
-        saveProgress(newProgress)
-
-        // Record in gamification system (Supabase) if user is logged in
-        if (passed) {
-            const userId = authSystem.getCurrentUserId()
-            if (userId) {
-                try {
-                    const exerciseId = `running-project-${selectedProject.id}-phase-${activePhaseIndex}`
-                    await onExerciseComplete(userId, 'prompt_builder', true, pointsEarned, exerciseId)
-                } catch {
-                    // Silently fail - localStorage already saved
-                }
-            }
-        }
-
         setEvaluationResult({
             score: scorePercent,
             passed,
-            partial,
             criteriaResults,
-            pointsEarned,
         })
-        setIsSubmitting(false)
     }, [selectedProject, activePhaseIndex, progress, userPrompt])
+
+    const handleSaveTrial = useCallback(() => {
+        if (!progress || activePhaseIndex === null || !evaluationResult?.passed || trialOutput.trim().length < 20) return
+        const updated: ProjectProgress = { ...progress, phases: { ...progress.phases, [activePhaseIndex]: {
+            completed: false, score: evaluationResult.score, pointsEarned: 0, userPrompt,
+            trialOutput: trialOutput.trim(), reviewedCriteria: [], reviewNotes: '',
+        } } }
+        try {
+            saveProgress(updated)
+            setProgress(updated)
+            setSavedTrialOutput(trialOutput.trim())
+            setReviewedCriteria([])
+            setSaveError(null)
+        } catch {
+            setSaveError('تعذّر حفظ ناتج التجربة في هذا المتصفح. اسمح بالتخزين المحلي ثم أعد المحاولة.')
+        }
+    }, [progress, activePhaseIndex, evaluationResult, trialOutput, userPrompt])
+
+    const handleCompleteTrial = useCallback(async () => {
+        if (!selectedProject || !progress || activePhaseIndex === null || !evaluationResult?.passed || completionBusyRef.current) return
+        const phase = selectedProject.phases[activePhaseIndex]
+        if (progress.phases[activePhaseIndex]?.completed || trialOutput.trim() !== savedTrialOutput || savedTrialOutput.length < 20
+            || reviewNotes.trim().length < 10 || !phase.scoringCriteria.every(c => reviewedCriteria.includes(c.id))) return
+        completionBusyRef.current = true
+        setIsSubmitting(true)
+        setSaveError(null)
+        const userId = authSystem.getCurrentUserId()
+        const exerciseId = `running-project-${selectedProject.id}-phase-${activePhaseIndex}`
+        const updated: ProjectProgress = { ...progress, phases: { ...progress.phases, [activePhaseIndex]: {
+            completed: true, score: evaluationResult.score, pointsEarned: userId ? phase.points : 0, userPrompt,
+            trialOutput: savedTrialOutput, reviewedCriteria, reviewNotes: reviewNotes.trim(), completionVersion: 2,
+        } }, currentPhaseIndex: activePhaseIndex === progress.currentPhaseIndex ? activePhaseIndex + 1 : progress.currentPhaseIndex }
+        let accountSaved = false
+        let progressNotificationFailed = false
+        try {
+            // Keep the reviewed draft if the account save fails; do not unlock the next phase yet.
+            const draft: ProjectProgress = { ...progress, phases: { ...progress.phases, [activePhaseIndex]: {
+                ...updated.phases[activePhaseIndex], completed: false, pointsEarned: 0,
+            } } }
+            saveProgress(draft)
+            setProgress(draft)
+            if (userId) {
+                const now = new Date().toISOString()
+                const { error } = await supabase.from('exercise_progress').insert({
+                    user_id: userId, exercise_id: exerciseId, exercise_type: 'prompt_builder',
+                    section_id: 'running-project', is_completed: true, is_correct: null,
+                    user_answer: JSON.stringify({ prompt: userPrompt, trialOutput: savedTrialOutput,
+                        reviewedCriteria, reviewNotes: reviewNotes.trim(), structureScore: evaluationResult.score,
+                        assessment: 'self-reviewed-trial', completionVersion: 2 }),
+                    points_earned: phase.points, completed_at: now, last_attempt_at: now,
+                })
+                if (error && error.code !== '23505') {
+                    setSaveError('تعذّر حفظ المحاولة في حسابك. بقيت المسودة محليًا؛ لم يُسجّل الإتمام أو الانتقال للمرحلة التالية.')
+                    return
+                }
+                accountSaved = true
+                // A duplicate means another tab or an earlier visit already recorded participation.
+                if (!error) {
+                    try {
+                        await onExerciseComplete(userId, 'prompt_builder', null, phase.points, exerciseId)
+                    } catch {
+                        progressNotificationFailed = true
+                    }
+                }
+            }
+            saveProgress(updated)
+            setProgress(updated)
+            setEvaluationResult(null)
+            if (progressNotificationFailed) setSaveError('حُفظت المحاولة في حسابك، لكن تعذّر تحديث عرض التقدم. أعد تحميل الصفحة؛ إعادة المحاولة لا تسجل مشاركة إضافية.')
+        } catch {
+            setSaveError(accountSaved
+                ? 'حُفظت المحاولة في حسابك، لكن تعذّر حفظ الإتمام في هذا المتصفح. أعد المحاولة لإعادة حفظه دون نقاط إضافية.'
+                : 'تعذّر حفظ إتمام التجربة. بقيت المسودة محليًا؛ لم يتم الانتقال إلى المرحلة التالية.')
+        } finally {
+            completionBusyRef.current = false
+            setIsSubmitting(false)
+        }
+    }, [selectedProject, progress, activePhaseIndex, evaluationResult, trialOutput, savedTrialOutput, reviewNotes, reviewedCriteria, userPrompt])
 
     // ============ Navigation helpers ============
 
@@ -265,9 +322,11 @@ export default function RunningProjectHub() {
     }, [selectedProject, activePhaseIndex, handleOpenPhase, handleBackToDashboard])
 
     const handleRetry = useCallback(() => {
-        setUserPrompt('')
         setEvaluationResult(null)
         setShowIdeal(false)
+        setSavedTrialOutput('')
+        setReviewedCriteria([])
+        setSaveError(null)
     }, [])
 
     // ============ Computed values ============
@@ -292,6 +351,8 @@ export default function RunningProjectHub() {
 
     return (
         <div className="running-project-container">
+            <p style={{ color: 'var(--color-text-secondary)' }}>المسودات والتقدم في المشروع محفوظة في هذا المتصفح. عند إتمام مرحلة وأنت مسجل الدخول، يُحفظ الطلب وناتج التجربة والمراجعة في حسابك لتسجيل المشاركة مرة واحدة؛ الزائر يكمل محليًا دون نقاط حساب. الفحص الأولي يبحث عن مؤشرات بنية الطلب؛ لا يتحقق من صحة المخرجات أو إتقان المهارة.</p>
+            {saveError && <p role="alert" style={{ color: '#fca5a5' }}>{saveError}</p>}
             <AnimatePresence mode="wait">
                 {/* ===== Project Selection ===== */}
                 {view === 'select' && (
@@ -361,16 +422,16 @@ export default function RunningProjectHub() {
                                     أحسنت! أكملت مشروع &ldquo;{selectedProject.name}&rdquo; 🎉
                                 </h2>
                                 <p className="project-complete-desc">
-                                    أنجزت كل المراحل السبع بنجاح! أنت الآن تملك خبرة عملية في Prompt Engineering من خلال مشروع حقيقي.
+                                    سجلت تجارب المراحل ومراجعتها الذاتية. احتفظ بنواتجك وراجعها مع شخص مختص عند الحاجة؛ الإتمام لا يثبت إتقان المهارة.
                                 </p>
                                 <div className="project-complete-stats">
                                     <div>
-                                        <div className="project-complete-stat-value">{completedPhasesCount}/7</div>
+                                        <div className="project-complete-stat-value">{completedPhasesCount}/{selectedProject.phases.length}</div>
                                         <div className="project-complete-stat-label">مراحل مكتملة</div>
                                     </div>
                                     <div>
                                         <div className="project-complete-stat-value">{totalPointsEarned}</div>
-                                        <div className="project-complete-stat-label">نقطة مكتسبة</div>
+                                        <div className="project-complete-stat-label">نقاط مشاركة</div>
                                     </div>
                                 </div>
                                 <button className="project-restart-btn" onClick={handleChangeProject}>
@@ -405,7 +466,7 @@ export default function RunningProjectHub() {
                                     </div>
                                     <div className="project-stat-card">
                                         <div className="project-stat-value">{totalPointsEarned}</div>
-                                        <div className="project-stat-label">نقاط مكتسبة</div>
+                                        <div className="project-stat-label">نقاط مشاركة</div>
                                     </div>
                                 </div>
 
@@ -438,7 +499,7 @@ export default function RunningProjectHub() {
                                                             {isCompleted && phaseProgress ? (
                                                                 <>⭐ {phaseProgress.pointsEarned}/{phase.points}</>
                                                             ) : (
-                                                                <>⭐ {phase.points} نقطة</>
+                                                                <>⭐ {phase.points} نقاط مشاركة</>
                                                             )}
                                                         </span>
                                                     </div>
@@ -528,7 +589,7 @@ export default function RunningProjectHub() {
                                                 className="phase-textarea"
                                                 value={userPrompt}
                                                 onChange={(e) => setUserPrompt(e.target.value)}
-                                                placeholder="اكتب البرومبت هنا... كلّما كان أكثر تفصيلاً، كلّما كانت النتيجة أفضل!"
+                                                placeholder="حدد المهمة والسياق والقيود وشكل الناتج الذي تحتاجه."
                                                 dir="rtl"
                                             />
                                             <div className="phase-char-count">
@@ -540,7 +601,7 @@ export default function RunningProjectHub() {
                                                 disabled={userPrompt.trim().length < 20 || isSubmitting}
                                                 style={{ '--project-color': selectedProject.color } as React.CSSProperties}
                                             >
-                                                {isSubmitting ? 'جاري التقييم...' : '🚀 تسليم البرومبت'}
+                                                فحص بنية أولي
                                             </button>
                                         </div>
                                     )}
@@ -550,9 +611,9 @@ export default function RunningProjectHub() {
                                         <div className="phase-result success">
                                             <div className="phase-result-header">
                                                 <div className="phase-result-icon">✅</div>
-                                                <div className="phase-result-title">تم إكمال هذه المرحلة</div>
+                                                <div className="phase-result-title">إتمام تجربة ومراجعة ذاتية</div>
                                                 <div className="phase-result-score">
-                                                    النتيجة: {progress?.phases[activePhaseIndex]?.score}% • النقاط: {progress?.phases[activePhaseIndex]?.pointsEarned}
+                                                    تغطية مؤشرات البنية: {progress?.phases[activePhaseIndex]?.score}% • نقاط مشاركة: {progress?.phases[activePhaseIndex]?.pointsEarned}
                                                 </div>
                                             </div>
 
@@ -566,13 +627,21 @@ export default function RunningProjectHub() {
                                                 </div>
                                             )}
 
+                                            <div className="phase-brief">
+                                                <div className="phase-brief-title">ناتج التجربة المحفوظ محليًا</div>
+                                                <div className="phase-brief-text">{progress?.phases[activePhaseIndex]?.trialOutput}</div>
+                                                <div className="phase-brief-title">ملاحظات المراجعة الذاتية</div>
+                                                <div className="phase-brief-text">{progress?.phases[activePhaseIndex]?.reviewNotes}</div>
+                                            </div>
+                                            <button className="phase-next-btn" onClick={handleNextPhase}>متابعة المشروع ←</button>
+
                                             {/* Ideal + Coach Tip */}
                                             <div className="phase-ideal-section">
                                                 <button
                                                     className="phase-ideal-toggle"
                                                     onClick={() => setShowIdeal(!showIdeal)}
                                                 >
-                                                    🎯 عرض البرومبت المثالي {showIdeal ? '▲' : '▼'}
+                                                    🎯 عرض مثال للمقارنة {showIdeal ? '▲' : '▼'}
                                                 </button>
                                                 <AnimatePresence>
                                                     {showIdeal && (
@@ -582,7 +651,7 @@ export default function RunningProjectHub() {
                                                             animate={{ opacity: 1, height: 'auto' }}
                                                             exit={{ opacity: 0, height: 0 }}
                                                         >
-                                                            <div className="phase-ideal-label">البرومبت المثالي:</div>
+                                                            <div className="phase-ideal-label">مثال للمقارنة:</div>
                                                             <div className="phase-ideal-text">{phase.idealPrompt}</div>
                                                         </motion.div>
                                                     )}
@@ -602,20 +671,14 @@ export default function RunningProjectHub() {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                         >
-                                            <div className={`phase-result ${evaluationResult.score >= 80 ? 'success' : evaluationResult.score >= 60 ? 'partial' : 'fail'}`}>
+                                            <div className={`phase-result ${evaluationResult.passed ? 'partial' : 'fail'}`}>
                                                 <div className="phase-result-header">
                                                     <div className="phase-result-icon">
-                                                        {evaluationResult.score >= 80 ? '🎉' : evaluationResult.score >= 60 ? '👍' : '💪'}
+                                                        🔎
                                                     </div>
-                                                    <div className="phase-result-title">
-                                                        {evaluationResult.score >= 80
-                                                            ? 'ممتاز! نجحت بتفوق'
-                                                            : evaluationResult.score >= 60
-                                                            ? 'جيد! نجحت بنجاح جزئي'
-                                                            : 'لم تنجح - حاول مرة أخرى'}
-                                                    </div>
+                                                    <div className="phase-result-title">فحص بنية أولي — {evaluationResult.passed ? 'توجد مؤشرات كافية لبدء التجربة' : 'أكمل مؤشرات البنية ثم أعد الفحص'}</div>
                                                     <div className="phase-result-score">
-                                                        النتيجة: {evaluationResult.score}%
+                                                        تغطية مؤشرات البنية: {evaluationResult.score}% — ليست درجة جودة
                                                     </div>
                                                 </div>
 
@@ -633,17 +696,30 @@ export default function RunningProjectHub() {
                                                     ))}
                                                 </div>
 
-                                                {/* Points */}
-                                                {evaluationResult.pointsEarned > 0 && (
-                                                    <div className="phase-points-earned">
-                                                        <div className="phase-points-value">
-                                                            +{evaluationResult.pointsEarned} نقطة
-                                                        </div>
-                                                        <div className="phase-points-label">
-                                                            {evaluationResult.score >= 80
-                                                                ? 'نقاط كاملة!'
-                                                                : '70% من النقاط (نجاح جزئي)'}
-                                                        </div>
+                                                {evaluationResult.passed && (
+                                                    <div className="phase-input-section">
+                                                        <p>جرّب الطلب في أداة AI، ثم احفظ الناتج وراجعه مقابل معايير المرحلة. لا توجد مراجعة دلالية آلية هنا.</p>
+                                                        <label className="phase-input-label" htmlFor="phase-trial-output">ناتج التجربة</label>
+                                                        <textarea id="phase-trial-output" className="phase-textarea" value={trialOutput} onChange={e => {
+                                                            setTrialOutput(e.target.value)
+                                                            setSavedTrialOutput('')
+                                                            setReviewedCriteria([])
+                                                        }} placeholder="الصق الناتج الذي حصلت عليه من تجربة الطلب. لا تضف معلومات حساسة." />
+                                                        <button className="phase-submit-btn" onClick={handleSaveTrial} disabled={trialOutput.trim().length < 20 || isSubmitting}>حفظ ناتج التجربة محليًا</button>
+                                                        {savedTrialOutput && <p role="status">حُفظ ناتج التجربة في هذا المتصفح.</p>}
+                                                        <fieldset style={{ border: '1px solid #444', padding: 16, marginTop: 16 }}>
+                                                            <legend>مراجعة ذاتية مقابل معايير المرحلة</legend>
+                                                            {phase.scoringCriteria.map(c => <label key={c.id} style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                                                                <input type="checkbox" checked={reviewedCriteria.includes(c.id)} disabled={!savedTrialOutput} onChange={e => setReviewedCriteria(prev => e.target.checked ? [...prev, c.id] : prev.filter(id => id !== c.id))} />
+                                                                راجعت {c.name}: {c.description}
+                                                            </label>)}
+                                                            <label htmlFor="phase-review-notes">ماذا وجدت بعد مقارنة الناتج بالمعايير؟ اذكر نقصًا أو سبب قبول الناتج.</label>
+                                                            <textarea id="phase-review-notes" className="phase-textarea" value={reviewNotes} onChange={e => setReviewNotes(e.target.value)} />
+                                                        </fieldset>
+                                                        <button className="phase-next-btn" onClick={handleCompleteTrial} disabled={isSubmitting || !savedTrialOutput || savedTrialOutput !== trialOutput.trim() || reviewNotes.trim().length < 10 || !phase.scoringCriteria.every(c => reviewedCriteria.includes(c.id))}>
+                                                            {isSubmitting ? 'جاري الحفظ...' : 'إتمام تجربة ومراجعة ذاتية'}
+                                                        </button>
+                                                        <p>نقاط المشاركة تُسجل بعد حفظ التجربة والمراجعة، ولا تعني نجاح الناتج أو إتقان المهارة.</p>
                                                     </div>
                                                 )}
 
@@ -653,7 +729,7 @@ export default function RunningProjectHub() {
                                                         className="phase-ideal-toggle"
                                                         onClick={() => setShowIdeal(!showIdeal)}
                                                     >
-                                                        🎯 {evaluationResult.passed ? 'قارن مع' : 'عرض'} البرومبت المثالي {showIdeal ? '▲' : '▼'}
+                                                        🎯 {evaluationResult.passed ? 'قارن مع' : 'عرض'} مثال الطلب {showIdeal ? '▲' : '▼'}
                                                     </button>
                                                     <AnimatePresence>
                                                         {showIdeal && (
@@ -663,7 +739,7 @@ export default function RunningProjectHub() {
                                                                 animate={{ opacity: 1, height: 'auto' }}
                                                                 exit={{ opacity: 0, height: 0 }}
                                                             >
-                                                                <div className="phase-ideal-label">البرومبت المثالي:</div>
+                                                                <div className="phase-ideal-label">مثال للمقارنة:</div>
                                                                 <div className="phase-ideal-text">{phase.idealPrompt}</div>
                                                             </motion.div>
                                                         )}
@@ -677,21 +753,7 @@ export default function RunningProjectHub() {
                                                 </div>
 
                                                 {/* Actions */}
-                                                {evaluationResult.passed ? (
-                                                    activePhaseIndex < selectedProject.phases.length - 1 ? (
-                                                        <button className="phase-next-btn" onClick={handleNextPhase}>
-                                                            المرحلة التالية ←
-                                                        </button>
-                                                    ) : (
-                                                        <button className="phase-next-btn" onClick={handleBackToDashboard}>
-                                                            🏆 العودة للوحة المشروع
-                                                        </button>
-                                                    )
-                                                ) : (
-                                                    <button className="phase-retry-btn" onClick={handleRetry}>
-                                                        🔄 حاول مرة أخرى
-                                                    </button>
-                                                )}
+                                                <button className="phase-retry-btn" onClick={handleRetry}>عدّل الطلب وأعد فحص البنية</button>
                                             </div>
                                         </motion.div>
                                     )}

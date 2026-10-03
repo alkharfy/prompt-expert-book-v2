@@ -473,11 +473,6 @@
   gap: 8px;
 }
 
-/* Hide close button on desktop */
-.nav-close-btn {
-  display: none;
-}
-
 /* Completed Card Styles */
 .step-card.completed {
   background: linear-gradient(135deg, #FF6B35, #FFB800);

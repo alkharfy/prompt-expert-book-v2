@@ -10,9 +10,9 @@ import FeatureGate from '@/components/FeatureGate';
 import Certificate, { AchievementsList } from '@/components/achievements/Certificate';
 import { achievementsData, AchievementDefinition } from '@/data/achievementsData';
 import { dbLogger } from '@/lib/logger';
-import { recalculateUserPoints } from '@/lib/gamification';
 import { getOrCreateCertificate } from '@/actions/certificates';
 import ShareButton from '@/components/sharing/ShareButton';
+import { CERTIFICATE_CHAPTER_COUNT, getMainChapterCompletion } from '@/lib/reading-completion';
 
 type TabType = 'achievements' | 'certificate';
 
@@ -21,8 +21,8 @@ interface UserStats {
   completedExercises: number;
   currentStreak: number;
   totalPoints: number;
-  readingTime: number;
   bookmarksCount: number;
+  certificateIssued?: boolean;
 }
 
 interface Achievement {
@@ -48,14 +48,12 @@ export default function AchievementsPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('achievements');
-  const [userName, setUserName] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const [userStats, setUserStats] = useState<UserStats>({
     completedChapters: 0,
     completedExercises: 0,
     currentStreak: 0,
     totalPoints: 0,
-    readingTime: 0,
     bookmarksCount: 0,
   });
   const [achievements, setAchievements] = useState<UserAchievement[]>([]);
@@ -64,6 +62,9 @@ export default function AchievementsPage() {
   const [certificateData, setCertificateData] = useState<{
     completionDate: Date;
     certificateId: string;
+    userName: string;
+    courseName: string;
+    previousRequirements: boolean;
   } | null>(null);
   const [nameError, setNameError] = useState('');
 
@@ -99,8 +100,8 @@ export default function AchievementsPage() {
             currentProgress = stats.bookmarksCount;
             isUnlocked = stats.bookmarksCount >= 10;
           } else if (achievement.id === 'first_certificate') {
-            currentProgress = stats.completedChapters >= 9 ? 1 : 0;
-            isUnlocked = stats.completedChapters >= 9;
+            currentProgress = stats.certificateIssued ? 1 : 0;
+            isUnlocked = !!stats.certificateIssued;
           } else if (achievement.id === 'share_certificate') {
             // يُتحقق عبر الخادم (مُخزن كـ reward_id = 'certificate_shared')
             isUnlocked = claimedRewards.includes('certificate_shared');
@@ -138,49 +139,14 @@ export default function AchievementsPage() {
           claimedRewards = claimedData.rewards || [];
         }
 
-        // مزامنة بيانات localStorage القديمة إلى الخادم (مرة واحدة)
-        const localClaimed = JSON.parse(localStorage.getItem('claimed_rewards') || '[]');
-        const localCertShared = localStorage.getItem('certificate_shared') === 'true';
-        const localToolsUsed = JSON.parse(localStorage.getItem('tools_used') || '[]');
-        const localIsTop10 = localStorage.getItem('is_top_10') === 'true';
-
-        const toSync: string[] = [];
-        for (const id of localClaimed) {
-          if (!claimedRewards.includes(id)) toSync.push(id);
-        }
-        if (localCertShared && !claimedRewards.includes('certificate_shared')) {
-          toSync.push('certificate_shared');
-        }
-        for (const tool of localToolsUsed) {
-          const toolId = `tool_${tool}`;
-          if (!claimedRewards.includes(toolId)) toSync.push(toolId);
-        }
-        if (localIsTop10 && !claimedRewards.includes('is_top_10')) {
-          toSync.push('is_top_10');
-        }
-
-        if (toSync.length > 0) {
-          await fetch('/api/achievements/claimed', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rewardIds: toSync }),
-          });
-          claimedRewards = [...claimedRewards, ...toSync];
-          // تنظيف localStorage بعد المزامنة الناجحة
-          localStorage.removeItem('claimed_rewards');
-          localStorage.removeItem('certificate_shared');
-          localStorage.removeItem('tools_used');
-          localStorage.removeItem('is_top_10');
-        }
       } catch {
-        // fallback: قراءة من localStorage إذا فشل الاتصال بالخادم
-        const localClaimed = JSON.parse(localStorage.getItem('claimed_rewards') || '[]');
-        claimedRewards = localClaimed;
+        // Display only persisted server claims; local flags are not evidence.
+        claimedRewards = [];
       }
 
       // جلب تقدم القراءة
       const progressData = await authSystem.getDetailedProgress();
-      const completedChapters = progressData?.completedChapters?.length || 0;
+      const completedChapters = getMainChapterCompletion(progressData?.completedChapters).completed;
 
       // جلب التمارين المكتملة
       const { data: exercisesData } = await supabase
@@ -191,7 +157,7 @@ export default function AchievementsPage() {
       const completedExercises = exercisesData?.length || 0;
 
       // جلب بيانات الـ Gamification
-      let { data: gamificationData } = await supabase
+      const { data: gamificationData } = await supabase
         .from('user_gamification')
         .select('*')
         .eq('user_id', loadUserId)
@@ -202,29 +168,6 @@ export default function AchievementsPage() {
             total_reading_time_minutes?: number
           } | null
         };
-
-      // التحقق من عدم تطابق النقاط وتشغيل إعادة الحساب إذا لزم الأمر
-      if ((!gamificationData?.total_points || gamificationData.total_points === 0) && (completedChapters > 0 || completedExercises > 0)) {
-        dbLogger.info('Points mismatch detected, recalculating...', { userId: loadUserId });
-        await recalculateUserPoints(loadUserId);
-
-        // إعادة جلب البيانات
-        const { data: refreshedData } = await supabase
-          .from('user_gamification')
-          .select('*')
-          .eq('user_id', loadUserId)
-          .maybeSingle() as {
-            data: {
-              current_streak?: number;
-              total_points?: number;
-              total_reading_time_minutes?: number
-            } | null
-          };
-
-        if (refreshedData) {
-          gamificationData = refreshedData;
-        }
-      }
 
       const currentStreak = gamificationData?.current_streak || 0;
       const totalPoints = gamificationData?.total_points || 0;
@@ -243,8 +186,6 @@ export default function AchievementsPage() {
         completedExercises,
         currentStreak,
         totalPoints,
-        // تقدير وقت القراءة: ~4 دقائق لكل صفحة مقروءة
-        readingTime: (progressData?.currentPage || 0) * 4,
         bookmarksCount,
       };
 
@@ -254,21 +195,23 @@ export default function AchievementsPage() {
       const userAchievements = calculateAchievements(stats, claimedRewards);
       setAchievements(userAchievements);
 
-      // التحقق من أهلية الشهادة (إتمام الكتاب)
-      if (completedChapters >= 9) {
-        setCertificateEligible(true);
+      // The server preserves historical certificates and decides new eligibility.
+      const certResult = await getOrCreateCertificate();
+      setCertificateEligible(certResult.success || completedChapters >= CERTIFICATE_CHAPTER_COUNT);
 
-        // إنشاء أو جلب الشهادة من السيرفر (محمي من التلاعب)
-        const certResult = await getOrCreateCertificate();
-
-        if (certResult.success && certResult.certificateId) {
-          setCertificateData({
-            completionDate: new Date(certResult.issuedAt || new Date()),
-            certificateId: certResult.certificateId,
-          });
-        } else if (certResult.error) {
-          setNameError(certResult.error);
-        }
+      if (certResult.success && certResult.certificateId) {
+        setCertificateData({
+          completionDate: new Date(certResult.issuedAt || new Date()),
+          certificateId: certResult.certificateId,
+          userName: certResult.userName || 'مستخدم',
+          courseName: certResult.courseName || 'PromptMaster',
+          previousRequirements: certResult.previousRequirements ?? true,
+        });
+        const issuedStats = { ...stats, certificateIssued: true };
+        setUserStats(issuedStats);
+        setAchievements(calculateAchievements(issuedStats, claimedRewards));
+      } else if (certResult.error && completedChapters >= CERTIFICATE_CHAPTER_COUNT) {
+        setNameError(certResult.error);
       }
     } catch (error) {
       dbLogger.error('Error loading user stats:', error);
@@ -284,17 +227,6 @@ export default function AchievementsPage() {
       }
 
       setUserId(currentUserId);
-
-      // جلب بيانات المستخدم
-      const { data: userData } = await supabase
-        .from('users')
-        .select('full_name, email')
-        .eq('id', currentUserId)
-        .single() as { data: { full_name?: string; email?: string } | null };
-
-      if (userData) {
-        setUserName(userData.full_name || userData.email?.split('@')[0] || 'مستخدم');
-      }
 
       // جلب الإحصائيات
       await loadUserStats(currentUserId);
@@ -488,12 +420,11 @@ export default function AchievementsPage() {
                 exit={{ opacity: 0, x: -20 }}
               >
                 <Certificate
-                  userName={userName}
+                  userName={certificateData.userName}
+                  courseName={certificateData.courseName}
                   completionDate={certificateData.completionDate}
                   certificateId={certificateData.certificateId}
-                  totalPoints={userStats.totalPoints}
-                  completedExercises={userStats.completedExercises}
-                  readingTime={userStats.readingTime}
+                  previousRequirements={certificateData.previousRequirements}
                 />
               </motion.div>
             )}
@@ -532,15 +463,15 @@ export default function AchievementsPage() {
             >
               <span className="lock-icon">🔐</span>
               <h4>الشهادة غير متاحة بعد</h4>
-              <p>أكمل قراءة جميع فصول الكتاب للحصول على شهادة الإتمام</p>
+              <p>سجّل إتمام قراءة الفصول الأساسية العشرة للحصول على شهادة إتمام من PromptMaster، مع اشتراك المتقدمة أو VIP نشط واسم ثلاثي. الشهادة تستند إلى سجل قراءة ذاتي.</p>
               <div className="book-progress">
                 <div className="book-progress-bar">
                   <div
                     className="book-progress-fill"
-                    style={{ width: `${(userStats.completedChapters / 9) * 100}%` }}
+                    style={{ width: `${(userStats.completedChapters / CERTIFICATE_CHAPTER_COUNT) * 100}%` }}
                   />
                 </div>
-                <span>{userStats.completedChapters} / 9 فصول</span>
+                <span>{userStats.completedChapters} / {CERTIFICATE_CHAPTER_COUNT} فصول أساسية</span>
               </div>
             </motion.div>
           )}

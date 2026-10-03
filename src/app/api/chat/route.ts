@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
+import { checkRateLimitAsync, RATE_LIMITS } from '@/lib/rate-limit'
 import { retrieveContext, formatContextForPrompt } from '@/lib/chat-context'
-import { getAuthenticatedUser, hasActiveSubscription } from '@/lib/auth-middleware'
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
+import { userHasFeature } from '@/lib/subscription'
 import { dbLogger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -279,11 +280,10 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // SECURITY: Subscription check — chat is a premium feature
-        const hasSub = await hasActiveSubscription(userId)
-        if (!hasSub) {
+        // Enforce the chat entitlement on the server, including status and expiry.
+        if (!await userHasFeature(userId, 'chat')) {
             return NextResponse.json(
-                { error: 'يرجى الاشتراك لاستخدام هذه الميزة' },
+                { error: 'المحادثة الذكية تتطلب اشتراك VIP نشطًا' },
                 { status: 403 }
             )
         }
@@ -299,7 +299,7 @@ export async function POST(request: NextRequest) {
         }
 
         // 3. Rate limit check (per-user) — after validation so invalid requests don't consume quota
-        const rateResult = checkRateLimit(`chat:${userId}`, RATE_LIMITS.CHAT)
+        const rateResult = await checkRateLimitAsync(`chat:${userId}`, RATE_LIMITS.CHAT)
         if (!rateResult.allowed) {
             return NextResponse.json(
                 {

@@ -9,6 +9,7 @@ import {
 } from '@/lib/learning-plan'
 import { getLearningPreferences } from '@/lib/learning-preferences'
 import type { LearningPathId, LearningDurationId } from '@/types/learning'
+import { userHasFeature } from '@/lib/subscription'
 
 // GET — جلب خطة اليوم أو الخطة الكاملة
 export async function GET(request: NextRequest) {
@@ -56,7 +57,11 @@ export async function POST(request: NextRequest) {
     const tasks = generatePlanTasks(
       prefs.learningPath as LearningPathId,
       prefs.learningDuration as LearningDurationId,
-      startDate
+      startDate,
+      {
+        includeProject: await userHasFeature(userId, 'tools'),
+        includeExercises: await userHasFeature(userId, 'exercises'),
+      }
     )
 
     if (tasks.length === 0) {
@@ -91,15 +96,18 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
+    }
     const { taskId, status } = body
 
-    if (!taskId || !['completed', 'skipped', 'postponed'].includes(status)) {
+    if (typeof taskId !== 'string' || !taskId || !['completed', 'skipped', 'postponed'].includes(status)) {
       return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
     }
 
     const result = await updateTaskStatus(userId, taskId, status)
     if (!result.ok) {
-      return NextResponse.json({ error: 'فشل التحديث' }, { status: 500 })
+      return NextResponse.json({ error: result.error || 'فشل التحديث' }, { status: result.error ? 400 : 500 })
     }
 
     return NextResponse.json({ ok: true })

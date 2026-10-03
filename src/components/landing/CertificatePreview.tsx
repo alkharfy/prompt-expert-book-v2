@@ -17,7 +17,7 @@ export default function CertificatePreview() {
                         <span className="section-badge">🎓 شهادة إتمام من PromptMaster</span>
                         <h2 className="section-title">احصل على شهادة إتمام</h2>
                         <p className="section-description">
-                            عند إتمامك لـ PromptMaster بنسبة 100%، تحصل على شهادة إتمام من PromptMaster
+                            بعد تسجيل إتمام قراءة الفصول الأساسية العشرة وكتابة اسمك الثلاثي، مع اشتراك المتقدمة أو VIP نشط، تحصل على شهادة إتمام من PromptMaster
                             برقم فريد قابل للتحقق ورابط عام للمشاركة على LinkedIn ومنصات التواصل.
                         </p>
 
@@ -36,7 +36,7 @@ export default function CertificatePreview() {
                             </li>
                             <li>
                                 <span className="feature-icon">📱</span>
-                                QR Code للتحقق السريع
+                                شهادة قراءة ذاتية، دون اعتماد مهني أو اختبار مهارة
                             </li>
                         </ul>
 
@@ -62,9 +62,9 @@ export default function CertificatePreview() {
 
                                     <div className="certificate-body">
                                         <p className="cert-text">يُشهد بأن</p>
-                                        <h3 className="cert-name">محمد أحمد</h3>
-                                        <p className="cert-text">قد أتم بنجاح</p>
-                                        <p className="course-name">بناء المواقع والتطبيقات بالذكاء الاصطناعي</p>
+                                        <h3 className="cert-name">اسم المتعلم — نموذج توضيحي</h3>
+                                        <p className="cert-text">سجّل إتمام قراءة</p>
+                                        <p className="course-name">إتمام قراءة الفصول الأساسية العشرة</p>
                                     </div>
 
                                     <div className="certificate-footer">
@@ -74,10 +74,6 @@ export default function CertificatePreview() {
                                             <span className="signer">PromptMaster</span>
                                         </div>
                                         <div className="cert-id">CERT-2026-PM8X4K</div>
-                                    </div>
-
-                                    <div className="qr-placeholder">
-                                        <span>QR</span>
                                     </div>
 
                                     <div className="seal">✓</div>

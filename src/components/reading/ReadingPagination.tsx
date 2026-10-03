@@ -12,6 +12,7 @@ interface ReadingPaginationProps {
     isNextLocked: boolean
     onLockedClick: () => void
     isBookEnd?: boolean // True only on last page of Appendix
+    isNextBusy?: boolean
 }
 
 export default function ReadingPagination({
@@ -23,7 +24,8 @@ export default function ReadingPagination({
     isLast,
     isNextLocked,
     onLockedClick,
-    isBookEnd = false
+    isBookEnd = false,
+    isNextBusy = false,
 }: ReadingPaginationProps) {
 
     const handleNextClick = () => {
@@ -43,7 +45,7 @@ export default function ReadingPagination({
                 <button
                     onClick={onPrev}
                     className="reading-nav-btn prev"
-                    disabled={isFirst}
+                    disabled={isFirst || isNextBusy}
                     aria-label={`الصفحة السابقة (${currentIndex} من ${total})`}
                 >
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -67,10 +69,12 @@ export default function ReadingPagination({
                 {/* Next Button (Left in RTL end) */}
                 <button
                     onClick={handleNextClick}
+                    disabled={isNextBusy}
+                    aria-busy={isNextBusy}
                     className="reading-nav-btn next"
                     aria-label={isNextLocked ? 'الصفحة التالية (مقفلة)' : nextLabel}
                 >
-                    <span>{nextLabel}</span>
+                    <span>{isNextBusy ? 'جاري حفظ الإتمام...' : nextLabel}</span>
                     <motion.svg
                         animate={isLast ? { x: [0, -5, 0] } : {}}
                         transition={isLast ? { duration: 1.5, repeat: Infinity } : {}}

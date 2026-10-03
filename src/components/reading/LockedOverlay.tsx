@@ -16,6 +16,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { authSystem } from '@/lib/auth_system'
 import { useSubscription } from '@/context/SubscriptionContext'
 import { trackPaywallHit } from '@/lib/analytics'
@@ -125,7 +126,7 @@ export default function LockedOverlay({
         }
 
         checkStatus()
-    }, [isOpen, onClose, currentPlan, subStatus, expiresAt, requiredFeature, hasFeature, subLoading])
+    }, [isOpen, onClose, nextPath, currentPlan, subStatus, expiresAt, requiredFeature, hasFeature, subLoading])
 
     const handleAction = () => {
         const safePath = getSafeRedirectPath(nextPath)
@@ -162,8 +163,8 @@ export default function LockedOverlay({
 
     switch (status) {
         case 'unauthenticated':
-            title = 'أكمل القراءة بعد تسجيل الدخول'
-            description = 'هذا المحتوى مخصص للأعضاء فقط. سجل دخولك الآن لتتمكن من الوصول لجميع محاور القسم والتمارين التطبيقية.'
+            title = 'متابعة الكتاب تحتاج اشتراكًا'
+            description = 'المقدمة والفصل الأول مجانيان. باقي الكتاب والتمارين يحتاجان اشتراكًا نشطًا. سجّل دخولك إذا كنت مشتركًا، أو شاهد الباقات قبل الشراء.'
             actionLabel = 'تسجيل الدخول'
             showPaymentIcon = false
             showValueProps = true
@@ -172,7 +173,7 @@ export default function LockedOverlay({
         case 'unpaid':
         case 'no_subscription':
             title = 'أكملت المحتوى المجاني — جاهز تكمل؟'
-            description = 'قرأت المقدمة والفصل الأول كاملاً (23 صفحة) واكتشفت أساسيات AI. الباقي أقوى بكتير!'
+            description = 'المقدمة والفصل الأول متاحان مجانًا. اختر اشتراكًا لمتابعة باقي الكتاب والتمارين؛ المزايا الإضافية تختلف حسب الباقة.'
             actionLabel = 'اشترك الآن — حسب الباقة المختارة'
             showPaymentIcon = true
             showValueProps = true
@@ -258,11 +259,11 @@ export default function LockedOverlay({
                                 </div>
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">🛠️</span>
-                                    <span>أدوات احترافية</span>
+                                    <span>أدوات حسب الباقة</span>
                                 </div>
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">🎓</span>
-                                    <span>شهادة إتمام</span>
+                                    <span>شهادة إتمام حسب الباقة</span>
                                 </div>
                             </motion.div>
                         )}
@@ -288,6 +289,12 @@ export default function LockedOverlay({
                             <button onClick={handleAction} className="lock-btn-primary">
                                 {actionLabel}
                             </button>
+
+                            {status === 'unauthenticated' && (
+                                <Link href="/#pricing" className="lock-btn-secondary">
+                                    شاهد الباقات والأسعار
+                                </Link>
+                            )}
 
                             {/* ضمان الاسترداد */}
                             {showValueProps && (

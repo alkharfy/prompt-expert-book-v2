@@ -11,6 +11,7 @@
 import 'server-only'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import type { PlanId, FeatureKey, UserPlan, SubscriptionStatus } from '@/types/subscription'
+import { isActivePlanSubscription, planHasFeature } from '@/lib/features'
 
 // ─────────────────────────────────────────────
 // Supabase Admin Client — uses shared singleton
@@ -118,7 +119,9 @@ export async function getUserSubscription(userId: string): Promise<UserPlan | nu
 
 /**
  * التحقق من أن المستخدم يملك ميزة معينة حسب باقته.
- * يستدعي دالة SQL: user_has_feature(p_user_id, p_feature)
+ * Uses the same canonical feature matrix as pricing and the client, after
+ * validating the subscription status and expiry. Stale SQL feature seeds
+ * cannot grant a paid feature to a lower tier.
  * 
  * @param userId - معرّف المستخدم (UUID)
  * @param feature - مفتاح الميزة المراد التحقق منها
@@ -134,19 +137,9 @@ export async function getUserSubscription(userId: string): Promise<UserPlan | nu
  */
 export async function userHasFeature(userId: string, feature: FeatureKey): Promise<boolean> {
     try {
-        const supabaseAdmin = getSupabaseAdmin()
-
-        const { data, error } = await (supabaseAdmin.rpc as any)('user_has_feature', {
-            p_user_id: userId,
-            p_feature: feature,
-        })
-
-        if (error) {
-            console.error('[subscription] Error calling user_has_feature:', error.message)
-            return false
-        }
-
-        return data === true
+        const subscription = await getUserSubscription(userId)
+        if (!isActivePlanSubscription(subscription)) return false
+        return planHasFeature(subscription.plan_id, feature)
     } catch (err) {
         console.error('[subscription] Unexpected error in userHasFeature:', err)
         return false

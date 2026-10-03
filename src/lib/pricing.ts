@@ -49,6 +49,8 @@ export function normalizePricingPlans(rows: unknown): PublicPricingPlan[] {
       if (feature === 'library') return `${PRODUCT_STATS.templates} قالب برومبت جاهز للتعديل`
       if (feature === 'exercises') return `${PRODUCT_STATS.exercises} تمرينًا تفاعليًا`
       if (feature === 'certificate') return 'شهادة إتمام من PromptMaster'
+      if (feature === 'tools') return 'أدوات البرومبت؛ تشخيص AI حتى 10 مرات خلال 24 ساعة'
+      if (feature === 'chat') return 'المحادثة الذكية حتى 30 رسالة خلال 24 ساعة'
       return FEATURE_NAMES[feature]
     })
     features.push('وصول لمدة سنة؛ التحديثات المتاحة مشمولة خلال الاشتراك')
@@ -57,7 +59,7 @@ export function normalizePricingPlans(rows: unknown): PublicPricingPlan[] {
       features, features_ar: features, duration: 'سنة', is_popular: id === 'basic',
       description: id === 'basic' ? 'الكتاب والتمارين والقوالب لتبدأ التطبيق على الدراسة والعمل.'
         : id === 'pro' ? 'الأساسية مع أدوات البرومبت والإنجازات وشهادة الإتمام.'
-        : 'المتقدمة مع المحادثة الذكية ومتابعة تحديثات AI.',
+        : 'المتقدمة مع المحادثة الذكية للمساعدة في التعلّم والتطبيق.',
       cta_link: `/payment?plan=${id}`, cta_text: id === 'basic' ? 'ابدأ بالأساسية' : `اختر ${PLAN_NAMES_AR[id]}`,
     }
   }).sort((a, b) => PLAN_ORDER[a.id] - PLAN_ORDER[b.id])

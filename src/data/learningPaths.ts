@@ -1,20 +1,16 @@
 import type { LearningPath, LearningPathId } from '@/types/learning'
-import { SECTION_REGISTRY } from '@/config/sections'
+import { LEARNING_SECTIONS, EXERCISE_COUNTS_BY_SECTION } from '@/config/learningCatalog'
 
 /* ──────────────────────────────────────────────
    Section → Page count helper
    ────────────────────────────────────────────── */
 function countPages(sectionIds: string[]): number {
-    let total = 0
-    for (let i = 0; i < SECTION_REGISTRY.length; i++) {
-        if (!sectionIds.includes(SECTION_REGISTRY[i].id)) continue
-        const nextOffset =
-            i + 1 < SECTION_REGISTRY.length
-                ? SECTION_REGISTRY[i + 1].progressOffset
-                : SECTION_REGISTRY[i].progressOffset + SECTION_REGISTRY[i].pageCount
-        total += nextOffset - SECTION_REGISTRY[i].progressOffset
-    }
-    return total
+    return LEARNING_SECTIONS.filter(section => sectionIds.includes(section.id))
+        .reduce((total, section) => total + section.pageCount, 0)
+}
+
+function countExercises(sectionIds: string[]): number {
+    return sectionIds.reduce((total, id) => total + (EXERCISE_COUNTS_BY_SECTION[id] || 0), 0)
 }
 
 /* ──────────────────────────────────────────────
@@ -30,7 +26,7 @@ const INTERMEDIATE_SECTIONS = [
     'section-5',
     'section-6',
 ]
-const COMPREHENSIVE_SECTIONS = SECTION_REGISTRY.map((s) => s.id)
+const COMPREHENSIVE_SECTIONS = LEARNING_SECTIONS.map((s) => s.id)
 
 export const LEARNING_PATHS: Record<LearningPathId, LearningPath> = {
     quick: {
@@ -41,7 +37,7 @@ export const LEARNING_PATHS: Record<LearningPathId, LearningPath> = {
         sections: QUICK_SECTIONS,
         totalPages: countPages(QUICK_SECTIONS),
         estimatedHours: 4,
-        exerciseCount: 5,
+        exerciseCount: countExercises(QUICK_SECTIONS),
         features: [
             'ما هو AI التوليدي',
             'أساسيات البرومبتات',
@@ -56,7 +52,7 @@ export const LEARNING_PATHS: Record<LearningPathId, LearningPath> = {
         sections: INTERMEDIATE_SECTIONS,
         totalPages: countPages(INTERMEDIATE_SECTIONS),
         estimatedHours: 12,
-        exerciseCount: 20,
+        exerciseCount: countExercises(INTERMEDIATE_SECTIONS),
         features: [
             'كل محتوى المسار السريع',
             'إطار GOLDS',
@@ -68,18 +64,18 @@ export const LEARNING_PATHS: Record<LearningPathId, LearningPath> = {
     comprehensive: {
         id: 'comprehensive',
         nameAr: 'المسار الشامل',
-        descriptionAr: 'إتقان كامل — كل المحتوى + المشروع الممتد',
+        descriptionAr: 'الفصول العشرة والمراجع والتمارين؛ مراحل المشروع تُضاف عند توفر أدوات البرومبت في باقتك',
         icon: '🏆',
         sections: COMPREHENSIVE_SECTIONS,
         totalPages: countPages(COMPREHENSIVE_SECTIONS),
         estimatedHours: 20,
-        exerciseCount: 40,
+        exerciseCount: countExercises(COMPREHENSIVE_SECTIONS),
         features: [
             'كل المحتوى',
             'وكلاء الذكاء الاصطناعي',
             'مكتبة القوالب',
-            'المشروع الممتد',
-            'شهادة إتمام',
+            'مراحل المشروع الممتد عند توفر الأدوات في الباقة',
+            'شهادة إتمام وفق متطلباتها وباقتك',
         ],
     },
 }
@@ -106,7 +102,11 @@ export const CHAPTER_TO_SECTION: Record<number, string> = {
     5: 'section-5',
     6: 'section-6',
     7: 'section-7',
-    // 8 = library, 9 = appendix — only in comprehensive
+    8: 'section-8',
+    9: 'section-9',
+    10: 'section-10',
+    11: 'library',
+    12: 'appendix',
 }
 
 /** Check if a roadmap chapter index is included in a path */
@@ -116,13 +116,12 @@ export function isChapterInPath(
 ): boolean {
     const sectionId = CHAPTER_TO_SECTION[chapterIndex]
     if (!sectionId) {
-        // Library (8) and Appendix (9) only in comprehensive
-        return pathId === 'comprehensive'
+        return false
     }
     return isSectionInPath(sectionId, pathId)
 }
 
-/** Calculate path completion % from global page number and completed chapters */
+/** Reading resume position; visiting a page does not prove earlier pages were completed. */
 export function getPathCompletion(
     currentPage: number,
     pathId: LearningPathId,
@@ -130,15 +129,10 @@ export function getPathCompletion(
     const path = LEARNING_PATHS[pathId]
     // Last section in this path
     const lastSectionId = path.sections[path.sections.length - 1]
-    const lastSection = SECTION_REGISTRY.find((s) => s.id === lastSectionId)
+    const lastSection = LEARNING_SECTIONS.find((s) => s.id === lastSectionId)
     if (!lastSection) return 0
 
-    const lastSectionIdx = SECTION_REGISTRY.indexOf(lastSection)
-    const pathEndPage =
-        lastSectionIdx + 1 < SECTION_REGISTRY.length
-            ? SECTION_REGISTRY[lastSectionIdx + 1].progressOffset
-            : lastSection.progressOffset + lastSection.pageCount
-
-    const clamped = Math.min(currentPage, pathEndPage)
+    const pathEndPage = lastSection.progressOffset + lastSection.pageCount
+    const clamped = Number.isFinite(currentPage) ? Math.max(0, Math.min(currentPage, pathEndPage)) : 0
     return Math.round((clamped / pathEndPage) * 100)
 }

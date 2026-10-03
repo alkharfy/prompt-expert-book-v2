@@ -66,7 +66,7 @@ const dripTemplates = [
             <div class="card">
                 <span class="emoji-large">🎁</span>
                 <h2>مرحباً يا ${escapeHtml(name)}!</h2>
-                <p>جهزنالك <strong>فصل 1 كامل مجاناً</strong> — 17 صفحة من المحتوى التفاعلي عن أساسيات البرومبتات.</p>
+                <p>جهزنالك <strong>فصل 1 كامل مجاناً</strong> — 17 صفحة عن كيفية عمل AI ونماذجه وحدوده واختيار الأدوات والاستخدام المسؤول.</p>
                 <p>فيه تمارين عملية تقدر تجربها فوراً مع ChatGPT وأي أداة AI ثانية.</p>
                 <hr class="divider">
                 <div style="text-align:center;">
@@ -83,9 +83,9 @@ const dripTemplates = [
                 <span class="emoji-large">💡</span>
                 <h2>ملخص سريع — فصل 1</h2>
                 <p>يا <strong>${escapeHtml(name)}</strong>، لو خلصت فصل 1 فأنت دلوقتي بتعرف:</p>
-                <p>1️⃣ <strong>إطار GOLDS</strong> — 5 خطوات لكتابة prompt احترافي</p>
-                <p>2️⃣ <strong>الفرق بين prompt جيد وسيئ</strong> — ليه AI بيرد ردود غريبة أحياناً</p>
-                <p>3️⃣ <strong>أول 3 تقنيات</strong> — Zero-shot, Few-shot, Chain of Thought</p>
+                <p>1️⃣ <strong>كيف يعمل AI</strong> — مقدمة مبسطة عن توليد النصوص</p>
+                <p>2️⃣ <strong>النماذج وحدودها</strong> — السياق والمعلومات التي تحتاج مراجعة</p>
+                <p>3️⃣ <strong>اختيار الأدوات واستخدامها بمسؤولية</strong> — التكلفة والخصوصية والأخلاقيات</p>
                 <p>💪 الجزء الأحلى؟ فصل 2 فيه تطبيقات أقوى بكتير!</p>
                 <hr class="divider">
                 <div style="text-align:center;">
@@ -96,16 +96,16 @@ const dripTemplates = [
     {
         day: 5,
         type: 'upgrade_drip_3' as const,
-        subject: () => `🔥 95 قالب prompt جاهز بيستناك في خطة Pro`,
+        subject: () => `📋 95 قالب prompt قابلة للتعديل في كل الباقات`,
         body: (name: string) => `
             <div class="card">
                 <span class="emoji-large">🔥</span>
                 <h2>95 قالب جاهز!</h2>
-                <p>يا <strong>${escapeHtml(name)}</strong>، في الفصول المتقدمة (3-10) فيه:</p>
+                <p>يا <strong>${escapeHtml(name)}</strong>، في المحتوى والمكتبة ضمن كل الباقات فيه:</p>
                 <p>📝 <strong>95 قالب prompt</strong> جاهز تنسخه وتستخدمه فوراً</p>
                 <p>🤖 <strong>بناء AI Agents</strong> — فصل كامل عن أتمتة المهام</p>
-                <p>🎨 <strong>Midjourney + DALL-E</strong> — فصل التصميم بالذكاء الاصطناعي</p>
-                <p>📊 <strong>تحليل البيانات</strong> — تقارير احترافية في دقائق</p>
+                <p>🎨 <strong>الصور والصوت والفيديو</strong> — أمثلة على توجيه الأدوات ومراجعة مخرجاتها</p>
+                <p>📊 <strong>تحليل البيانات</strong> — أمثلة لإعداد تحليل ومراجعة دقته</p>
                 <hr class="divider">
                 <div style="text-align:center;">
                     <a href="${APP_URL}/payment" class="btn">شوف الخطط المتاحة ←</a>
@@ -115,17 +115,16 @@ const dripTemplates = [
     {
         day: 7,
         type: 'upgrade_drip_4' as const,
-        subject: () => `📖 أحمد في فصل 3 بيبني أول AI Agent... عايز تكمل معاه؟`,
+        subject: () => `📖 فصل 7: تصميم وكيل AI وحدود تنفيذه`,
         body: (name: string) => `
             <div class="card">
                 <span class="emoji-large">🤖</span>
-                <h2>قصة أحمد — فصل 3</h2>
-                <p>يا <strong>${escapeHtml(name)}</strong>، أحمد (بطل الكتاب) في فصل 3 بيتعلم حاجة مختلفة...</p>
-                <p>بيبني <strong>أول AI Agent</strong> بتاعه — نظام ذكي بيعمل مهام كاملة لوحده:</p>
-                <p>✅ يبحث في الإنترنت + يلخص النتائج</p>
-                <p>✅ يكتب تقارير احترافية</p>
-                <p>✅ يرد على إيميلات العملاء</p>
-                <p>تخيل لو عندك assistant زي كده في شغلك! 🚀</p>
+                <h2>تصميم الوكلاء — فصل 7</h2>
+                <p>يا <strong>${escapeHtml(name)}</strong>، أحمد شخصية تعليمية في الكتاب. الفصل 7 يوضح كيف تصمم مهمة الوكيل وأدواته وحدود تنفيذه:</p>
+                <p>✅ تقسيم المهمة ومراجعة النتائج</p>
+                <p>✅ اختيار الأدوات وتحديد صلاحياتها</p>
+                <p>✅ طلب موافقة بشرية عند الإجراءات الحساسة</p>
+                <p>ابدأ بمهمة صغيرة واختبرها قبل الاعتماد عليها في شغلك.</p>
                 <hr class="divider">
                 <div style="text-align:center;">
                     <a href="${APP_URL}/payment" class="btn">أكمل رحلتك مع أحمد ←</a>
@@ -135,7 +134,7 @@ const dripTemplates = [
     {
         day: 10,
         type: 'upgrade_drip_5' as const,
-        subject: () => `⏰ جاهز تبدأ احتراف AI؟ شاهد الباقات والأسعار الحالية`,
+        subject: () => `⏰ جاهز تتعلّم AI عمليًا؟ شاهد الباقات والأسعار الحالية`,
         body: (name: string) => `
             <div class="card">
                 <span class="emoji-large">⏰</span>
@@ -143,11 +142,11 @@ const dripTemplates = [
                 <p>يا <strong>${escapeHtml(name)}</strong>، الكتاب كامل (10 فصول + 95 قالب + 45 تمرين + شهادة إتمام في الباقات التي تشملها) في انتظارك.</p>
                 <div style="background:rgba(255,107,53,0.08); border:1px solid rgba(255,107,53,0.2); border-radius:8px; padding:16px; text-align:center; margin:16px 0;">
                     <p style="font-size:24px; font-weight:bold; color:#FF6B35; margin:0;">بالسعر الموضّح قبل الدفع</p>
-                    <p style="color:#888; margin:8px 0 0 0;">وصول سنة كاملة — أقل من سعر كوباية قهوة في الأسبوع</p>
+                    <p style="color:#888; margin:8px 0 0 0;">وصول سنة كاملة — السعر وشروط الباقة موضحان قبل الدفع</p>
                 </div>
                 <hr class="divider">
                 <div style="text-align:center;">
-                    <a href="${APP_URL}/payment" class="btn">استفد من العرض ←</a>
+                    <a href="${APP_URL}/payment" class="btn">شاهد الباقات الحالية ←</a>
                 </div>
             </div>`,
     },
@@ -159,17 +158,17 @@ const dripTemplates = [
             <div class="card">
                 <span class="emoji-large">⚡</span>
                 <h2>آخر تذكير!</h2>
-                <p>يا <strong>${escapeHtml(name)}</strong>، لسه ما بدأتش رحلتك في احتراف الذكاء الاصطناعي؟</p>
+                <p>يا <strong>${escapeHtml(name)}</strong>، لسه ما بدأتش رحلتك في تعلّم استخدام الذكاء الاصطناعي؟</p>
                 <p>ده آخر تذكير مننا — المحتوى كامل في انتظارك بالسعر الموضّح قبل الدفع.</p>
                 <div style="background:rgba(255,107,53,0.08); border:1px solid rgba(255,107,53,0.2); border-radius:8px; padding:16px; margin:16px 0;">
                     <p style="color:#ccc; margin:0;">🎯 45 تمرين تفاعلي</p>
-                    <p style="color:#ccc; margin:8px 0 0 0;">📜 شهادة قابلة للمشاركة</p>
-                    <p style="color:#ccc; margin:8px 0 0 0;">🏆 Leaderboard + إنجازات</p>
-                    <p style="color:#ccc; margin:8px 0 0 0;">💬 مجتمع المتعلمين</p>
+                    <p style="color:#ccc; margin:8px 0 0 0;">📜 شهادة إتمام قراءة في المتقدمة وVIP عند استيفاء المتطلبات</p>
+                    <p style="color:#ccc; margin:8px 0 0 0;">🏆 لوحة المتصدرين والإنجازات في المتقدمة وVIP</p>
+                    <p style="color:#ccc; margin:8px 0 0 0;">📚 المصادر وأخبار AI متاحة مجانًا للجميع</p>
                 </div>
                 <hr class="divider">
                 <div style="text-align:center;">
-                    <a href="${APP_URL}/payment" class="btn">اشترك قبل ما العرض ينتهي ←</a>
+                    <a href="${APP_URL}/payment" class="btn">اختر الباقة المناسبة ←</a>
                 </div>
             </div>`,
     },

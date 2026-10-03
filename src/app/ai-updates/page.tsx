@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
 interface ChangelogEntry {
   id: string
@@ -37,86 +36,39 @@ const IMPORTANCE_COLORS: Record<string, string> = {
 }
 
 export default function AiUpdatesPage() {
-  const router = useRouter()
   const [updates, setUpdates] = useState<ChangelogEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [isVip, setIsVip] = useState(false)
-  const [checking, setChecking] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
-    const checkAccess = async () => {
+    let cancelled = false
+    const fetchUpdates = async () => {
       try {
-        const res = await fetch('/api/subscription/status')
+        const res = await fetch('/api/ai-updates')
+        if (!res.ok) throw new Error('Could not load AI news')
         const data = await res.json()
-        if (data.plan_id === 'vip') {
-          setIsVip(true)
-          // Fetch updates
-          const updatesRes = await fetch('/api/ai-updates')
-          const updatesData = await updatesRes.json()
-          setUpdates(updatesData.updates || [])
-        }
-      } catch { /* ignore */ }
-      setChecking(false)
-      setLoading(false)
+        if (!cancelled) setUpdates(data.updates || [])
+      } catch { if (!cancelled) setLoadError(true) }
+      if (!cancelled) setLoading(false)
     }
-    checkAccess()
+    fetchUpdates()
+    return () => { cancelled = true }
   }, [])
-
-  if (checking) {
-    return (
-      <div className="updates-page">
-        <div className="loading">
-          <div className="spinner"></div>
-          <p>جاري التحقق من صلاحيتك...</p>
-        </div>
-        <style jsx>{`
-          .updates-page { max-width: 800px; margin: 0 auto; padding: 3rem 1rem; text-align: center; direction: rtl; }
-          .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,107,53,0.2); border-top-color: #FF6B35; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
-          @keyframes spin { to { transform: rotate(360deg); } }
-          .loading p { color: rgba(255,255,255,0.5); }
-        `}</style>
-      </div>
-    )
-  }
-
-  if (!isVip) {
-    return (
-      <div className="updates-page">
-        <div className="locked-state">
-          <div className="locked-icon">🔒</div>
-          <h2>تحديثات AI الأسبوعية</h2>
-          <p>هذه الميزة حصرية لمشتركي الباقة المميزة (VIP)</p>
-          <p className="locked-desc">احصل على تحديثات أسبوعية عن أحدث أدوات ونماذج الذكاء الاصطناعي</p>
-          <button className="upgrade-btn" onClick={() => router.push('/payment?feature=vip')}>
-            ⭐ ترقية إلى VIP
-          </button>
-        </div>
-        <style jsx>{`
-          .updates-page { max-width: 800px; margin: 0 auto; padding: 3rem 1rem; direction: rtl; }
-          .locked-state { text-align: center; padding: 3rem 0; }
-          .locked-icon { font-size: 4rem; margin-bottom: 1rem; }
-          .locked-state h2 { font-size: 1.5rem; color: #FF6B35; margin-bottom: 0.75rem; }
-          .locked-state p { color: rgba(255,255,255,0.6); margin-bottom: 0.5rem; }
-          .locked-desc { font-size: 0.9rem; opacity: 0.5; margin-bottom: 1.5rem !important; }
-          .upgrade-btn { padding: 0.75rem 2rem; background: linear-gradient(135deg, #FFD700, #FF6B35); color: #000; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 0.2s; }
-          .upgrade-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        `}</style>
-      </div>
-    )
-  }
 
   return (
     <div className="updates-page">
       <div className="updates-header">
-        <h1>🔮 تحديثات AI الأسبوعية</h1>
-        <p>آخر الأخبار والتطورات في عالم الذكاء الاصطناعي</p>
-        <span className="vip-badge">⭐ VIP حصري</span>
+        <h1>🔮 أخبار AI</h1>
+        <p>أخبار ومصادر متاحة مجانًا للجميع؛ راجع تاريخ نشر كل خبر ومصدره.</p>
       </div>
 
       {loading ? (
         <div className="loading">
           <div className="spinner"></div>
+          <p>جاري تحميل أخبار AI...</p>
         </div>
+      ) : loadError ? (
+        <p role="alert">تعذّر تحميل أخبار AI. أعد تحميل الصفحة للمحاولة مجددًا.</p>
       ) : updates.length === 0 ? (
         <div className="empty">
           <p>لا توجد تحديثات حالياً</p>

@@ -49,7 +49,7 @@ const chapters: Chapter[] = [
     {
         number: '03',
         title: 'إطار GOLDS',
-        description: 'نظام ثابت لأي برومبت (Goal, Output, Language, Details, Style)',
+        description: 'تنظيم الطلب: Goal, Output, Length, Details, Style',
         href: '/read/section-3/1',
         icon: '🎯'
     },
@@ -83,13 +83,34 @@ const chapters: Chapter[] = [
     },
     {
         number: '08',
+        title: 'RAG والبيانات الخاصة',
+        description: 'استخدام مصادر بياناتك والتحقق من الإجابات',
+        href: '/read/section-8/1',
+        icon: '🔎'
+    },
+    {
+        number: '09',
+        title: 'تطبيقات عملية',
+        description: 'تطبيق AI على مهام العمل والتعلم حسب مجالك',
+        href: '/read/section-9/1',
+        icon: '💼'
+    },
+    {
+        number: '10',
+        title: 'متابعة التطور وتقديم خدمة',
+        description: 'تطوير مهاراتك وتحديد نطاق خدمة قابلة للفحص',
+        href: '/read/section-10/1',
+        icon: '🌱'
+    },
+    {
+        number: 'المكتبة',
         title: 'مكتبة القوالب',
         description: '95 قالب برومبت جاهز للنسخ',
         href: '/library/1',
         icon: '📚'
     },
     {
-        number: '09',
+        number: 'الملحق',
         title: 'الملحق',
         description: 'تمارين وإجابات نموذجية',
         href: '/read/appendix/1',

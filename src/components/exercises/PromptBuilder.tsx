@@ -1,9 +1,10 @@
 'use client'
 
 import { renderPromptTemplate } from '@/lib/prompt-template'
+import { hasMeaningfulFieldValue, isSubstantivePrompt } from '@/lib/exerciseScoring'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence, Reorder } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { supabaseProxy as supabase } from '@/lib/supabase_proxy'
 import { authSystem } from '@/lib/auth_system'
 import { onExerciseComplete } from '@/lib/gamification'
@@ -26,7 +27,7 @@ interface PromptBuilderProps {
     templateFormat: string // مثل: "أنت {{role}}. أريد منك {{task}}. الشروط: {{constraints}}. المخرجات: {{output}}."
     exampleOutput?: string
     points?: number
-    onComplete?: (isCorrect: boolean, points: number) => void
+    onComplete?: (isCorrect: boolean | null, points: number) => void
 }
 
 export default function PromptBuilder({
@@ -48,6 +49,10 @@ export default function PromptBuilder({
     const [copied, setCopied] = useState(false)
     const [activeStep, setActiveStep] = useState(0)
     const [showExample, setShowExample] = useState<string | null>(null)
+    const [practiceOutput, setPracticeOutput] = useState('')
+    const [selfReviewed, setSelfReviewed] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+    const [saveError, setSaveError] = useState('')
 
     const checkPreviousProgress = useCallback(async (isMounted: () => boolean) => {
         try {
@@ -72,13 +77,11 @@ export default function PromptBuilder({
                 
                 const savedValues = JSON.parse(data.user_answer || '{}')
                 setValues(savedValues)
+                setPracticeOutput(savedValues.__practiceOutput || '')
+                setSelfReviewed(savedValues.__selfReviewed === 'true')
                 
                 // إعادة بناء البرومبت
-                let prompt = templateFormat
-                Object.entries(savedValues).forEach(([key, value]) => {
-                    prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value as string)
-                })
-                setGeneratedPrompt(prompt)
+                setGeneratedPrompt(renderPromptTemplate(templateFormat, savedValues))
             }
         } catch (error) {
             dbLogger.error('Error checking progress:', error)
@@ -95,13 +98,13 @@ export default function PromptBuilder({
     }, [checkPreviousProgress])
 
     const saveProgress = async () => {
+        if (alreadyCompleted || isSaving || practiceOutput.trim().length < 20 || !selfReviewed) return
+        setIsSaving(true)
+        setSaveError('')
         try {
             const userId = authSystem.getCurrentUserId()
-            if (!userId) return
-
-            // منع تكرار النقاط إذا كان التمرين مكتملاً سابقاً
-            if (alreadyCompleted) {
-                dbLogger.debug('Exercise already completed, skipping points update')
+            if (!userId) {
+                setSaveError('سجّل الدخول لحفظ إتمام التدريب.')
                 return
             }
 
@@ -116,8 +119,8 @@ export default function PromptBuilder({
                     exercise_type: 'prompt_builder',
                     section_id: sectionId,
                     is_completed: true,
-                    is_correct: true,
-                    user_answer: JSON.stringify(values),
+                    is_correct: null,
+                    user_answer: JSON.stringify({ ...values, __practiceOutput: practiceOutput, __selfReviewed: 'true' }),
                     points_earned: points,
                     completed_at: new Date().toISOString(),
                     last_attempt_at: new Date().toISOString()
@@ -127,15 +130,19 @@ export default function PromptBuilder({
 
             if (error) {
                 dbLogger.error('Error saving exercise progress:', error)
+                setSaveError('تعذر حفظ التدريب. جرّب مرة أخرى؛ لم يُسجّل الإتمام.')
                 return
             }
 
-            // تحديث إحصائيات المستخدم والنقاط
-            await onExerciseComplete(userId, 'prompt_builder', true, points, exerciseId)
-
-            onComplete?.(true, points)
+            setAlreadyCompleted(true)
+            // Open practice earns participation points, without a correctness claim.
+            await onExerciseComplete(userId, 'prompt_builder', null, points, exerciseId)
+            onComplete?.(null, points)
         } catch (error) {
             dbLogger.error('Error saving progress:', error)
+            setSaveError('تعذر حفظ التدريب. جرّب مرة أخرى.')
+        } finally {
+            setIsSaving(false)
         }
     }
 
@@ -149,9 +156,13 @@ export default function PromptBuilder({
         if (isSubmitted) return
 
         const prompt = buildPrompt()
+        if (!allRequiredFilled || !isSubstantivePrompt(prompt, 60)) {
+            setSaveError('اكتب تفاصيل مفيدة في الحقول المطلوبة وطلبًا واضحًا يحدد المهمة قبل إنشاء البرومبت.')
+            return
+        }
+        setSaveError('')
         setGeneratedPrompt(prompt)
         setIsSubmitted(true)
-        saveProgress()
     }
 
     const handleCopy = async () => {
@@ -169,6 +180,9 @@ export default function PromptBuilder({
         setIsSubmitted(false)
         setGeneratedPrompt('')
         setActiveStep(0)
+        setPracticeOutput('')
+        setSelfReviewed(false)
+        setSaveError('')
     }
 
     const handleNextStep = () => {
@@ -184,7 +198,7 @@ export default function PromptBuilder({
     }
 
     const requiredSteps = steps.filter(s => s.required !== false)
-    const allRequiredFilled = requiredSteps.every(step => (values[step.id] || '').trim() !== '')
+    const allRequiredFilled = requiredSteps.every(step => hasMeaningfulFieldValue(values[step.id] || ''))
     const filledCount = steps.filter(step => (values[step.id] || '').trim() !== '').length
     const progress = (filledCount / steps.length) * 100
 
@@ -210,12 +224,14 @@ export default function PromptBuilder({
                 {alreadyCompleted && (
                     <span className="quiz-completed-badge">✅ تم البناء</span>
                 )}
-                <span className="quiz-points">{points} نقطة</span>
+                <span className="quiz-points">{points} نقطة مشاركة</span>
             </div>
 
             {/* Title & Description */}
             <h3 className="quiz-question">{title}</h3>
             <p className="prompt-builder-description">{description}</p>
+            <p className="prompt-builder-description">ابنِ الطلب ثم جرّبه في أداة مناسبة واحفظ الناتج وراجع دقته والتزامه بالمطلوب. الإتمام هنا تدريب ومراجعة ذاتية، ولا يُحسب إجابة صحيحة آليًا.</p>
+            {saveError && <p role="alert">{saveError}</p>}
 
             {/* Progress Bar */}
             <div className="prompt-progress-bar">
@@ -262,6 +278,7 @@ export default function PromptBuilder({
 
                             <textarea
                                 className="prompt-input"
+                                aria-label={steps[activeStep].label}
                                 value={values[steps[activeStep].id] || ''}
                                 onChange={e => handleInputChange(steps[activeStep].id, e.target.value)}
                                 placeholder={steps[activeStep].placeholder}
@@ -343,8 +360,8 @@ export default function PromptBuilder({
                         transition={{ duration: 0.5 }}
                     >
                         <div className="generated-header">
-                            <h4>🎉 البرومبت الخاص بك جاهز!</h4>
-                            <span className="points-earned">+{points} نقطة</span>
+                            <h4>البرومبت جاهز للتجربة</h4>
+                            {alreadyCompleted && <span className="points-earned">تم تسجيل التدريب</span>}
                         </div>
 
                         <div className="generated-prompt-box">
@@ -363,6 +380,32 @@ export default function PromptBuilder({
                                 <h5>مثال على المخرجات المتوقعة:</h5>
                                 <p className="example-output-text">{exampleOutput}</p>
                             </div>
+                        )}
+
+                        <label htmlFor={`practice-output-${exerciseId}`}>ناتج التجربة أو وصف النتيجة</label>
+                        <textarea
+                            id={`practice-output-${exerciseId}`}
+                            className="prompt-input"
+                            value={practiceOutput}
+                            onChange={event => { setPracticeOutput(event.target.value); setSelfReviewed(false) }}
+                            placeholder="الصق ناتج التجربة، أو صف النتيجة وما يحتاج تعديلًا. احذف أي بيانات خاصة قبل الحفظ."
+                            rows={5}
+                            disabled={alreadyCompleted}
+                        />
+                        {!alreadyCompleted && (
+                            <>
+                                <label>
+                                    <input type="checkbox" checked={selfReviewed} onChange={event => setSelfReviewed(event.target.checked)} />
+                                    راجعت الناتج مقابل المطلوب، وتحققت من المعلومات التي تحتاج مصدرًا، وحددت التحسين اللازم.
+                                </label>
+                                <button
+                                    className="quiz-submit-btn"
+                                    onClick={saveProgress}
+                                    disabled={isSaving || !selfReviewed || practiceOutput.trim().length < 20}
+                                >
+                                    {isSaving ? 'جارٍ الحفظ...' : 'سجّل إتمام التدريب'}
+                                </button>
+                            </>
                         )}
 
                         {!alreadyCompleted && (

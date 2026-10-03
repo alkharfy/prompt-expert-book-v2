@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserSubscription } from '@/lib/subscription'
-import { getPlanFeatures } from '@/lib/features'
+import { getPlanFeatures, isActivePlanSubscription } from '@/lib/features'
 import type { FeatureKey } from '@/types/subscription'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { dbLogger } from '@/lib/logger'
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     // 2. جلب بيانات الاشتراك من قاعدة البيانات
     const subscription = await getUserSubscription(userId)
 
-    if (!subscription || !subscription.plan_id) {
+    if (!isActivePlanSubscription(subscription)) {
       // لا يوجد اشتراك نشط
       return NextResponse.json(
         {

@@ -6,7 +6,7 @@ vi.mock('@/lib/supabase_proxy', () => ({
   supabaseProxy: new Proxy({}, { get: () => { proxyUsed.count++; throw new Error('browser proxy used on the server') } }),
 }))
 vi.mock('@/lib/logger', () => ({ dbLogger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() } }))
-import { updateGamification, recordNoteCreation, syncReadingToGamification } from '@/lib/gamification'
+import { onExerciseComplete, updateExerciseStats, updateGamification, recordNoteCreation, syncReadingToGamification } from '@/lib/gamification'
 
 function fakeDb(rows: Record<string, unknown> = {}) {
   const calls: unknown[][] = []
@@ -29,6 +29,23 @@ function fakeDb(rows: Record<string, unknown> = {}) {
 beforeEach(() => { proxyUsed.count = 0 })
 
 describe('gamification on the server', () => {
+  it('does not accept point or correctness updates through the legacy browser hook', async () => {
+    await onExerciseComplete('u1', 'quiz', true, 999999, 'forged-id')
+    expect(proxyUsed.count).toBe(0)
+  })
+  it('records open practice without increasing correct answers through the provided client', async () => {
+    const db = fakeDb()
+    await updateExerciseStats('u1', 'prompt_builder', null, 20, db)
+    expect(db.rpc).toHaveBeenCalledWith('update_exercise_stats_atomic', { p_user_id: 'u1', p_exercise_type: 'prompt_builder', p_is_correct: null, p_points_earned: 20 })
+    expect(proxyUsed.count).toBe(0)
+  })
+  it('keeps ungraded practice out of correct answers in the direct fallback too', async () => {
+    const db = fakeDb({ user_exercise_stats: { total_completed: 2, total_correct: 1, total_points: 30 } })
+    db.rpc.mockResolvedValueOnce({ data: null, error: { message: 'missing RPC' } } as any)
+    await updateExerciseStats('u1', 'prompt_builder', null, 20, db)
+    expect(db.calls).toContainEqual(['user_exercise_stats', 'upsert', expect.objectContaining({ total_completed: 3, total_correct: 1, total_points: 50 })])
+    expect(proxyUsed.count).toBe(0)
+  })
   it('awards points through the provided service-role client', async () => {
     const db = fakeDb()
     await updateGamification('u1', 30, 'mission_complete', db)
@@ -42,6 +59,13 @@ describe('gamification on the server', () => {
     db.rpc.mockResolvedValueOnce({ data: null, error: { message: 'function does not exist' } } as any)
     await updateGamification('u1', 10, 'chapter_complete', db)
     expect(db.calls).toContainEqual(['user_gamification', 'upsert', expect.objectContaining({ total_points: 105, current_level: 2 })])
+    expect(proxyUsed.count).toBe(0)
+  })
+  it('does not count reading or mission rewards as exercises in the fallback', async () => {
+    const db = fakeDb({ user_gamification: { total_points: 100, exercises_completed: 3 } })
+    db.rpc.mockResolvedValueOnce({ data: null, error: { message: 'missing RPC' } } as any)
+    await updateGamification('u1', 50, 'chapter_complete', db)
+    expect(db.calls).toContainEqual(['user_gamification', 'upsert', expect.objectContaining({ total_points: 150, exercises_completed: 3 })])
     expect(proxyUsed.count).toBe(0)
   })
 

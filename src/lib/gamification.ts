@@ -1,11 +1,8 @@
 // Gamification System - نظام النقاط والإحصائيات
 // يتم استخدامه لتحديث إحصائيات المستخدم عند إكمال التمارين والقراءة
 //
-// ℹ️ NOTE: This module uses the anon-key Supabase client intentionally.
-// It is imported by client components (QuizQuestion, FillInBlank,
-// PromptBuilder, RunningProjectHub, SectionPage). Switching to
-// service_role would expose the key in the client bundle.
-// Security relies on RLS policies on gamification tables.
+// This module contains no service-role key. Server award handlers pass their
+// admin client explicitly; raw point/stat writes are blocked by the browser proxy.
 
 import { supabaseProxy as supabase } from './supabase_proxy'
 import { dbLogger } from './logger'
@@ -93,15 +90,16 @@ async function isExerciseAlreadyRecorded(userId: string, exerciseId: string): Pr
 /**
  * تحديث إحصائيات التمارين للمستخدم
  */
-async function updateExerciseStats(
+export async function updateExerciseStats(
     userId: string,
     exerciseType: 'quiz' | 'fill_blank' | 'prompt_builder',
-    isCorrect: boolean,
-    pointsEarned: number
+    isCorrect: boolean | null,
+    pointsEarned: number,
+    db: GamificationDb = supabase
 ): Promise<void> {
     try {
         // Atomic upsert via RPC to prevent race conditions
-        const { error: rpcError } = await supabase.rpc('update_exercise_stats_atomic', {
+        const { error: rpcError } = await db.rpc('update_exercise_stats_atomic', {
             p_user_id: userId,
             p_exercise_type: exerciseType,
             p_is_correct: isCorrect,
@@ -111,7 +109,7 @@ async function updateExerciseStats(
         if (rpcError) {
             dbLogger.error('RPC update_exercise_stats_atomic failed, using fallback', rpcError)
             // Fallback: original read-then-write (acceptable for low-traffic scenarios)
-            await updateExerciseStatsFallback(userId, exerciseType, isCorrect, pointsEarned)
+            await updateExerciseStatsFallback(userId, exerciseType, isCorrect, pointsEarned, db)
         } else {
             dbLogger.debug('Exercise stats updated (atomic)')
         }
@@ -124,10 +122,11 @@ async function updateExerciseStats(
 async function updateExerciseStatsFallback(
     userId: string,
     exerciseType: 'quiz' | 'fill_blank' | 'prompt_builder',
-    isCorrect: boolean,
-    pointsEarned: number
+    isCorrect: boolean | null,
+    pointsEarned: number,
+    db: GamificationDb = supabase
 ): Promise<void> {
-    const { data: currentStats, error: fetchError } = await supabase
+    const { data: currentStats, error: fetchError } = await db
         .from('user_exercise_stats')
         .select('*')
         .eq('user_id', userId)
@@ -158,7 +157,7 @@ async function updateExerciseStatsFallback(
         updated_at: new Date().toISOString()
     }
 
-    const { error: upsertError } = await (supabase
+    const { error: upsertError } = await (db
         .from('user_exercise_stats') as unknown as UpsertTable)
         .upsert(newStats, { onConflict: 'user_id' })
 
@@ -233,7 +232,7 @@ async function updateGamificationFallback(
     } | null
 
     const newTotalPoints = (gamData?.total_points || 0) + pointsEarned
-    const newExercisesCompleted = (gamData?.exercises_completed || 0) + 1
+    const newExercisesCompleted = (gamData?.exercises_completed || 0) + (actionType === 'exercise_complete' ? 1 : 0)
     const newLevel = Math.floor(newTotalPoints / 100) + 1
     const pointsToNextLevel = 100 - (newTotalPoints % 100)
 
@@ -282,48 +281,20 @@ async function updateGamificationFallback(
 }
 
 /**
- * دالة شاملة لتحديث كل الإحصائيات عند إكمال تمرين
- * تستخدم عملية ذرية (atomic) لمنع تكرار النقاط في حالة race condition
- * @param exerciseId - معرف التمرين (مطلوب لمنع تكرار النقاط)
+ * Compatibility hook for client exercises. The validated server save handles
+ * points, correctness and mission updates; browser-provided scores are ignored.
  */
 export async function onExerciseComplete(
     userId: string,
     exerciseType: 'quiz' | 'fill_blank' | 'prompt_builder',
-    isCorrect: boolean,
+    isCorrect: boolean | null,
     pointsEarned: number,
     exerciseId?: string
 ): Promise<void> {
-    // إذا لم يتم تمرير exerciseId، نستخدم الطريقة القديمة (غير آمنة)
-    if (!exerciseId) {
-        dbLogger.warn('onExerciseComplete called without exerciseId - race condition possible')
-        await updateExerciseStats(userId, exerciseType, isCorrect, pointsEarned)
-        await updateGamification(userId, pointsEarned, 'exercise_complete')
-        return
-    }
-
-    // الكمبوننت يحفظ التمرين في exercise_progress قبل استدعاء هذه الدالة
-    // لذلك نتحقق فقط أن التمرين لم يُسجل نقاطه *مسبقاً* في gamification
-    // عبر التحقق من alreadyCompleted الذي يمرره الكمبوننت
-    // الكمبوننت نفسه يمنع الاستدعاء المتكرر عبر alreadyCompleted check
-    
-    await updateExerciseStats(userId, exerciseType, isCorrect, pointsEarned)
-    await updateGamification(userId, pointsEarned, 'exercise_complete')
-
-    // تحديث تقدم المهام اليومية — عبر الـ API: هذه الدالة تعمل في المتصفح،
-    // ومحرك المهام يحتاج مفتاح service_role الموجود على الخادم فقط.
-    try {
-        const actions = ['complete_exercise', ...(isCorrect && exerciseType === 'quiz' ? ['perfect_score'] : [])]
-        for (const action_type of actions) {
-            await fetch('/api/missions/progress', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ action_type }),
-            })
-        }
-    } catch (err) {
-        dbLogger.error('Error updating mission progress from exercise', err)
-    }
+    // The validated server-side exercise save now awards points and updates
+    // missions once. Retain this client hook for existing callers without
+    // accepting correctness or point values from the browser.
+    return
 }
 
 /**
@@ -518,127 +489,5 @@ export async function syncReadingToGamification(
         }
     } catch (error) {
         dbLogger.error('Error in syncReadingToGamification', error)
-    }
-}
-
-/**
- * إعادة حساب نقاط المستخدم بالكامل بناءً على التمارين والفصول المكتملة
- * يستخدم لإصلاح أي مشاكل في التزامن
- */
-export async function recalculateUserPoints(userId: string): Promise<void> {
-    try {
-        dbLogger.debug(`Starting point recalculation for user ${userId}`)
-
-        // 1. حساب نقاط التمارين
-        const { data: exercisesData, error: exercisesError } = await supabase
-            .from('exercise_progress')
-            .select('points_earned')
-            .eq('user_id', userId)
-            .eq('is_completed', true)
-
-        if (exercisesError) {
-            dbLogger.error('Error fetching exercises for recalculation', exercisesError)
-            return
-        }
-
-        const exercisesList = exercisesData as unknown as { points_earned: number }[]
-        const exercisesPoints = exercisesList?.reduce((sum, ex) => sum + (ex.points_earned || 0), 0) || 0
-        const exercisesCount = exercisesList?.length || 0
-
-        // 2. حساب نقاط القراءة (الفصول)
-        // نحتاج لجلب عدد الفصول المكتملة من progress
-        const { data: readingData, error: readingError } = await supabase
-            .from('reading_progress')
-            .select('completed_chapters')
-            .eq('user_id', userId)
-            .maybeSingle() as { data: { completed_chapters?: string[] } | null; error: unknown }
-
-        if (readingError) {
-            dbLogger.error('Error fetching reading progress for recalculation', readingError)
-            return
-        }
-
-        const completedChapters = readingData?.completed_chapters?.length || 0
-        const readingPoints = completedChapters * 50
-
-        // 3. المجموع الكلي
-        const totalPoints = exercisesPoints + readingPoints
-
-        // 4. تحديث جدول Gamification
-        // نحاول استعادة الـ Streak إذا كان المستخدم نشطاً اليوم
-        // نتحقق من آخر نشاط في التمارين
-        const { data: lastExercise } = await supabase
-            .from('exercise_progress')
-            .select('completed_at')
-            .eq('user_id', userId)
-            .order('completed_at', { ascending: false })
-            .limit(1)
-            .maybeSingle() as { data: { completed_at: string } | null }
-
-        let lastActivityDate = null
-        let currentStreakUpdate = {}
-
-        if (lastExercise?.completed_at) {
-            const lastDate = new Date(lastExercise.completed_at).toISOString().split('T')[0]
-            const today = new Date().toISOString().split('T')[0]
-
-            // إذا كان آخر نشاط هو اليوم
-            if (lastDate === today) {
-                lastActivityDate = today
-                // إذا لم يكن هناك streak محفوظ أو كان 0، نجعله 1 على الأقل بما أنه نشط اليوم
-                // (لا يمكننا معرفة الـ streak الحقيقي بدون سجل كامل، لكن 1 أفضل من 0)
-                currentStreakUpdate = {
-                    last_activity_date: today,
-                    // نستخدم raw upsert لذا لا يمكننا قراءة القيمة الحالية بسهولة هنا
-                    // لكن بما أننا نعيد الحساب، نفترض أننا نريد إصلاح القيم الصفرية
-                    // سيتم تعيينه إلى 1 إذا لم يكن هناك قيمة، أو الحفاظ على القيمة إذا وجدت (في تحديث منفصل لو أردنا، لكن هنا سنقوم بتحديث شامل)
-                }
-            }
-        }
-
-        // نقوم بتحديث البيانات
-        // ملاحظة: Upsert سيقوم بإنشاء صف جديد أو تحديث الموجود
-        // للحفاظ على الـ streak الموجود، نحتاج لقراءته أولاً، لكننا نريد تحديثه إذا كان 0 ومستخدم نشط
-
-        const { data: existingGam } = await supabase
-            .from('user_gamification')
-            .select('current_streak, longest_streak')
-            .eq('user_id', userId)
-            .maybeSingle() as { data: { current_streak: number, longest_streak: number } | null }
-
-        let finalStreak = existingGam?.current_streak || 0
-        let finalLongest = existingGam?.longest_streak || 0
-
-        // إذا كان نشط اليوم والستريك 0، نجعله 1
-        if (lastActivityDate && finalStreak === 0) {
-            finalStreak = 1
-            finalLongest = Math.max(finalLongest, 1)
-        }
-
-        const { error: updateError } = await (supabase
-            .from('user_gamification') as unknown as UpsertTable)
-            .upsert({
-                user_id: userId,
-                total_points: totalPoints,
-                exercises_completed: exercisesCount,
-                chapters_completed: completedChapters,
-                current_level: Math.floor(totalPoints / 100) + 1,
-                points_to_next_level: 100 - (totalPoints % 100),
-                current_streak: finalStreak,
-                longest_streak: finalLongest,
-                ...(lastActivityDate ? { last_activity_date: lastActivityDate } : {}),
-                updated_at: new Date().toISOString()
-            }, {
-                onConflict: 'user_id'
-            })
-
-        if (updateError) {
-            dbLogger.error('Error updating recalculated points', updateError)
-        } else {
-            dbLogger.info(`Recalculated points for user ${userId}: ${totalPoints} (Ex: ${exercisesPoints}, Read: ${readingPoints})`)
-        }
-
-    } catch (error) {
-        dbLogger.error('Error in recalculateUserPoints', error)
     }
 }

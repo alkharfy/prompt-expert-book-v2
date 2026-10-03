@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useBottomBarOffset } from '@/hooks/useBottomBarOffset'
 
 /**
  * GuestBanner — sticky banner at the bottom for unauthenticated readers.
@@ -9,19 +10,20 @@ import { useState } from 'react'
  */
 export default function GuestBanner() {
   const [dismissed, setDismissed] = useState(false)
+  const barRef = useBottomBarOffset(!dismissed)
 
   if (dismissed) return null
 
   return (
-    <div className="guest-banner">
+    <div ref={barRef} className="guest-banner">
       <div className="guest-banner-content">
         <span className="guest-banner-icon">📚</span>
         <p className="guest-banner-text">
           افتح الكتاب كامل + 95 قالب جاهز — شاهد الباقات والأسعار
         </p>
         <div className="guest-banner-actions">
-          <Link href="/payment?plan=pro" className="guest-banner-cta">
-            اشترك الآن
+          <Link href="/#pricing" className="guest-banner-cta">
+            شاهد الباقات
           </Link>
           <Link href="/register" className="guest-banner-secondary">
             سجّل مجاناً
@@ -46,7 +48,7 @@ export default function GuestBanner() {
           background: rgba(15, 15, 30, 0.95);
           backdrop-filter: blur(12px);
           border-top: 1px solid rgba(255, 107, 53, 0.3);
-          padding: 14px 20px;
+          padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
           animation: slideUp 0.4s ease-out;
         }
 
@@ -84,7 +86,7 @@ export default function GuestBanner() {
           flex-shrink: 0;
         }
 
-        .guest-banner-cta {
+        .guest-banner :global(.guest-banner-cta) {
           display: inline-block;
           background: #FF6B35;
           color: white;
@@ -100,11 +102,11 @@ export default function GuestBanner() {
           transition: background 0.2s;
         }
 
-        .guest-banner-cta:hover {
+        .guest-banner :global(.guest-banner-cta:hover) {
           background: #e55a28;
         }
 
-        .guest-banner-secondary {
+        .guest-banner :global(.guest-banner-secondary) {
           display: inline-flex;
           align-items: center;
           color: rgba(255, 255, 255, 0.6);
@@ -116,7 +118,7 @@ export default function GuestBanner() {
           min-height: 44px;
         }
 
-        .guest-banner-secondary:hover {
+        .guest-banner :global(.guest-banner-secondary:hover) {
           color: rgba(255, 255, 255, 0.9);
         }
 
@@ -142,7 +144,7 @@ export default function GuestBanner() {
 
         @media (max-width: 600px) {
           .guest-banner {
-            padding: 12px 16px;
+            padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
           }
 
           .guest-banner-content {
@@ -164,7 +166,7 @@ export default function GuestBanner() {
             justify-content: center;
           }
 
-          .guest-banner-cta {
+          .guest-banner :global(.guest-banner-cta) {
             flex: 1;
             justify-content: center;
           }

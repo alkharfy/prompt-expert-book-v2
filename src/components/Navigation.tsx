@@ -18,6 +18,7 @@ export default function Navigation() {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const [isSearchOpen, setIsSearchOpen] = useState(false)
+    const [isMobileMenu, setIsMobileMenu] = useState(false)
 
     // New: Subscription system integration (parallel mode)
     const { currentPlan, hasFeature, isLoading: subLoading } = useSubscription()
@@ -34,6 +35,66 @@ export default function Navigation() {
     }
 
     const headerRef = useRef<HTMLElement>(null)
+    const menuRef = useRef<HTMLDivElement>(null)
+    const menuToggleRef = useRef<HTMLButtonElement>(null)
+
+    useEffect(() => {
+        const media = window.matchMedia('(max-width: 1024px)')
+        const update = () => {
+            setIsMobileMenu(media.matches)
+            if (!media.matches) setIsMenuOpen(false)
+        }
+        update()
+        media.addEventListener('change', update)
+        return () => media.removeEventListener('change', update)
+    }, [])
+
+    useEffect(() => {
+        if (!isMobileMenu || !isMenuOpen || !menuRef.current) return
+
+        const menu = menuRef.current
+        const toggle = menuToggleRef.current
+        const previousOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+
+        const focusable = () => Array.from(menu.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(element => element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden')
+
+        focusable()[0]?.focus({ preventScroll: true })
+
+        const handleMenuKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                event.preventDefault()
+                setIsMenuOpen(false)
+                setIsDropdownOpen(false)
+                return
+            }
+            if (event.key !== 'Tab') return
+
+            const elements = focusable()
+            const first = elements[0]
+            const last = elements[elements.length - 1]
+            if (!first || !last) return
+
+            if (event.shiftKey && (document.activeElement === first || !menu.contains(document.activeElement))) {
+                event.preventDefault()
+                last.focus()
+            } else if (!event.shiftKey && (document.activeElement === last || !menu.contains(document.activeElement))) {
+                event.preventDefault()
+                first.focus()
+            }
+        }
+
+        document.addEventListener('keydown', handleMenuKeyDown)
+        return () => {
+            document.removeEventListener('keydown', handleMenuKeyDown)
+            document.body.style.overflow = previousOverflow
+            if (window.matchMedia('(max-width: 1024px)').matches) {
+                toggle?.focus({ preventScroll: true })
+            }
+        }
+    }, [isMobileMenu, isMenuOpen])
 
     useEffect(() => {
         // Close menus on route change
@@ -192,6 +253,7 @@ export default function Navigation() {
         <>
         <motion.nav
             ref={headerRef}
+            aria-label="التنقل الرئيسي"
             className={`nav ${isMenuOpen ? 'menu-open' : ''}`}
             initial={{ y: -100 }}
             animate={{ y: 0 }}
@@ -227,16 +289,28 @@ export default function Navigation() {
                 </div>
 
                 <button
+                    ref={menuToggleRef}
                     className={`nav-toggle ${isMenuOpen ? 'active' : ''}`}
                     onClick={toggleMenu}
-                    aria-label="فتح القائمة"
+                    aria-label={isMenuOpen ? 'إغلاق القائمة' : 'فتح القائمة'}
+                    aria-expanded={isMenuOpen}
+                    aria-controls="main-navigation-links"
                 >
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
 
-                <div className={`nav-links-container ${isMenuOpen ? 'open' : ''}`}>
+                <div
+                    ref={menuRef}
+                    id="main-navigation-links"
+                    className={`nav-links-container ${isMenuOpen ? 'open' : ''}`}
+                    inert={isMobileMenu && !isMenuOpen}
+                    aria-hidden={isMobileMenu && !isMenuOpen ? true : undefined}
+                    role={isMobileMenu ? 'dialog' : undefined}
+                    aria-modal={isMobileMenu && isMenuOpen ? true : undefined}
+                    aria-label={isMobileMenu ? 'القائمة الرئيسية' : undefined}
+                >
                     <button className="nav-close-btn" onClick={toggleMenu} aria-label="إغلاق القائمة">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -286,6 +360,17 @@ export default function Navigation() {
                                 className={`nav-link ${pathname === '/blog' || pathname.startsWith('/blog/') ? 'active' : ''}`}
                             >
                                 ✍️ المدونة
+                            </Link>
+                        </li>
+
+                        <li>
+                            <Link href="/resources" className={`nav-link ${pathname === '/resources' ? 'active' : ''}`}>
+                                📚 المصادر
+                            </Link>
+                        </li>
+                        <li>
+                            <Link href="/ai-updates" className={`nav-link ${pathname === '/ai-updates' ? 'active' : ''}`}>
+                                🔔 تحديثات AI
                             </Link>
                         </li>
 
@@ -383,30 +468,6 @@ export default function Navigation() {
                                         </Link>
                                     </li>
 
-                                    {/* مكتبة المصادر */}
-                                    <li>
-                                        <Link href="/resources" className={`dropdown-link ${pathname === '/resources' ? 'active' : ''}`}>
-                                            📚 مكتبة المصادر
-                                            {isFeatureLocked('resources') && (
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
-                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                                </svg>
-                                            )}
-                                        </Link>
-                                    </li>
-                                    {/* تحديثات AI */}
-                                    <li>
-                                        <Link href="/ai-updates" className={`dropdown-link ${pathname === '/ai-updates' ? 'active' : ''}`}>
-                                            🔔 تحديثات AI
-                                            {isFeatureLocked('ai_updates') && (
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', opacity: 0.6 }}>
-                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                                </svg>
-                                            )}
-                                        </Link>
-                                    </li>
                                     {/* المجتمع */}
                                     <li>
                                         <Link href="/community" className={`dropdown-link ${pathname === '/community' ? 'active' : ''}`}>

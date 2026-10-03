@@ -30,6 +30,10 @@ describe('public pricing without a stale fallback', () => {
     expect(plans.map(p => p.price)).toEqual([350, 1200.5])
     expect(plans[0].features_ar).toContain('45 تمرينًا تفاعليًا')
     expect(plans[1].features_ar).toContain('شهادة إتمام من PromptMaster')
+    expect(plans[1].features_ar).toContain('المحادثة الذكية حتى 30 رسالة خلال 24 ساعة')
+    expect(plans[1].features_ar).toContain('أدوات البرومبت؛ تشخيص AI حتى 10 مرات خلال 24 ساعة')
+    expect(plans[1].features_ar).not.toContain('تحديثات AI')
+    expect(plans[1].features_ar).not.toContain('مكتبة المصادر')
     expect(plans[0].cta_link).toBe('/payment?plan=basic')
   })
   it.each([[], null, [{ id: 'basic', price: true }], [{ id: 'basic', price: 0 }],

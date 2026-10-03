@@ -23,10 +23,25 @@ export const checkPatterns = {
     minimum_length: null as unknown as RegExp, // handled separately
 }
 
+// A lightweight structure check cannot verify relevance, factual accuracy or skill.
+const TASK_ACTION = /(?:^|[^\p{L}])(?:اكتب|كتابة|حلل|حلّل|تحليل|لخص|لخّص|تلخيص|صمم|صمّم|تصميم|أنشئ|انشئ|إنشاء|استخرج|قارن|اشرح|اقترح|صنف|صنّف|خطط|خطّط|ترجم|راجع|حوّل|حول|اسأل|اسألني|اطلب|اطرح|ضع|ساعدني|حدد|حدّد|أعد|اعطني|أعطني|رتب|رتّب|اجمع|قدم|قدّم|write|analyze|analyse|summarize|design|create|extract|compare|explain|suggest|classify|plan|translate|review|generate|list)(?:[^\p{L}]|$)/iu
+
+export function isSubstantivePrompt(prompt: string, minLength = 80): boolean {
+    const trimmed = prompt.trim()
+    const words = trimmed.match(/[\p{L}\p{N}]+/gu) || []
+    return trimmed.length >= minLength && words.length >= 12 && TASK_ACTION.test(trimmed)
+}
+
+export function hasMeaningfulFieldValue(value: string): boolean {
+    const compact = value.trim().replace(/\s/g, '')
+    return compact.length >= 3 && /[\p{L}\p{N}]/u.test(compact) && new Set(compact).size > 1
+}
+
 /**
  * تقييم معيار واحد ضد برومبت المستخدم
  */
 export function evaluateCriterion(userPrompt: string, criterion: ScoringCriterion, minLength: number = 80): boolean {
+    if (!isSubstantivePrompt(userPrompt, minLength)) return false
     if (criterion.check === 'minimum_length') {
         return userPrompt.length >= minLength
     }
@@ -59,7 +74,7 @@ export function scorePrompt(
     }
 
     const score = totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 100) : 0
-    const pointsEarned = score >= passThreshold ? maxPoints : Math.round(maxPoints * 0.5)
+    const pointsEarned = score >= passThreshold ? maxPoints : 0
 
     return { score, pointsEarned, passedCriteria }
 }

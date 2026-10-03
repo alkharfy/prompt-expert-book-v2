@@ -51,8 +51,8 @@ body { margin:0; padding:0; background:#050505; color:#e0e0e0; font-family:'Taja
 
 const planNames: Record<string, string> = {
     basic: 'Basic — الأساسية',
-    pro: 'Pro — الاحترافية',
-    vip: 'VIP — المتقدمة',
+    pro: 'Pro — المتقدمة',
+    vip: 'VIP',
 }
 
 function getPlanName(planId: string): string {
@@ -83,15 +83,15 @@ const cartEmails = [
         minHoursAfter: 24,
         maxHoursAfter: 71,
         type: 'cart_recovery_2' as const,
-        subject: (planName: string) => `💡 3 أسباب ليه ${planName} هتغير شغلك`,
+        subject: (planName: string) => `💡 3 فوائد تعليمية في ${planName}`,
         body: (name: string, planName: string) => `
             <div class="card">
                 <span class="emoji-large">💡</span>
                 <h2>ليه ${escapeHtml(planName)}؟</h2>
-                <p>يا <strong>${escapeHtml(name)}</strong>، هنا 3 أسباب ليه المتعلمين بيختاروا الاشتراك:</p>
-                <p>1️⃣ <strong>توفير وقت</strong> — بدل ما تدور في 100 مصدر، كل حاجة مرتبة في مكان واحد</p>
-                <p>2️⃣ <strong>تطبيق عملي</strong> — 40+ تمرين بتطبقه على شغلك الحقيقي</p>
-                <p>3️⃣ <strong>شهادة + مجتمع</strong> — إثبات مهاراتك ومشاركة تجربتك</p>
+                <p>يا <strong>${escapeHtml(name)}</strong>، دي 3 فوائد تعليمية متاحة في الاشتراك:</p>
+                <p>1️⃣ <strong>محتوى منظّم</strong> — فصول وأمثلة مرتبة تساعدك تبدأ وتواصل</p>
+                <p>2️⃣ <strong>تطبيق عملي</strong> — 45 تمرينًا لتجربة ما تتعلّمه</p>
+                <p>3️⃣ <strong>تابع تقدّمك</strong> — قراءة وقوالب وتمارين في كل الباقات؛ المتقدمة وVIP تضيفان أدوات وشهادة إتمام قراءة من PromptMaster وفق متطلباتها.</p>
                 <hr class="divider">
                 <div style="text-align:center;">
                     <a href="${APP_URL}/payment" class="btn">ابدأ رحلتك ←</a>
@@ -109,7 +109,7 @@ const cartEmails = [
                 <span class="emoji-large">🚀</span>
                 <h2>خطوة واحدة وتبدأ!</h2>
                 <p>يا <strong>${escapeHtml(name)}</strong>، وصلت لصفحة الاشتراك ومكمّلتش — الكتاب كامل (10 فصول + 95 قالب + 45 تمرين + شهادة إتمام في الباقات التي تشملها) مستنيك.</p>
-                <p>اشترك دلوقتي وابدأ تتعلّم تكتب برومبتات تجيب نتيجة صح من أول مرة.</p>
+                <p>ابدأ تتعلّم تكتب تعليمات واضحة، وتجرب الناتج وتراجعه وتحسّنه خطوة بخطوة.</p>
                 <hr class="divider">
                 <div style="text-align:center;">
                     <a href="${APP_URL}/payment" class="btn">أكمل اشتراكك ←</a>

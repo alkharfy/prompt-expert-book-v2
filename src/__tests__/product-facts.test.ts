@@ -4,6 +4,7 @@ import { allExercises } from '@/data/exercisesData'
 import { PRODUCT_STATS } from '@/lib/pricing'
 import { TOTAL_BOOK_PAGES } from '@/lib/config'
 import { SECTION_REGISTRY } from '@/config/sections'
+import { LEARNING_SECTIONS } from '@/config/learningCatalog'
 import { LEARNING_PATHS, getPathCompletion } from '@/data/learningPaths'
 
 describe('product facts match the shipped lessons', () => {
@@ -26,7 +27,8 @@ describe('product facts match the shipped lessons', () => {
     }
     expect(offset).toBe(182)
     const fullPath = Object.values(LEARNING_PATHS).find(p => p.sections.includes('section-10'))!
-    expect(fullPath.totalPages).toBe(offset)
-    expect(getPathCompletion(offset, fullPath.id)).toBe(100)
+    const fullPageCount = LEARNING_SECTIONS.reduce((sum, section) => sum + section.pageCount, 0)
+    expect(fullPath.totalPages).toBe(fullPageCount)
+    expect(getPathCompletion(fullPageCount, fullPath.id)).toBe(100)
   })
 })

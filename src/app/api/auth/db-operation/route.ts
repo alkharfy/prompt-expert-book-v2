@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { cookies } from 'next/headers'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { recordExerciseCompletion } from '@/lib/server/exercise-completion'
 
 /**
  * استخراج userId من cookies مع التحقق من الجلسة
@@ -49,7 +50,13 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const body = await request.json()
+        let body: any
+        try { body = await request.json() } catch {
+            return NextResponse.json({ ok: false, error: 'بيانات غير صالحة' }, { status: 400 })
+        }
+        if (!body || typeof body !== 'object' || Array.isArray(body)) {
+            return NextResponse.json({ ok: false, error: 'بيانات غير صالحة' }, { status: 400 })
+        }
         const { operation, table, data, filters, select: selectFields } = body
 
         // Whitelist of allowed tables (payments removed - should use dedicated payment endpoints)
@@ -64,12 +71,11 @@ export async function POST(request: NextRequest) {
         // Only these columns can be modified via this proxy
         const WRITABLE_COLUMNS: Record<string, string[]> = {
             users: ['full_name', 'phone_number'], // NO: is_admin, is_active, current_plan, password_hash, plan_expires_at
-            reading_progress: ['current_page', 'bookmarks', 'completed_chapters', 'completion_percentage'],
+            // reading_progress is read-only here; its dedicated API validates
+            // page bounds, chapter IDs, paid access and derived percentages.
             bookmarks: ['section_id', 'page_id', 'note', 'title'],
-            exercise_progress: ['exercise_id', 'exercise_type', 'section_id', 'is_completed', 'is_correct', 'user_answer', 'points_earned', 'completed_at', 'last_attempt_at'],
-            user_exercise_stats: ['total_completed', 'total_correct', 'total_points', 'quizzes_completed', 'fill_blanks_completed', 'prompt_builders_completed', 'last_exercise_at'],
-            user_gamification: ['total_points', 'current_level', 'points_to_next_level', 'current_streak', 'longest_streak', 'last_activity_date', 'exercises_completed', 'chapters_completed', 'total_reading_time_minutes'],
-            points_history: ['points', 'action_type', 'action_details'],
+            // Exercises have a validated one-time server handler below.
+            // XP, correctness, totals and history are never browser-writable.
             // sessions, devices, verification_codes: read-only through this proxy
         }
 
@@ -115,6 +121,10 @@ export async function POST(request: NextRequest) {
         }
 
         const supabase = getSupabaseAdmin()
+        if (table === 'exercise_progress' && (operation === 'insert' || operation === 'upsert')) {
+            const result = await recordExerciseCompletion(authenticatedUserId, data, operation, supabase)
+            return NextResponse.json(result.body, { status: result.status })
+        }
         let query: any
 
         switch (operation) {
@@ -158,7 +168,7 @@ export async function POST(request: NextRequest) {
                 query = supabase.from(table).insert(safeInsertData)
                 if (body.returnData) query = query.select().single()
                 const insertResult = await query
-                return NextResponse.json({ ok: true, data: insertResult.data, error: insertResult.error ? 'فشل في إضافة البيانات' : null })
+                return NextResponse.json({ ok: true, data: insertResult.data, error: insertResult.error ? 'فشل في إضافة البيانات' : null, errorCode: insertResult.error?.code === '23505' ? '23505' : undefined })
             }
 
             case 'update': {
@@ -230,21 +240,7 @@ export async function POST(request: NextRequest) {
             }
 
             case 'rpc': {
-                const ALLOWED_RPCS = [
-                    'update_exercise_stats_atomic',
-                    'update_gamification_atomic'
-                ]
-                const rpcName = body.rpcName
-                if (!rpcName || !ALLOWED_RPCS.includes(rpcName)) {
-                    return NextResponse.json(
-                        { ok: false, error: `RPC ${rpcName} not allowed` },
-                        { status: 403 }
-                    )
-                }
-                // Inject user_id into params for security
-                const rpcParams = { ...body.rpcParams, p_user_id: authenticatedUserId }
-                const rpcResult = await supabase.rpc(rpcName, rpcParams)
-                return NextResponse.json({ ok: true, data: rpcResult.data, error: rpcResult.error ? rpcResult.error.message : null })
+                return NextResponse.json({ ok: false, error: 'العمليات الحسابية متاحة من الخادم فقط' }, { status: 403 })
             }
 
             default:

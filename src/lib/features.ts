@@ -9,7 +9,7 @@
  * @module lib/features
  */
 
-import type { PlanId, FeatureKey } from '@/types/subscription'
+import type { PlanId, FeatureKey, UserPlan } from '@/types/subscription'
 
 // ─────────────────────────────────────────────
 // Constants
@@ -19,9 +19,10 @@ import type { PlanId, FeatureKey } from '@/types/subscription'
  * خريطة الميزات لكل باقة.
  * يجب أن تتطابق تماماً مع جدول plan_features في قاعدة البيانات.
  * 
- * - basic: القراءة والإشارات المرجعية والمكتبة وتتبع التقدم
- * - pro:   كل ميزات basic + التمارين والإنجازات ولوحة المتصدرين والشهادة
- * - vip:   كل ميزات pro + الأدوات والمحادثة الذكية
+ * - basic: القراءة والإشارات المرجعية والمكتبة والتقدم والتمارين
+ * - pro:   كل ميزات basic + الأدوات والإنجازات ولوحة المتصدرين وشهادة القراءة
+ * - vip:   كل ميزات pro + المحادثة الذكية
+ * Resources and AI news are public, not subscription entitlements.
  */
 export const PLAN_FEATURES: Record<PlanId, readonly FeatureKey[]> = {
     basic: [
@@ -41,7 +42,6 @@ export const PLAN_FEATURES: Record<PlanId, readonly FeatureKey[]> = {
         'leaderboard',
         'certificate',
         'tools',
-        'resources',
     ],
     vip: [
         'reading',
@@ -54,18 +54,25 @@ export const PLAN_FEATURES: Record<PlanId, readonly FeatureKey[]> = {
         'certificate',
         'tools',
         'chat',
-        'resources',
-        'ai_updates',
     ],
 } as const
+
+/** Shared by the client-facing status API, middleware and server entitlements. */
+export function isActivePlanSubscription(subscription: UserPlan | null): subscription is UserPlan & {
+    plan_id: PlanId; expires_at: string; status: 'active'
+} {
+    return !!subscription && !!subscription.plan_id && subscription.status === 'active'
+        && !!subscription.expires_at && Object.hasOwn(PLAN_FEATURES, subscription.plan_id)
+        && Date.parse(subscription.expires_at) > Date.now()
+}
 
 /**
  * أسماء الباقات بالعربية
  */
 const PLAN_NAMES: Record<PlanId, string> = {
     basic: 'الباقة الأساسية',
-    pro: 'الباقة الاحترافية',
-    vip: 'الباقة المميزة',
+    pro: 'الباقة المتقدمة',
+    vip: 'باقة VIP',
 } as const
 
 /**
@@ -135,7 +142,7 @@ export function getPlanFeatures(plan: PlanId): readonly FeatureKey[] {
  * 
  * @example
  * ```ts
- * getPlanName('vip') // 'الباقة المميزة'
+ * getPlanName('vip') // 'باقة VIP'
  * ```
  */
 export function getPlanName(plan: PlanId): string {

@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
+import { supabaseProxy as supabase } from '@/lib/supabase_proxy'
 import { authSystem } from '@/lib/auth_system'
 import { onExerciseComplete } from '@/lib/gamification'
 import {
@@ -35,10 +35,10 @@ function scoreFix(userPrompt: string, challenge: PromptDisease): ChallengeResult
         criteriaResults.push({ ...criterion, passed })
     })
 
-    const score = Math.round((earnedWeight / totalWeight) * 100)
+    const score = totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 100) : 0
     const pointsEarned = score >= 70
         ? challenge.points
-        : Math.floor((score / 100) * challenge.points * 0.5)
+        : 0
 
     return { score, pointsEarned, criteriaResults, passed: score >= 70 }
 }
@@ -51,9 +51,12 @@ export default function PromptChallenges() {
     const [result, setResult] = useState<ChallengeResult | null>(null)
     const [completedChallenges, setCompletedChallenges] = useState<Set<string>>(new Set())
     const [submitting, setSubmitting] = useState(false)
+    const [saveError, setSaveError] = useState<string | null>(null)
+    const submitBusyRef = useRef(false)
 
     // Load completed challenges on mount
     useEffect(() => {
+        let active = true
         const loadProgress = async () => {
             const userId = authSystem.getCurrentUserId()
             if (!userId) return
@@ -66,43 +69,60 @@ export default function PromptChallenges() {
                     .eq('is_completed', true)
                     .like('exercise_id', 'hospital-challenge-%') as { data: { exercise_id: string }[] | null }
 
-                if (data) {
-                    setCompletedChallenges(new Set(data.map((d) => d.exercise_id)))
+                if (data && active) {
+                    setCompletedChallenges(prev => new Set([...prev, ...data.map((d) => d.exercise_id)]))
                 }
             } catch {
                 // Silently fail
             }
         }
         loadProgress()
+        return () => { active = false }
     }, [])
 
     const handleSubmit = useCallback(async () => {
-        if (!activeChallenge || !userFix.trim() || submitting) return
+        if (!activeChallenge || !userFix.trim() || submitBusyRef.current) return
 
+        submitBusyRef.current = true
         setSubmitting(true)
+        setSaveError(null)
         const challengeResult = scoreFix(userFix, activeChallenge)
         setResult(challengeResult)
 
-        // Save to gamification if not already completed
+        // Insert first: the unique user/exercise key prevents points on repeat visits or another tab.
         const userId = authSystem.getCurrentUserId()
-        if (userId && !completedChallenges.has(activeChallenge.exerciseId)) {
-            try {
-                await onExerciseComplete(
-                    userId,
-                    'prompt_builder',
-                    challengeResult.passed,
-                    challengeResult.pointsEarned,
-                    activeChallenge.exerciseId
-                )
-                if (challengeResult.passed) {
+        try {
+            if (challengeResult.passed && userId && !completedChallenges.has(activeChallenge.exerciseId)) {
+                const now = new Date().toISOString()
+                const { error } = await supabase.from('exercise_progress').insert({
+                    user_id: userId, exercise_id: activeChallenge.exerciseId,
+                    exercise_type: 'prompt_builder', section_id: 'hospital-challenges',
+                    is_completed: true, is_correct: null,
+                    user_answer: JSON.stringify({ prompt: userFix, structureScore: challengeResult.score,
+                        assessment: 'structure-only-participation' }),
+                    points_earned: challengeResult.pointsEarned, completed_at: now, last_attempt_at: now,
+                })
+                if (error && error.code !== '23505') {
+                    setSaveError('تعذّر حفظ المحاولة في حسابك. لم يُسجّل الإتمام أو نقاط المشاركة؛ أعد المحاولة لاحقًا.')
+                } else {
                     setCompletedChallenges((prev) => new Set(prev).add(activeChallenge.exerciseId))
+                    if (!error) {
+                        try {
+                            await onExerciseComplete(userId, 'prompt_builder', null,
+                                challengeResult.pointsEarned, activeChallenge.exerciseId)
+                        } catch {
+                            setSaveError('حُفظت المحاولة في حسابك، لكن تعذّر تحديث عرض التقدم. أعد تحميل الصفحة؛ إعادة المحاولة لا تسجل مشاركة إضافية.')
+                        }
+                    }
                 }
-            } catch {
-                // Silently fail
             }
+        } catch {
+            setSaveError('تعذّر حفظ المحاولة في حسابك. لم يُسجّل الإتمام أو نقاط المشاركة؛ أعد المحاولة لاحقًا.')
+        } finally {
+            submitBusyRef.current = false
+            setSubmitting(false)
         }
-        setSubmitting(false)
-    }, [activeChallenge, userFix, submitting, completedChallenges])
+    }, [activeChallenge, userFix, completedChallenges])
 
     const handleBack = () => {
         setActiveChallenge(null)
@@ -110,6 +130,7 @@ export default function PromptChallenges() {
         setShowHints(false)
         setShowIdeal(false)
         setResult(null)
+        setSaveError(null)
     }
 
     const getDifficultyLabel = (d: string) => {
@@ -133,7 +154,7 @@ export default function PromptChallenges() {
                         exit={{ opacity: 0 }}
                     >
                         <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', marginBottom: 25 }}>
-                            برومبتات مريضة تحتاج مساعدتك - أصلحها واكسب نقاط!
+                            حسّن بنية الطلب، ثم جرّبه وراجع الناتج. النقاط للمشاركة فقط ولا تثبت جودة المخرجات.
                         </p>
                         <div className="challenges-grid">
                             {hospitalChallenges.map((challenge, i) => {
@@ -159,9 +180,9 @@ export default function PromptChallenges() {
                                                 {getDifficultyLabel(challenge.difficulty)}
                                             </span>
                                             {isCompleted ? (
-                                                <span className="challenge-completed-badge">✅ مكتمل</span>
+                                                <span className="challenge-completed-badge">✅ مشاركة مسجلة</span>
                                             ) : (
-                                                <span className="challenge-points">⭐ {challenge.points} نقطة</span>
+                                                <span className="challenge-points">⭐ {challenge.points} نقاط مشاركة</span>
                                             )}
                                         </div>
                                     </motion.div>
@@ -243,13 +264,13 @@ export default function PromptChallenges() {
                                     onClick={handleSubmit}
                                     disabled={!userFix.trim() || submitting}
                                 >
-                                    {submitting ? 'جارٍ التقييم...' : '✅ تسليم العلاج'}
+                                    {submitting ? 'جارٍ الفحص...' : 'فحص بنية أولي'}
                                 </button>
                                 <button
                                     className="show-ideal-btn"
                                     onClick={() => setShowIdeal(!showIdeal)}
                                 >
-                                    {showIdeal ? 'إخفاء الإجابة' : '👁️ عرض الإجابة المثالية'}
+                                    {showIdeal ? 'إخفاء المثال' : 'عرض مثال للمقارنة'}
                                 </button>
                             </div>
                         )}
@@ -264,7 +285,7 @@ export default function PromptChallenges() {
                                     className="ideal-prompt-section"
                                     style={{ marginTop: 20 }}
                                 >
-                                    <span className="ideal-prompt-label">الإجابة المثالية</span>
+                                    <span className="ideal-prompt-label">مثال للمقارنة يحتاج تجربة ومراجعة</span>
                                     <div className="ideal-prompt-text">{activeChallenge.idealPrompt}</div>
                                 </motion.div>
                             )}
@@ -280,7 +301,7 @@ export default function PromptChallenges() {
                                 >
                                     <div className="score-header">
                                         <span className="score-icon">
-                                            {result.passed ? '🎉' : '🔄'}
+                                            🔎
                                         </span>
                                         <span
                                             className="score-value"
@@ -289,12 +310,15 @@ export default function PromptChallenges() {
                                             {result.score}%
                                         </span>
                                         <span className="score-label">
-                                            {result.passed ? 'تم العلاج بنجاح!' : 'يحتاج مزيداً من العلاج'}
+                                            فحص بنية أولي: {result.passed ? 'توجد مؤشرات كافية لبدء التجربة' : 'أكمل مؤشرات البنية وأعد الفحص'}
                                         </span>
                                         <span className="score-points">
-                                            +{result.pointsEarned} نقطة
+                                            {result.passed ? `${result.pointsEarned} نقاط مشاركة متاحة` : 'لا نقاط أو إتمام لهذا الفحص'}
                                         </span>
                                     </div>
+
+                                    <p>النسبة لتغطية مؤشرات البنية وليست درجة جودة. جرّب الطلب في أداة AI، وافحص دقة الناتج واكتماله وقيوده، ثم عدّل الطلب وأعد التجربة.</p>
+                                    {saveError && <p role="alert">{saveError}</p>}
 
                                     <div className="criteria-list">
                                         {result.criteriaResults.map((cr) => (
@@ -313,14 +337,12 @@ export default function PromptChallenges() {
 
                                     {/* أزرار بعد النتيجة */}
                                     <div className="challenge-actions" style={{ marginTop: 20 }}>
-                                        {!result.passed && (
-                                            <button
+                                        <button
                                                 className="submit-fix-btn"
-                                                onClick={() => { setResult(null); setUserFix('') }}
+                                                onClick={() => { setResult(null); setSaveError(null) }}
                                             >
-                                                🔄 حاول مرة أخرى
-                                            </button>
-                                        )}
+                                                عدّل الطلب وأعد الفحص
+                                        </button>
                                         <button className="show-ideal-btn" onClick={handleBack}>
                                             → تحدي آخر
                                         </button>

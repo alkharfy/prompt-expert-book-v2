@@ -105,7 +105,7 @@ export const recapsData: Record<string, ChapterRecap> = {
         },
         nextChapterTeaser: {
             title: 'في الفصل القادم...',
-            description: 'هتتعلم إطار GOLDS — نظام احترافي لكتابة برومبتات تعطي نتائج مذهلة في كل مرة!',
+            description: "هتتعلم إطار GOLDS — قائمة تحقق لتنظيم طلبك، وبعدها تجرب الناتج وتراجعه.",
             icon: '🔮',
         },
         stats: { pages: 18, estimatedMinutes: 25, exercises: 3 },
@@ -119,7 +119,7 @@ export const recapsData: Record<string, ChapterRecap> = {
             {
                 icon: '🏆',
                 title: 'إطار GOLDS',
-                description: 'G (Goal) + O (Output) + L (Limits) + D (Details) + S (Style) — 5 عناصر لبرومبت احترافي.',
+                description: "G (Goal) + O (Output) + L (Length) + D (Details) + S (Style) — الهدف، المخرج، الطول، التفاصيل، والأسلوب. القيود تدخل ضمن التفاصيل.",
             },
             {
                 icon: '🎯',
@@ -138,7 +138,7 @@ export const recapsData: Record<string, ChapterRecap> = {
             },
         ],
         proTip: {
-            text: 'في المرة الجاية اللي تحتاج فيها AI، اكتب البرومبت باستخدام GOLDS: حدد الهدف، المخرج، الحدود، التفاصيل، والأسلوب. قارن النتيجة بسؤال عادي!',
+            text: "استخدم GOLDS: حدد الهدف والمخرج والطول والتفاصيل والأسلوب. ضيف القيود المهمة ضمن التفاصيل، ثم قارن الناتج بطلبك وراجع صحته.",
             icon: '💡',
         },
         nextChapterTeaser: {
@@ -290,7 +290,7 @@ export const recapsData: Record<string, ChapterRecap> = {
             {
                 icon: '🚀',
                 title: 'بناء وكيل متكامل',
-                description: 'طبقت عملياً وبنيت وكيل ذكي قادر ينفذ مهام حقيقية من البداية للنهاية.',
+                description: "صممت دور الوكيل وأدواته وقواعده. تنفيذ مهام حقيقية يحتاج ربط الأدوات فعليًا واختبار الصلاحيات وحالات الفشل.",
             },
         ],
         proTip: {

@@ -104,6 +104,8 @@ export default function KnowledgeCardView({
                             className={`kc-dot ${i === activeCard ? 'active' : ''} ${i < activeCard ? 'done' : ''}`}
                             onClick={() => setActiveCard(i)}
                             aria-label={`بطاقة ${i + 1}`}
+                            aria-current={i === activeCard ? 'step' : undefined}
+                            type="button"
                         />
                     ))}
                 </div>
@@ -259,28 +261,47 @@ export default function KnowledgeCardView({
                     align-items: center;
                     justify-content: space-between;
                     padding: 0 4px;
+                    gap: 8px;
+                    flex-wrap: wrap;
                 }
                 .kc-dots {
                     display: flex;
-                    gap: 6px;
+                    gap: 0;
                     flex-wrap: wrap;
+                    flex: 1;
+                    min-width: 0;
                 }
                 .kc-dot {
+                    display: grid;
+                    place-items: center;
+                    width: 44px;
+                    min-width: 44px;
+                    height: 44px;
+                    border: none;
+                    border-radius: 8px;
+                    background: transparent;
+                    padding: 0;
+                    cursor: pointer;
+                }
+                .kc-dot::before {
+                    content: '';
                     width: 10px;
                     height: 10px;
                     border-radius: 50%;
                     border: 2px solid rgba(255, 107, 53, 0.4);
                     background: transparent;
-                    padding: 0;
-                    cursor: pointer;
                     transition: all 0.2s;
                 }
-                .kc-dot.active {
+                .kc-dot:focus-visible {
+                    outline: 2px solid #FF6B35;
+                    outline-offset: 1px;
+                }
+                .kc-dot.active::before {
                     background: #FF6B35;
                     border-color: #FF6B35;
                     transform: scale(1.2);
                 }
-                .kc-dot.done {
+                .kc-dot.done::before {
                     background: rgba(255, 107, 53, 0.5);
                     border-color: rgba(255, 107, 53, 0.5);
                 }
@@ -293,6 +314,7 @@ export default function KnowledgeCardView({
                     font-size: 0.75rem;
                     cursor: pointer;
                     font-family: inherit;
+                    min-height: 44px;
                 }
                 .kc-card {
                     background: rgba(255, 255, 255, 0.02);

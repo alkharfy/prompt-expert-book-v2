@@ -88,10 +88,9 @@ const PLANS = [
     popular: false,
     features: [
       'كل مميزات الأساسية',
-      'صندوق الأدوات الذكية',
+      'أدوات البرومبت؛ تشخيص AI حتى 10 مرات خلال 24 ساعة',
       'الإنجازات والشهادات',
       'لوحة المتصدرين',
-      'مكتبة المصادر',
     ],
     featureKeys: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises', 'gamification', 'leaderboard', 'certificate', 'tools'],
   },
@@ -103,8 +102,7 @@ const PLANS = [
     icon: '👑',
     features: [
       'كل مميزات المتقدمة',
-      'المحادثة الذكية مع AI',
-      'تحديثات AI',
+      'المحادثة الذكية حتى 30 رسالة خلال 24 ساعة',
     ],
     featureKeys: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises', 'gamification', 'leaderboard', 'certificate', 'tools', 'chat'],
   },

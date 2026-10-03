@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { isSubstantivePrompt } from '@/lib/exerciseScoring';
 
 // معايير تقييم البرومبت
 interface AnalysisCriteria {
@@ -57,15 +58,22 @@ export default function PromptAnalyzer() {
 
     setIsAnalyzing(true);
 
-    // محاكاة تأخير التحليل
-    setTimeout(() => {
-      const analysis = performAnalysis(prompt);
-      setResult(analysis);
-      setIsAnalyzing(false);
-    }, 1500);
+    const analysis = performAnalysis(prompt);
+    setResult(analysis);
+    setIsAnalyzing(false);
   };
 
   const performAnalysis = (text: string): AnalysisResult => {
+    if (!isSubstantivePrompt(text)) {
+      return {
+        overallScore: 0,
+        scores: Object.fromEntries(analysisCriteria.map(criterion => [criterion.id, 0])),
+        strengths: [],
+        weaknesses: ['لا تتوفر تفاصيل كافية لفحص البنية في هذه الأداة.'],
+        suggestions: ['حدد المهمة والسياق وشكل الناتج المطلوب. لا تضف كلمات مفتاحية لمجرد رفع المؤشر.'],
+        improvedPrompt: text.trim(),
+      };
+    }
     const scores: { [key: string]: number } = {};
     const strengths: string[] = [];
     const weaknesses: string[] = [];
@@ -80,7 +88,7 @@ export default function PromptAnalyzer() {
     scores.clarity = Math.min(clarityScore, 100);
 
     if (scores.clarity >= 70) {
-      strengths.push('الطلب واضح ومفهوم');
+      strengths.push('رُصد طول وصيغة طلب تساعد على وصف المهمة');
     } else {
       weaknesses.push('الطلب يحتاج لمزيد من الوضوح');
       suggestions.push('حدد بوضوح ما تريد الحصول عليه');
@@ -95,7 +103,7 @@ export default function PromptAnalyzer() {
     scores.specificity = Math.min(specificityScore, 100);
 
     if (scores.specificity >= 70) {
-      strengths.push('يحتوي على تفاصيل محددة');
+      strengths.push('رُصدت مؤشرات مثل أرقام أو أمثلة');
     } else {
       weaknesses.push('يفتقر لتفاصيل محددة');
       suggestions.push('أضف أمثلة أو أرقام محددة لتوضيح المطلوب');
@@ -109,7 +117,7 @@ export default function PromptAnalyzer() {
     scores.context = Math.min(contextScore, 100);
 
     if (scores.context >= 60) {
-      strengths.push('يوفر سياقاً مناسباً');
+      strengths.push('رُصدت كلمات تشير إلى سياق');
     } else {
       weaknesses.push('السياق غير كافٍ');
       suggestions.push('أضف معلومات خلفية عن المهمة أو الهدف');
@@ -123,7 +131,7 @@ export default function PromptAnalyzer() {
     scores.structure = Math.min(structureScore, 100);
 
     if (scores.structure >= 60) {
-      strengths.push('منظم بشكل جيد');
+      strengths.push('رُصدت عناوين أو خطوات');
     } else {
       weaknesses.push('يحتاج لتنظيم أفضل');
       suggestions.push('قسّم البرومبت لأقسام واضحة (الدور، المهمة، القيود)');
@@ -137,7 +145,7 @@ export default function PromptAnalyzer() {
     scores.actionable = Math.min(actionableScore, 100);
 
     if (scores.actionable >= 70) {
-      strengths.push('المطلوب واضح وقابل للتنفيذ');
+      strengths.push('رُصدت صيغة طلب أو تنسيق للمخرجات');
     } else {
       weaknesses.push('المطلوب غير واضح تماماً');
       suggestions.push('حدد الشكل أو التنسيق المطلوب للناتج');
@@ -151,7 +159,7 @@ export default function PromptAnalyzer() {
     scores.constraints = Math.min(constraintsScore, 100);
 
     if (scores.constraints >= 50) {
-      strengths.push('يحدد قيوداً واضحة');
+      strengths.push('رُصدت كلمات تشير إلى قيود');
     } else {
       suggestions.push('أضف قيوداً مثل: طول الرد، ما يجب تجنبه');
     }
@@ -217,7 +225,7 @@ export default function PromptAnalyzer() {
   };
 
   const getScoreLabel = (score: number): string => {
-    if (score >= 80) return 'ممتاز';
+    if (score >= 80) return 'مؤشرات كثيرة';
     if (score >= 60) return 'جيد';
     if (score >= 40) return 'مقبول';
     return 'يحتاج تحسين';
@@ -245,7 +253,7 @@ export default function PromptAnalyzer() {
     <div className="prompt-analyzer">
       <div className="analyzer-header">
         <h2>🔍 محلل البرومبتات</h2>
-        <p>حلل برومبتك واحصل على نصائح لتحسينه</p>
+        <p>فحص بنية أولي يعتمد على كلمات وأنماط، ولا يستخدم نموذج AI لتقييم المعنى أو صحة المعلومات. جرّب الطلب وراجع الناتج؛ المؤشر لا يثبت الجودة أو الإتقان.</p>
       </div>
 
       {!result ? (
@@ -298,12 +306,12 @@ export default function PromptAnalyzer() {
               </div>
             </div>
             <div className="score-description">
-              <h3>النتيجة الإجمالية</h3>
+              <h3>مؤشر البنية الأولي</h3>
               <p>
-                {result.overallScore >= 80 && 'برومبت ممتاز! جاهز للاستخدام.'}
-                {result.overallScore >= 60 && result.overallScore < 80 && 'برومبت جيد مع فرص للتحسين.'}
-                {result.overallScore >= 40 && result.overallScore < 60 && 'يحتاج بعض التحسينات.'}
-                {result.overallScore < 40 && 'يحتاج تحسينات كبيرة.'}
+                {result.overallScore >= 80 && 'رُصدت عناصر متعددة. اختبر فائدتها في الناتج الفعلي.'}
+                {result.overallScore >= 60 && result.overallScore < 80 && 'رُصدت بعض العناصر؛ راجع ما تحتاجه المهمة.'}
+                {result.overallScore >= 40 && result.overallScore < 60 && 'رُصدت عناصر محدودة؛ قد تحتاج تفاصيل إضافية.'}
+                {result.overallScore < 40 && 'المؤشرات قليلة؛ وضّح المهمة والسياق عند الحاجة.'}
               </p>
             </div>
           </div>
@@ -380,7 +388,7 @@ export default function PromptAnalyzer() {
               className="toggle-improved-btn"
               onClick={() => setShowImproved(!showImproved)}
             >
-              {showImproved ? '🔼 إخفاء النسخة المحسنة' : '🔽 عرض النسخة المحسنة'}
+              {showImproved ? '🔼 إخفاء مسودة التنظيم' : '🔽 عرض مسودة التنظيم'}
             </button>
 
             <AnimatePresence>
@@ -392,7 +400,7 @@ export default function PromptAnalyzer() {
                   className="improved-prompt-container"
                 >
                   <div className="improved-header">
-                    <span>✨ النسخة المحسنة</span>
+                    <span>✨ مسودة تنظيم تحتاج استكمالًا وتجربة</span>
                     <button 
                       className={`copy-btn ${copied ? 'copied' : ''}`}
                       onClick={copyImproved}

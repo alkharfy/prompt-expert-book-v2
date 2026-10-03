@@ -6,6 +6,7 @@ vi.mock('@/lib/auth-middleware', () => ({ getAuthenticatedUser: h.auth }))
 vi.mock('@/lib/supabase-admin', () => ({ getSupabaseAdmin: () => ({ from: h.db }) }))
 vi.mock('@/lib/learning-plan', () => ({ generatePlanTasks: h.write, savePlan: h.write, getTodayPlan: h.write, getFullPlan: h.write, updateTaskStatus: h.write }))
 vi.mock('@/lib/learning-preferences', () => ({ getLearningPreferences: h.write, saveLearningPreferences: h.write, validatePreferences: h.write }))
+vi.mock('@/lib/subscription', () => ({ userHasFeature: h.write }))
 
 import { GET as history } from '@/app/api/payments/history/route'
 import { POST as intent } from '@/app/api/payment/intent/route'

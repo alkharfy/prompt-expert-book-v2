@@ -249,7 +249,7 @@ export default function CertificatePage() {
                     className="verified-badge"
                 >
                     <span className="check-icon">✓</span>
-                    <span>شهادة موثّقة ومعتمدة</span>
+                    <span>شهادة إتمام صادرة من PromptMaster</span>
                 </motion.div>
 
                 <motion.div
@@ -294,12 +294,15 @@ export default function CertificatePage() {
                                 <h2 className="cert-name">{certificate.user_name}</h2>
                                 <div className="name-line" />
                             </div>
-                            <p className="cert-intro">قد أتم بنجاح دراسة</p>
+                            <p className="cert-intro">سجّل إتمام متطلبات القراءة في</p>
                             <h3 className="course-name">{certificate.course_name}</h3>
                             <div className="completion-badge">
                                 <span className="completion-icon">🏆</span>
-                                <span>نسبة الإتمام {certificate.completion_percentage}%</span>
+                                <span>{certificate.previous_requirements
+                                    ? 'صدرت وفق متطلبات الإتمام السابقة'
+                                    : 'إتمام قراءة الفصول الأساسية العشرة'}</span>
                             </div>
+                            <p className="cert-intro">تستند إلى سجل قراءة ذاتي؛ لا تثبت اجتياز اختبار مهارة أو اعتمادًا مهنيًا.</p>
                         </div>
 
                         <div className="certificate-footer">

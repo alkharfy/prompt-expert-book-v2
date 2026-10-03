@@ -1,17 +1,13 @@
 /**
  * Certificates module
  * 
- * ⚠️ NOTE: This module uses the anon-key Supabase client.
- * If REVOKE ALL has been applied to the anon role, these operations
- * may fail. Ensure certificates table has public-read RLS policy
- * for is_public=true rows, or route through server API / supabaseProxy.
+ * Client-safe public verification through the server endpoint. Issued records
+ * remain historical documents, including those with earlier requirements.
  */
-import { supabase } from './supabase'
 import { dbLogger } from './logger'
 
 export interface Certificate {
     id: string
-    user_id: string
     certificate_id: string
     user_name: string
     course_name: string
@@ -19,27 +15,15 @@ export interface Certificate {
     completion_percentage: number
     is_public: boolean
     created_at: string
+    previous_requirements: boolean
 }
 
 // Get certificate by public ID
 export async function getCertificateByPublicId(certificateId: string): Promise<Certificate | null> {
     try {
-        const { data, error } = await supabase
-            .from('certificates')
-            .select('*')
-            .eq('certificate_id', certificateId)
-            .eq('is_public', true)
-            .single()
-
-        if (error || !data) {
-            // Only log as error if it's not a "not found" case
-            if (error && !error.message?.includes('0 rows')) {
-                dbLogger.error('Error fetching certificate', { certificateId, error: error.message })
-            }
-            return null
-        }
-
-        return data
+        const response = await fetch(`/api/certificates/${encodeURIComponent(certificateId)}`, { cache: 'no-store' })
+        if (!response.ok) return null
+        return (await response.json()).certificate || null
     } catch (err) {
         dbLogger.error('Error in getCertificateByPublicId', err)
         return null

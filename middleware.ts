@@ -13,6 +13,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.types'
+import type { PlanId } from '@/types/subscription'
+import { getPlanFeatures, isActivePlanSubscription } from '@/lib/features'
 
 // ─────────────────────────────────────────────
 // Security Headers (applied to every response)
@@ -99,7 +101,6 @@ const PROTECTED_ROUTES: Record<string, string> = {
   '/chat': 'chat',
   '/achievements': 'gamification',
   '/leaderboard': 'gamification',
-  '/certificate': 'certificate',
 }
 
 /**
@@ -116,6 +117,9 @@ const PUBLIC_PATHS = [
   '/payment/callback',
   '/library',
   '/toc',
+  '/certificate',
+  '/resources',
+  '/ai-updates',
 ]
 
 /**
@@ -142,6 +146,7 @@ function isPublicPath(pathname: string): boolean {
   // مسارات تبدأ بـ /read/ أو /api/ أو /_next/
   if (
     pathname.startsWith('/read/') ||
+    pathname.startsWith('/certificate/') ||
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname === '/favicon.ico'
@@ -187,7 +192,7 @@ async function checkUserSubscription(userId: string): Promise<{
     }
 
     // Strategy 1: Try RPC function get_user_plan
-    let planId: string | null = null
+    let planId: PlanId | null = null
 
     try {
       const { data, error } = await (supabase.rpc as any)('get_user_plan', {
@@ -197,6 +202,7 @@ async function checkUserSubscription(userId: string): Promise<{
       if (!error) {
         const row = Array.isArray(data) ? data[0] : data
         if (row && row.plan_id) {
+          if (!isActivePlanSubscription(row)) return { hasPlan: false, planId: null, features: [] }
           planId = row.plan_id
         }
       }
@@ -208,14 +214,14 @@ async function checkUserSubscription(userId: string): Promise<{
     if (!planId) {
       try {
         const { data: sub } = await (supabase.from('subscriptions') as any)
-          .select('plan_id')
+          .select('plan_id, status, expires_at')
           .eq('user_id', userId)
           .eq('status', 'active')
           .gt('expires_at', new Date().toISOString())
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle()
-        if (sub && sub.plan_id) planId = sub.plan_id
+        if (isActivePlanSubscription(sub)) planId = sub.plan_id
       } catch { /* table might not exist */ }
     }
 
@@ -226,8 +232,10 @@ async function checkUserSubscription(userId: string): Promise<{
           .select('current_plan, is_active, plan_expires_at')
           .eq('id', userId)
           .maybeSingle()
-        if (user && user.current_plan && user.plan_expires_at && new Date(user.plan_expires_at) > new Date()) {
-          planId = user.current_plan
+        const userPlan = user ? { plan_id: user.current_plan, expires_at: user.plan_expires_at,
+          status: user.is_active === true ? 'active' as const : null } : null
+        if (isActivePlanSubscription(userPlan)) {
+          planId = userPlan.plan_id
         }
       } catch { /* fallback */ }
     }
@@ -241,12 +249,7 @@ async function checkUserSubscription(userId: string): Promise<{
     }
 
     // جلب ميزات الباقة — استخدام القيم الثابتة لضمان الاتساق (المصدر الوحيد للحقيقة)
-    const STATIC_FEATURES: Record<string, string[]> = {
-      basic: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises'],
-      pro: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises', 'gamification', 'leaderboard', 'certificate', 'tools'],
-      vip: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises', 'gamification', 'leaderboard', 'certificate', 'tools', 'chat'],
-    }
-    const features = STATIC_FEATURES[planId] ?? []
+    const features = [...getPlanFeatures(planId)]
 
     return {
       hasPlan: true,

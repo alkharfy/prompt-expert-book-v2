@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { getLearningReadingUrl } from '@/config/learningCatalog'
 
 interface DailyTask {
   id: string
@@ -21,6 +22,7 @@ interface Props {
   progressPercent: number
   tasks: DailyTask[]
   isFlexible: boolean
+  needsRegeneration?: boolean
   onTaskAction: (taskId: string, action: 'completed' | 'skipped') => Promise<void>
 }
 
@@ -38,7 +40,7 @@ const STATUS_LABELS: Record<string, { label: string; icon: string }> = {
   postponed: { label: 'مؤجل', icon: '📌' },
 }
 
-export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, tasks, isFlexible, onTaskAction }: Props) {
+export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, tasks, isFlexible, needsRegeneration, onTaskAction }: Props) {
   const [loadingTask, setLoadingTask] = useState<string | null>(null)
 
   const handleAction = async (taskId: string, action: 'completed' | 'skipped') => {
@@ -126,7 +128,7 @@ export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, t
             border-right: 2px solid rgba(255,107,53,0.3);
             margin-bottom: 4px;
           }
-          .dtc-action-btn {
+          :global(.dtc-action-btn) {
             display: inline-block;
             padding: 10px 24px;
             border-radius: 8px;
@@ -137,11 +139,11 @@ export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, t
             border: none;
             transition: all 0.2s;
           }
-          .dtc-primary {
+          :global(.dtc-primary) {
             background: #FF6B35;
             color: #fff;
           }
-          .dtc-primary:hover {
+          :global(.dtc-primary:hover) {
             background: #e55a2b;
             transform: translateY(-1px);
           }
@@ -166,10 +168,13 @@ export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, t
         <div className="dtc-progress-bar">
           <div className="dtc-progress-fill" style={{ width: `${progressPercent}%` }} />
         </div>
-        <span className="dtc-progress-label">{progressPercent}% مكتمل</span>
+        <span className="dtc-progress-label">{progressPercent}% من مهام الجدول</span>
       </div>
 
       {/* Tasks */}
+      {needsRegeneration && (
+        <p role="status">خطة الدراسة الحالية لا تغطي كل صفحات المسار. <Link href="/onboarding">حدّث إعدادات المسار لتوليد خطة مكتملة</Link>.</p>
+      )}
       {tasks.length === 0 ? (
         <div className="dtc-empty">
           <p>🎯 لا يوجد مهام مجدولة اليوم</p>
@@ -194,7 +199,7 @@ export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, t
                   <>
                     {task.taskType === 'reading' && task.sectionId && (
                       <Link
-                        href={`/read/${task.sectionId}/${task.startPage || 1}`}
+                        href={getLearningReadingUrl(task.sectionId, task.startPage || 1)}
                         className="dtc-action-btn dtc-primary dtc-small"
                       >
                         ابدأ
@@ -202,7 +207,7 @@ export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, t
                     )}
                     {task.taskType === 'exercise' && (
                       <Link
-                        href="/exercises"
+                        href={task.sectionId === 'running-project' ? '/running-project' : `/exercises?section=${encodeURIComponent(task.sectionId || '')}`}
                         className="dtc-action-btn dtc-primary dtc-small"
                       >
                         حل
@@ -211,7 +216,9 @@ export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, t
                     <button
                       className="dtc-action-btn dtc-complete dtc-small"
                       onClick={() => handleAction(task.id, 'completed')}
-                      disabled={loadingTask === task.id}
+                      disabled={loadingTask === task.id || task.taskType === 'celebration' && progressPercent < 100}
+                      aria-label={`أكملت: ${task.titleAr}`}
+                      title={task.taskType === 'celebration' && progressPercent < 100 ? 'أكمل المهام المتبقية أولًا' : 'تسجيل الإكمال'}
                     >
                       {loadingTask === task.id ? '...' : '✓'}
                     </button>
@@ -357,11 +364,13 @@ export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, t
           gap: 6px;
           flex-shrink: 0;
         }
-        .dtc-action-btn {
+        :global(.dtc-action-btn) {
           display: inline-flex;
           align-items: center;
           justify-content: center;
           padding: 8px 16px;
+          min-height: 44px;
+          min-width: 44px;
           border-radius: 8px;
           font-size: 0.85rem;
           font-weight: 600;
@@ -371,15 +380,15 @@ export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, t
           transition: all 0.2s;
           font-family: inherit;
         }
-        .dtc-small {
+        :global(.dtc-small) {
           padding: 6px 12px;
           font-size: 0.8rem;
         }
-        .dtc-primary {
+        :global(.dtc-primary) {
           background: #FF6B35;
           color: #fff;
         }
-        .dtc-primary:hover {
+        :global(.dtc-primary:hover) {
           background: #e55a2b;
           transform: translateY(-1px);
         }

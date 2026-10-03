@@ -29,7 +29,7 @@ describe('FeatureKey type — new keys', () => {
   })
 })
 
-describe('PLAN_FEATURES — resource library access', () => {
+describe('PLAN_FEATURES — public pages are not paid entitlements', () => {
   it('basic plan should NOT have "resources"', () => {
     expect(PLAN_FEATURES.basic).not.toContain('resources')
   })
@@ -38,20 +38,20 @@ describe('PLAN_FEATURES — resource library access', () => {
     expect(PLAN_FEATURES.basic).not.toContain('ai_updates')
   })
 
-  it('pro plan should have "resources"', () => {
-    expect(PLAN_FEATURES.pro).toContain('resources')
+  it('pro plan should NOT sell "resources" as exclusive', () => {
+    expect(PLAN_FEATURES.pro).not.toContain('resources')
   })
 
   it('pro plan should NOT have "ai_updates"', () => {
     expect(PLAN_FEATURES.pro).not.toContain('ai_updates')
   })
 
-  it('vip plan should have "resources"', () => {
-    expect(PLAN_FEATURES.vip).toContain('resources')
+  it('vip plan should NOT sell "resources" as exclusive', () => {
+    expect(PLAN_FEATURES.vip).not.toContain('resources')
   })
 
-  it('vip plan should have "ai_updates"', () => {
-    expect(PLAN_FEATURES.vip).toContain('ai_updates')
+  it('vip plan should NOT sell "ai_updates" as exclusive', () => {
+    expect(PLAN_FEATURES.vip).not.toContain('ai_updates')
   })
 
   it('vip should be a superset of pro features', () => {
@@ -89,8 +89,8 @@ describe('planHasFeature helper', () => {
     const { planHasFeature } = await import('@/lib/features')
     
     expect(planHasFeature('basic', 'resources')).toBe(false)
-    expect(planHasFeature('pro', 'resources')).toBe(true)
-    expect(planHasFeature('vip', 'resources')).toBe(true)
+    expect(planHasFeature('pro', 'resources')).toBe(false)
+    expect(planHasFeature('vip', 'resources')).toBe(false)
   })
 
   it('should correctly identify ai_updates access per plan', async () => {
@@ -98,6 +98,6 @@ describe('planHasFeature helper', () => {
     
     expect(planHasFeature('basic', 'ai_updates')).toBe(false)
     expect(planHasFeature('pro', 'ai_updates')).toBe(false)
-    expect(planHasFeature('vip', 'ai_updates')).toBe(true)
+    expect(planHasFeature('vip', 'ai_updates')).toBe(false)
   })
 })

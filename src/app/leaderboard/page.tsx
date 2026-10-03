@@ -5,20 +5,16 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
 import ShareButton from '@/components/sharing/ShareButton'
-import { supabase } from '@/lib/supabase'
-import { authSystem } from '@/lib/auth_system'
-import { dbLogger } from '@/lib/logger'
 
 interface LeaderboardUser {
-    user_id: string
-    full_name: string
+    displayName: string
     total_points: number
     current_level: number
     current_streak: number
-    chapters_completed: number
     exercises_completed: number
     badges_count: number
     rank: number
+    isCurrentUser: boolean
 }
 
 type TabType = 'points' | 'streak' | 'exercises'
@@ -26,109 +22,47 @@ type TabType = 'points' | 'streak' | 'exercises'
 export default function LeaderboardPage() {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(true)
-    const [isLoggedIn, setIsLoggedIn] = useState(false)
-    const [currentUserId, setCurrentUserId] = useState<string | null>(null)
     const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
     const [activeTab, setActiveTab] = useState<TabType>('points')
-    const [userRank, setUserRank] = useState<LeaderboardUser | null>(null)
+    const [loadError, setLoadError] = useState<string | null>(null)
+    const [errorStatus, setErrorStatus] = useState<number | null>(null)
+    const [retryCount, setRetryCount] = useState(0)
+    const userRank = leaderboard.find(user => user.isCurrentUser) || null
 
-    const fetchLeaderboard = useCallback(async () => {
+    const fetchLeaderboard = useCallback(async (signal: AbortSignal) => {
+        setIsLoading(true)
+        setLoadError(null)
+        setErrorStatus(null)
         try {
-            // ترتيب حسب التبويب النشط
-            let orderBy = 'total_points'
-            if (activeTab === 'streak') orderBy = 'current_streak'
-            if (activeTab === 'exercises') orderBy = 'exercises_completed'
-
-            const { data, error } = await supabase
-                .from('user_gamification')
-                .select(`
-                    user_id,
-                    total_points,
-                    current_level,
-                    current_streak,
-                    chapters_completed,
-                    exercises_completed
-                `)
-                .order(orderBy, { ascending: false })
-                .limit(50) as { 
-                    data: Array<{
-                        user_id: string;
-                        total_points: number;
-                        current_level: number;
-                        current_streak: number;
-                        chapters_completed: number;
-                        exercises_completed: number;
-                    }> | null; 
-                    error: any 
+            const result = await fetch(`/api/leaderboard?tab=${activeTab}`, { signal, cache: 'no-store' })
+            if (!result.ok) {
+                if (!signal.aborted) {
+                    setLeaderboard([])
+                    setErrorStatus(result.status)
+                    setLoadError(result.status === 401 ? 'يرجى تسجيل الدخول لعرض لوحة المتصدرين'
+                        : result.status === 403 ? 'لوحة المتصدرين متاحة مع اشتراك نشط في Pro أو VIP'
+                        : 'تعذّر تحميل لوحة المتصدرين؛ حاول لاحقًا')
                 }
-
-            if (error) throw error
-
-            // جلب أسماء المستخدمين
-            if (data && data.length > 0) {
-                const userIds = data.map(d => d.user_id)
-                const { data: users } = await supabase
-                    .from('users')
-                    .select('id, full_name')
-                    .in('id', userIds) as { data: Array<{ id: string; full_name: string }> | null }
-
-                const usersMap = new Map(users?.map(u => [u.id, u.full_name]) || [])
-
-                // جلب عدد الشارات لكل مستخدم
-                const { data: badgeCounts } = await supabase
-                    .from('user_badges')
-                    .select('user_id')
-                    .in('user_id', userIds) as { data: Array<{ user_id: string }> | null }
-
-                const badgeCountMap = new Map<string, number>()
-                badgeCounts?.forEach(b => {
-                    badgeCountMap.set(b.user_id, (badgeCountMap.get(b.user_id) || 0) + 1)
-                })
-
-                const leaderboardData: LeaderboardUser[] = data.map((item, index) => ({
-                    user_id: item.user_id,
-                    full_name: usersMap.get(item.user_id) || 'مستخدم',
-                    total_points: item.total_points || 0,
-                    current_level: item.current_level || 1,
-                    current_streak: item.current_streak || 0,
-                    chapters_completed: item.chapters_completed || 0,
-                    exercises_completed: item.exercises_completed || 0,
-                    badges_count: badgeCountMap.get(item.user_id) || 0,
-                    rank: index + 1
-                }))
-
-                setLeaderboard(leaderboardData)
-
-                // إيجاد ترتيب المستخدم الحالي - استخدام userId مباشرة بدلاً من state
-                const userId = authSystem.getCurrentUserId()
-                if (userId) {
-                    const userEntry = leaderboardData.find(u => u.user_id === userId)
-                    setUserRank(userEntry || null)
-                }
+                return
             }
-        } catch (error) {
-            dbLogger.error('Error fetching leaderboard:', error)
+            const data = await result.json()
+            if (!Array.isArray(data.entries)) throw new Error('Invalid leaderboard response')
+            if (!signal.aborted) setLeaderboard(data.entries)
+        } catch {
+            if (!signal.aborted) {
+                setLeaderboard([])
+                setLoadError('تعذّر تحميل لوحة المتصدرين؛ حاول لاحقًا')
+            }
+        } finally {
+            if (!signal.aborted) setIsLoading(false)
         }
     }, [activeTab])
 
     useEffect(() => {
-        const checkAuthAndLoadData = async () => {
-            try {
-                const userId = authSystem.getCurrentUserId()
-                setCurrentUserId(userId)
-                setIsLoggedIn(!!userId)
-
-                // جلب بيانات المتصدرين
-                await fetchLeaderboard()
-            } catch (error) {
-                dbLogger.error('Error loading leaderboard:', error)
-            } finally {
-                setIsLoading(false)
-            }
-        }
-
-        checkAuthAndLoadData()
-    }, [activeTab, fetchLeaderboard])
+        const controller = new AbortController()
+        void fetchLeaderboard(controller.signal)
+        return () => controller.abort()
+    }, [fetchLeaderboard, retryCount])
 
     const getRankIcon = (rank: number) => {
         switch (rank) {
@@ -168,6 +102,25 @@ export default function LeaderboardPage() {
         )
     }
 
+    if (loadError) {
+        return (
+            <>
+                <Navigation />
+                <main className="leaderboard-page">
+                    <div className="container">
+                        <h1>🏆 لوحة المتصدرين</h1>
+                        <div className="empty-leaderboard" role="alert">
+                            <p>{loadError}</p>
+                            <button className="login-btn" onClick={() => setRetryCount(value => value + 1)}>إعادة المحاولة</button>
+                            {errorStatus === 401 && <button className="login-btn" onClick={() => router.push('/login')}>تسجيل الدخول</button>}
+                            {errorStatus === 403 && <button className="login-btn" onClick={() => router.push('/#pricing')}>عرض الباقات</button>}
+                        </div>
+                    </div>
+                </main>
+            </>
+        )
+    }
+
     return (
         <>
             <Navigation />
@@ -180,7 +133,7 @@ export default function LeaderboardPage() {
                         animate={{ opacity: 1, y: 0 }}
                     >
                         <h1>🏆 لوحة المتصدرين</h1>
-                        <p>تنافس مع المتعلمين الآخرين</p>
+                        <p>ترتيب النشاط داخل المنصة، ولا يقيس الإتقان</p>
                     </motion.div>
 
                     {/* Tabs */}
@@ -206,7 +159,7 @@ export default function LeaderboardPage() {
                     </div>
 
                     {/* User's Rank Card */}
-                    {isLoggedIn && userRank && (
+                    {userRank && (
                         <motion.div 
                             className="user-rank-card"
                             initial={{ opacity: 0, y: 20 }}
@@ -221,7 +174,7 @@ export default function LeaderboardPage() {
                                 </span>
                             </div>
                             <div className="user-rank-level">
-                                المستوى {userRank.current_level}
+                                مستوى النشاط {userRank.current_level}
                             </div>
                             <ShareButton
                                 type="streak"
@@ -251,7 +204,7 @@ export default function LeaderboardPage() {
                                 transition={{ delay: 0.2 }}
                             >
                                 <div className="podium-avatar">🥈</div>
-                                <span className="podium-name">{leaderboard[1].full_name}</span>
+                                <span className="podium-name">{leaderboard[1].displayName}</span>
                                 <span className="podium-value">{getDisplayValue(leaderboard[1])}</span>
                                 <div className="podium-stand">2</div>
                             </motion.div>
@@ -265,7 +218,7 @@ export default function LeaderboardPage() {
                             >
                                 <div className="podium-crown">👑</div>
                                 <div className="podium-avatar">🥇</div>
-                                <span className="podium-name">{leaderboard[0].full_name}</span>
+                                <span className="podium-name">{leaderboard[0].displayName}</span>
                                 <span className="podium-value">{getDisplayValue(leaderboard[0])}</span>
                                 <div className="podium-stand">1</div>
                             </motion.div>
@@ -278,7 +231,7 @@ export default function LeaderboardPage() {
                                 transition={{ delay: 0.3 }}
                             >
                                 <div className="podium-avatar">🥉</div>
-                                <span className="podium-name">{leaderboard[2].full_name}</span>
+                                <span className="podium-name">{leaderboard[2].displayName}</span>
                                 <span className="podium-value">{getDisplayValue(leaderboard[2])}</span>
                                 <div className="podium-stand">3</div>
                             </motion.div>
@@ -287,18 +240,18 @@ export default function LeaderboardPage() {
 
                     {/* Full Leaderboard */}
                     <div className="leaderboard-list">
-                        {leaderboard.slice(3).map((user, index) => (
+                        {(leaderboard.length >= 3 ? leaderboard.slice(3) : leaderboard).map((user, index) => (
                             <motion.div
-                                key={user.user_id}
-                                className={`leaderboard-item ${user.user_id === currentUserId ? 'current-user' : ''}`}
+                                key={user.rank}
+                                className={`leaderboard-item ${user.isCurrentUser ? 'current-user' : ''}`}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: index * 0.03 }}
                             >
                                 <span className="item-rank">{user.rank}</span>
                                 <div className="item-info">
-                                    <span className="item-name">{user.full_name}</span>
-                                    <span className="item-level">المستوى {user.current_level}</span>
+                                    <span className="item-name">{user.displayName}</span>
+                                    <span className="item-level">مستوى النشاط {user.current_level}</span>
                                 </div>
                                 <div className="item-stats">
                                     <span className="item-value">{getDisplayValue(user)}</span>
@@ -316,14 +269,6 @@ export default function LeaderboardPage() {
                             <span className="empty-icon">🏆</span>
                             <h3>لا يوجد متصدرين بعد</h3>
                             <p>كن أول من يتصدر القائمة!</p>
-                            {!isLoggedIn && (
-                                <button 
-                                    className="login-btn"
-                                    onClick={() => router.push('/login')}
-                                >
-                                    سجّل الدخول للمشاركة
-                                </button>
-                            )}
                         </div>
                     )}
                 </div>

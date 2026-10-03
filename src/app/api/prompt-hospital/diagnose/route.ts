@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
-import { getAuthenticatedUser, hasActiveSubscription } from '@/lib/auth-middleware'
+import { checkRateLimitAsync, RATE_LIMITS } from '@/lib/rate-limit'
+import { getAuthenticatedUser } from '@/lib/auth-middleware'
+import { userHasFeature } from '@/lib/subscription'
 import { dbLogger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -154,17 +155,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'غير مصرح - سجّل الدخول أولاً' }, { status: 401 })
         }
 
-        // SECURITY: Subscription check — prompt hospital is a premium feature
-        const hasSub = await hasActiveSubscription(userId)
-        if (!hasSub) {
+        // Diagnosis belongs to tools, available in Pro and VIP with an active term.
+        if (!await userHasFeature(userId, 'tools')) {
             return NextResponse.json(
-                { error: 'يرجى الاشتراك لاستخدام هذه الميزة' },
+                { error: 'تشخيص البرومبت يتطلب اشتراك المتقدمة أو VIP نشطًا' },
                 { status: 403 }
             )
         }
 
         // Rate limit
-        const rateResult = checkRateLimit(`hospital:${userId}`, RATE_LIMITS.HOSPITAL_DIAGNOSE)
+        const rateResult = await checkRateLimitAsync(`hospital:${userId}`, RATE_LIMITS.HOSPITAL_DIAGNOSE)
         if (!rateResult.allowed) {
             return NextResponse.json({
                 error: `تجاوزت الحد المسموح (${RATE_LIMITS.HOSPITAL_DIAGNOSE.maxRequests} تشخيص/يوم). حاول بعد ${rateResult.retryAfter} ثانية.`,

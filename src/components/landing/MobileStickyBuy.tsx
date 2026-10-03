@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { trackCtaClick } from '@/lib/analytics'
+import { useBottomBarOffset } from '@/hooks/useBottomBarOffset'
 
 export default function MobileStickyBuy() {
     const [visible, setVisible] = useState(false)
     const pricingVisible = useRef(false)
+    const barRef = useBottomBarOffset(visible)
 
     useEffect(() => {
         // Track scroll position
@@ -26,7 +28,7 @@ export default function MobileStickyBuy() {
             observer = new IntersectionObserver(
                 ([entry]) => {
                     pricingVisible.current = entry.isIntersecting
-                    if (entry.isIntersecting) setVisible(false)
+                    setVisible(!entry.isIntersecting && window.scrollY > 500)
                 },
                 { threshold: 0.1 }
             )
@@ -34,6 +36,7 @@ export default function MobileStickyBuy() {
         }
 
         window.addEventListener('scroll', onScroll, { passive: true })
+        onScroll()
         return () => {
             window.removeEventListener('scroll', onScroll)
             observer?.disconnect()
@@ -43,7 +46,7 @@ export default function MobileStickyBuy() {
     if (!visible) return null
 
     return (
-        <div className="mobile-sticky-buy">
+        <div ref={barRef} className="mobile-sticky-buy">
             <Link href="#pricing" className="mobile-sticky-btn" onClick={() => trackCtaClick('اشترك الآن', 'mobile_sticky_bar')}>
                 اشترك الآن — حسب الباقة المختارة 🚀
             </Link>
@@ -58,7 +61,7 @@ export default function MobileStickyBuy() {
                     align-items: center;
                     justify-content: center;
                     gap: 14px;
-                    padding: 12px 16px;
+                    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
                     background: rgba(10, 10, 10, 0.96);
                     backdrop-filter: blur(12px);
                     border-top: 1px solid rgba(255, 107, 53, 0.2);
@@ -77,9 +80,12 @@ export default function MobileStickyBuy() {
                     font-weight: 700;
                 }
 
-                .mobile-sticky-btn {
+                .mobile-sticky-buy :global(.mobile-sticky-btn) {
                     display: inline-flex;
                     align-items: center;
+                    justify-content: center;
+                    min-height: 44px;
+                    max-width: 100%;
                     padding: 10px 24px;
                     background: linear-gradient(135deg, #FF6B35, #FF8C42);
                     color: #fff;
@@ -87,11 +93,11 @@ export default function MobileStickyBuy() {
                     font-weight: 700;
                     font-size: 0.9rem;
                     text-decoration: none;
-                    white-space: nowrap;
+                    text-align: center;
                     transition: transform 0.2s;
                 }
 
-                .mobile-sticky-btn:hover {
+                .mobile-sticky-buy :global(.mobile-sticky-btn:hover) {
                     transform: translateY(-1px);
                 }
 

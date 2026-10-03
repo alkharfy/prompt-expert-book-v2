@@ -1,191 +1,35 @@
-// Tests for /ai-updates page
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+import AiUpdatesPage from '@/app/ai-updates/page'
 
-const mockFetch = vi.fn()
-global.fetch = mockFetch
+beforeEach(() => { vi.mocked(fetch).mockReset() })
 
-const mockPush = vi.fn()
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: mockPush,
-    replace: vi.fn(),
-    back: vi.fn(),
-    prefetch: vi.fn(),
-  }),
-  usePathname: () => '/ai-updates',
-}))
+const entry = { id: '1', title_ar: 'خبر تعليمي', content_ar: 'تفاصيل الخبر', category: 'new_model', importance: 'high', published_at: '2026-09-24', source_url: 'https://example.com/source' }
 
-describe('AiUpdatesPage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    vi.resetModules()
-  })
-
-  it('should show loading/checking state initially', async () => {
-    mockFetch.mockImplementation(() => new Promise(() => {})) // never resolves
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
+describe('public AI news', () => {
+  it('shows loading while the public feed is requested', () => {
+    vi.mocked(fetch).mockImplementation(() => new Promise(() => {}))
     render(<AiUpdatesPage />)
-
-    expect(screen.getByText('جاري التحقق من صلاحيتك...')).toBeInTheDocument()
+    expect(screen.getByText('جاري تحميل أخبار AI...')).toBeInTheDocument()
   })
-
-  it('should show locked state for non-VIP users', async () => {
-    // subscription/status returns non-VIP plan
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ plan_id: 'pro' }),
-    })
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
+  it('shows news to a visitor without requesting subscription status or an upgrade', async () => {
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({ updates: [entry] }) } as Response)
     render(<AiUpdatesPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText('🔒')).toBeInTheDocument()
-      expect(screen.getByText('تحديثات AI الأسبوعية')).toBeInTheDocument()
-      expect(screen.getByText('هذه الميزة حصرية لمشتركي الباقة المميزة (VIP)')).toBeInTheDocument()
-    })
+    expect(await screen.findByText('خبر تعليمي')).toBeInTheDocument()
+    expect(fetch).toHaveBeenCalledExactlyOnceWith('/api/ai-updates')
+    expect(screen.getByText(/متاحة مجانًا للجميع/)).toBeInTheDocument()
+    expect(screen.queryByText(/VIP|ترقية/)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /المصدر/ })).toHaveAttribute('href', entry.source_url)
   })
-
-  it('should show upgrade button for non-VIP users', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ plan_id: 'basic' }),
-    })
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
+  it('distinguishes an unavailable feed from an empty feed', async () => {
+    vi.mocked(fetch).mockResolvedValue({ ok: false } as Response)
     render(<AiUpdatesPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText(/ترقية إلى VIP/)).toBeInTheDocument()
-    })
+    expect(await screen.findByRole('alert')).toHaveTextContent('تعذّر تحميل أخبار AI')
+    expect(screen.queryByText('لا توجد تحديثات حالياً')).not.toBeInTheDocument()
   })
-
-  it('should navigate to payment on upgrade click', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ plan_id: 'basic' }),
-    })
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
+  it('shows a real empty response without an exclusivity claim', async () => {
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => ({ updates: [] }) } as Response)
     render(<AiUpdatesPage />)
-
-    await waitFor(() => {
-      const btn = screen.getByText(/ترقية إلى VIP/)
-      btn.click()
-      expect(mockPush).toHaveBeenCalledWith('/payment?feature=vip')
-    })
-  })
-
-  it('should show updates for VIP users', async () => {
-    // subscription/status returns VIP
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ plan_id: 'vip' }),
-    })
-    // ai-updates returns entries
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        updates: [
-          { id: '1', title_ar: 'Claude 4', content_ar: 'نموذج جديد', category: 'new_model', importance: 'high', published_at: '2026-03-20' },
-          { id: '2', title_ar: 'نصيحة البرومبت', content_ar: 'استخدم system prompt', category: 'tip', importance: 'normal', published_at: '2026-03-16' },
-        ],
-      }),
-    })
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
-    render(<AiUpdatesPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText('🔮 تحديثات AI الأسبوعية')).toBeInTheDocument()
-      expect(screen.getByText('Claude 4')).toBeInTheDocument()
-      expect(screen.getByText('نموذج جديد')).toBeInTheDocument()
-      expect(screen.getByText('نصيحة البرومبت')).toBeInTheDocument()
-    })
-  })
-
-  it('should show VIP badge for VIP users', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ plan_id: 'vip' }),
-    })
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ updates: [] }),
-    })
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
-    render(<AiUpdatesPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText(/VIP حصري/)).toBeInTheDocument()
-    })
-  })
-
-  it('should show empty state when VIP but no updates', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ plan_id: 'vip' }),
-    })
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ updates: [] }),
-    })
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
-    render(<AiUpdatesPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText('لا توجد تحديثات حالياً')).toBeInTheDocument()
-    })
-  })
-
-  it('should show category icons for updates', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ plan_id: 'vip' }),
-    })
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        updates: [
-          { id: '1', title_ar: 'Update', content_ar: 'Content', category: 'update', importance: 'normal', published_at: '2026-03-20' },
-          { id: '2', title_ar: 'New Tool', content_ar: 'Content', category: 'new_tool', importance: 'normal', published_at: '2026-03-19' },
-        ],
-      }),
-    })
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
-    render(<AiUpdatesPage />)
-
-    await waitFor(() => {
-      expect(screen.getByText(/🔄 تحديث/)).toBeInTheDocument()
-      expect(screen.getByText(/🔧 أداة جديدة/)).toBeInTheDocument()
-    })
-  })
-
-  it('should render source link when provided', async () => {
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({ plan_id: 'vip' }),
-    })
-    mockFetch.mockResolvedValueOnce({
-      json: async () => ({
-        updates: [
-          { id: '1', title_ar: 'Test', content_ar: 'Content', category: 'update', importance: 'normal', published_at: '2026-03-20', source_url: 'https://example.com/source' },
-        ],
-      }),
-    })
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
-    render(<AiUpdatesPage />)
-
-    await waitFor(() => {
-      const sourceLink = screen.getByText('🔗 المصدر')
-      expect(sourceLink).toBeInTheDocument()
-      expect(sourceLink.closest('a')).toHaveAttribute('href', 'https://example.com/source')
-    })
-  })
-
-  it('should handle fetch error gracefully for non-VIP', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-    const { default: AiUpdatesPage } = await import('@/app/ai-updates/page')
-    render(<AiUpdatesPage />)
-
-    // Should show locked state since error means we can't verify VIP
-    await waitFor(() => {
-      expect(screen.getByText('🔒')).toBeInTheDocument()
-    })
+    await waitFor(() => expect(screen.getByText('لا توجد تحديثات حالياً')).toBeInTheDocument())
   })
 })

@@ -41,7 +41,16 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json()
+        if (!body || typeof body !== 'object' || Array.isArray(body)) {
+            return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
+        }
         const { action_type, value } = body
+
+        // Exercise milestones are emitted once by the validated completion
+        // handler, after the server grades or records known course practice.
+        if (action_type === 'complete_exercise' || action_type === 'perfect_score') {
+            return NextResponse.json({ error: 'تُسجّل مهام التمارين من نتيجة الحفظ على الخادم' }, { status: 403 })
+        }
 
         if (!action_type || typeof action_type !== 'string') {
             return NextResponse.json(

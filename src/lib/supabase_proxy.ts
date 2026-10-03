@@ -58,7 +58,7 @@ async function callApi(body: any): Promise<{ data: any; error: any }> {
         })
         const result = await res.json()
         if (result.error) {
-            return { data: result.data || null, error: { message: result.error } }
+            return { data: result.data || null, error: { message: result.error, code: result.errorCode || undefined } }
         }
         return { data: result.data, error: null }
     } catch (err: any) {

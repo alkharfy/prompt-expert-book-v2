@@ -249,19 +249,22 @@
 .nav-toggle {
   display: none;
   flex-direction: column;
-  justify-content: space-around;
-  width: 30px;
-  height: 24px;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 0;
   z-index: 2000;
-  margin-right: 10px;
+  margin-right: 0;
 }
 
 .nav-toggle span {
-  width: 100%;
+  width: 30px;
   height: 3px;
   background-color: var(--color-orange-primary);
   border-radius: 2px;
@@ -277,6 +280,16 @@
 .nav-links-container {
   display: flex;
   align-items: center;
+}
+
+.nav-close-btn {
+  display: none;
+}
+
+.nav-toggle:focus-visible,
+.nav-close-btn:focus-visible {
+  outline: 2px solid var(--color-orange-primary);
+  outline-offset: 3px;
 }
 
 /* Overlay */
@@ -296,7 +309,7 @@
 }
 
 /* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .nav-toggle {
     display: flex;
   }
@@ -305,7 +318,7 @@
     position: fixed;
     top: 0;
     right: 0;
-    height: 100vh;
+    height: 100dvh;
     width: 280px;
     max-width: 80vw;
     background: #0a0a0a;
@@ -385,6 +398,8 @@
     color: var(--color-orange-primary);
     cursor: pointer;
     padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 50%;
     align-items: center;
     justify-content: center;
@@ -460,7 +475,7 @@
   /* Hide the underline animation for this button */
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .payment-highlight-btn {
     margin-right: 0;
     margin-bottom: 10px;

@@ -21,7 +21,7 @@ export default function ProgressDashboard({
     onSectionClick,
 }: ProgressDashboardProps) {
     const totalExercises = Object.values(allExercises).reduce((sum, arr) => sum + arr.length, 0)
-    const totalCompleted = userStats?.total_completed || 0
+    const totalCompleted = Object.values(allExercises).flat().filter(exercise => completedExercises.has(exercise.exerciseId)).length
     const overallProgress = totalExercises > 0 ? Math.round((totalCompleted / totalExercises) * 100) : 0
 
     // Calculate level from points
@@ -58,7 +58,7 @@ export default function ProgressDashboard({
                     {overallProgress >= 100 ? '🏆' : overallProgress >= 50 ? '🔥' : '📈'}
                 </div>
                 <h3 style={{ color: '#fff', fontSize: '1.4rem', marginBottom: '8px' }}>
-                    التقدم الكلي
+                    إتمام تمارين المنهج
                 </h3>
                 <div style={{
                     fontSize: '2.5rem',
@@ -99,7 +99,7 @@ export default function ProgressDashboard({
                 }}>
                     <div>
                         <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#fff' }}>
-                            المستوى {level}
+                            مستوى النشاط {level}
                         </div>
                         <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>
                             {pointsToNextLevel} نقطة للمستوى التالي
@@ -215,7 +215,7 @@ export default function ProgressDashboard({
                         padding: '24px',
                     }}>
                         <h4 style={{ color: '#fff', fontSize: '1rem', marginBottom: '16px' }}>
-                            📊 نقاط تحتاج تحسين
+                            📊 وحدات لم تُستكمل تمارينها
                         </h4>
                         {weakSections.map(s => (
                             <div

@@ -4,14 +4,13 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 
 const features = [
-    { label: 'عربي 100% بأسلوب مصري', us: true, udemy: 'بعضها', learnprompting: false },
-    { label: 'تمارين تفاعلية (45+)', us: true, udemy: false, learnprompting: false },
-    { label: 'تتبع تقدم + Streaks', us: true, udemy: false, learnprompting: false },
-    { label: '5 ج.م (عرض محدود)', us: true, udemy: false, learnprompting: 'مجاني' },
-    { label: 'شهادة قابلة للمشاركة', us: true, udemy: true, learnprompting: false },
-    { label: 'مجتمع + Leaderboard', us: true, udemy: false, learnprompting: false },
-    { label: 'أسلوب قصصي ممتع', us: true, udemy: false, learnprompting: false },
-    { label: 'Gamification كاملة', us: true, udemy: false, learnprompting: false },
+    { label: 'الكتاب والقوالب والتمارين', basic: true, pro: true, vip: true },
+    { label: 'تتبع القراءة والإشارات المرجعية', basic: true, pro: true, vip: true },
+    { label: 'الأدوات وتشخيص البرومبت', basic: false, pro: '10 تشخيصات / 24 ساعة', vip: '10 تشخيصات / 24 ساعة' },
+    { label: 'الإنجازات ولوحة المتصدرين', basic: false, pro: true, vip: true },
+    { label: 'شهادة إتمام قراءة وفق متطلباتها', basic: false, pro: true, vip: true },
+    { label: 'المحادثة الذكية', basic: false, pro: false, vip: '30 رسالة / 24 ساعة' },
+    { label: 'مدة الوصول', basic: 'سنة', pro: 'سنة', vip: 'سنة' },
 ]
 
 function renderCell(value: boolean | string) {
@@ -32,10 +31,10 @@ export default function CompetitorComparison() {
                     transition={{ duration: 0.6 }}
                     className="section-header"
                 >
-                    <span className="section-badge">⚡ ليه إحنا مختلفين؟</span>
-                    <h2 className="section-title">قارن بنفسك</h2>
+                    <span className="section-badge">⚡ اختار ما يناسبك</span>
+                    <h2 className="section-title">قارن باقات PromptMaster</h2>
                     <p className="section-subtitle">
-                        شوف الفرق بين PromptMaster والبدائل الثانية
+                        المصادر وأخبار AI مجانية للجميع؛ مميزات الاشتراك موضحة هنا
                     </p>
                 </motion.div>
 
@@ -51,11 +50,9 @@ export default function CompetitorComparison() {
                             <thead>
                                 <tr>
                                     <th className="feature-header">الميزة</th>
-                                    <th className="our-header">
-                                        <span className="our-badge">PromptMaster</span>
-                                    </th>
-                                    <th>Udemy</th>
-                                    <th>LearnPrompting</th>
+                                    <th>الأساسية</th>
+                                    <th>المتقدمة</th>
+                                    <th className="our-header"><span className="our-badge">VIP</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -68,9 +65,9 @@ export default function CompetitorComparison() {
                                         transition={{ delay: index * 0.06 }}
                                     >
                                         <td className="feature-name">{row.label}</td>
-                                        <td className="our-cell">{renderCell(row.us)}</td>
-                                        <td>{renderCell(row.udemy)}</td>
-                                        <td>{renderCell(row.learnprompting)}</td>
+                                        <td>{renderCell(row.basic)}</td>
+                                        <td>{renderCell(row.pro)}</td>
+                                        <td className="our-cell">{renderCell(row.vip)}</td>
                                     </motion.tr>
                                 ))}
                             </tbody>
@@ -90,10 +87,10 @@ export default function CompetitorComparison() {
                         <span className="callout-emoji">💡</span>
                         <div>
                             <p className="callout-title">
-                                كورس AI واحد على Udemy = 349-2,199 ج.م (فيديو فقط)
+                                ابدأ بالفصل الأول المجاني قبل اختيار الباقة
                             </p>
                             <p className="callout-subtitle">
-                                PromptMaster = <strong>5 ج.م فقط (بكود AI56)</strong> مع تمارين + gamification + شهادة + مجتمع — بدل كورس Udemy بـ 349-2,199 ج.م
+                                <strong>الأسعار وشروط الخصم تظهر قبل الدفع.</strong> الشهادة تسجّل إتمام قراءة ذاتي للفصول الأساسية العشرة، ولا تمثل اعتمادًا مهنيًا أو إثبات مهارة.
                             </p>
                         </div>
                     </div>

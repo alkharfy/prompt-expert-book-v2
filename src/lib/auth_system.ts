@@ -4,7 +4,8 @@
 import { supabaseProxy as supabase } from './supabase_proxy'
 import { deviceFingerprint, DeviceFingerprintData } from './fingerprint'
 import { saveAuthCookies, getAuthCookies, clearAuthCookies } from './cookie_utils'
-import { SESSION_DURATION_MS, TOTAL_BOOK_PAGES, TOTAL_CHAPTERS } from './config'
+import { SESSION_DURATION_MS, TOTAL_BOOK_PAGES } from './config'
+import { getMainChapterCompletion, normalizeCompletedChapters, parseChapterId } from './reading-completion'
 import { authLogger } from './logger'
 import { hashPassword, verifyPassword, isBcryptHash, legacySha256Hash } from './password'
 import { checkRateLimit, RATE_LIMITS } from './rate-limit'
@@ -340,19 +341,7 @@ class AuthSystem {
             // 8. Save to cookies
             saveAuthCookies(session.token, deviceId, newUser.id)
 
-            // 9. Create reading progress record
-            const { error: progressError } = await (supabase.from('reading_progress') as any).insert({
-                user_id: newUser.id,
-                current_page: 1,
-                total_pages: TOTAL_BOOK_PAGES,
-                bookmarks: [],
-                completed_chapters: [],
-                completion_percentage: 0,
-            })
-
-            if (progressError) {
-                authLogger.warn('Could not create reading progress record', { message: progressError.message })
-            }
+            // The validated reading API initializes progress on the first save.
 
             return {
                 ok: true,
@@ -1134,106 +1123,30 @@ class AuthSystem {
      */
     /**
      * Get detailed reading progress including completed chapters
-     * Also auto-calculates completed chapters based on current page
+     * Reads explicit, validated chapter markers. Jumping to a later page does
+     * not mark the earlier chapters complete.
      */
     async getDetailedProgress(): Promise<{ currentPage: number, totalPages: number, percentage: number, completedChapters: number[] } | null> {
         try {
             const userId = this.getCurrentUserId()
             if (!userId) return null
 
-            const { data, error } = await supabase
-                .from('reading_progress')
-                .select('current_page, total_pages, completion_percentage, completed_chapters')
-                .eq('user_id', userId)
-                .maybeSingle() as {
-                    data: {
-                        current_page?: number;
-                        total_pages?: number;
-                        completion_percentage?: number;
-                        completed_chapters?: string[]
-                    } | null;
-                    error: any
-                }
-
-            if (error || !data) return null
-
-            // Map string array to number array for chapter indices
-            let completedChapters = (data.completed_chapters || []).map((id: string) => parseInt(id))
-
-            // Auto-calculate completed chapters based on current page
-            // This ensures progress is tracked even if user didn't click "Next" at end of chapter
+            const response = await fetch('/api/reading-progress', { cache: 'no-store' })
+            if (!response.ok) return null
+            const { data } = await response.json()
+            if (!data) return null
+            const completedChapters = normalizeCompletedChapters(data.completed_chapters).map(Number)
             const currentPage = data.current_page || 1
-            const calculatedChapters = this.calculateCompletedChapters(currentPage)
-
-            // Merge: keep manually marked + add calculated ones
-            const allChapters = [...completedChapters, ...calculatedChapters]
-            const mergedChapters = allChapters.filter((value, index, self) => self.indexOf(value) === index)
-
-            // If we calculated more chapters than stored, update the database
-            if (mergedChapters.length > completedChapters.length) {
-                completedChapters = mergedChapters
-                // Update in background (don't await)
-                this.syncCompletedChapters(userId, mergedChapters)
-            }
 
             return {
                 currentPage,
-                totalPages: data.total_pages || TOTAL_BOOK_PAGES,
-                percentage: data.completion_percentage || Math.min(Math.round((currentPage / TOTAL_BOOK_PAGES) * 100), 100),
+                totalPages: TOTAL_BOOK_PAGES,
+                percentage: getMainChapterCompletion(completedChapters).percentage,
                 completedChapters
             }
         } catch (err) {
             authLogger.error('Error', err)
             return null
-        }
-    }
-
-    /**
-     * Calculate which chapters are completed based on current page number
-     * Page ranges for each chapter (based on actual bookData counts):
-     * - Intro (0): pages 1-6 (6 pages)
-     * - Section 1 (1): pages 7-23 (17 pages)
-     * - Section 2 (2): pages 24-41 (18 pages)
-     * - Section 3 (3): pages 42-59 (18 pages)
-     * - Section 4 (4): pages 60-77 (18 pages)
-     * - Section 5 (5): pages 78-95 (18 pages)
-     * - Sections 6-10 end at 115, 133, 149, 165 and 182.
-     * - Library ends at 194; appendix at 214; glossary at 222.
-     * Total: 222 pages
-     */
-    private calculateCompletedChapters(currentPage: number): number[] {
-        const completed: number[] = []
-
-        // Chapter end pages (inclusive) - verified against bookData
-        const chapterEndPages = [6, 23, 41, 59, 77, 95, 115, 133, 149, 165, 182, 194, 214]
-
-        for (let i = 0; i < chapterEndPages.length; i++) {
-            // A chapter is completed if user has read past its last page
-            if (currentPage > chapterEndPages[i]) {
-                completed.push(i)
-            }
-        }
-
-        return completed
-    }
-
-    /**
-     * Sync completed chapters to database (background update)
-     */
-    private async syncCompletedChapters(userId: string, chapters: number[]): Promise<void> {
-        try {
-            const chaptersStr = chapters.map(c => c.toString())
-
-            await (supabase
-                .from('reading_progress') as any)
-                .update({
-                    completed_chapters: chaptersStr,
-                })
-                .eq('user_id', userId)
-
-            authLogger.debug(`Synced completed chapters: ${chapters.length}/${TOTAL_CHAPTERS}`)
-        } catch (err) {
-            authLogger.error('Error syncing chapters', err)
         }
     }
 
@@ -1246,37 +1159,13 @@ class AuthSystem {
             const userId = this.getCurrentUserId()
             if (!userId) return false
 
-            // 1. Get current completed chapters
-            const { data, error: fetchError } = await supabase
-                .from('reading_progress')
-                .select('completed_chapters')
-                .eq('user_id', userId)
-                .single() as { data: { completed_chapters?: string[] } | null; error: any }
-
-            if (fetchError) {
-                authLogger.error('Error fetching chapters', { message: fetchError.message })
-                return false
-            }
-
-            const current = data?.completed_chapters || []
-            const indexStr = chapterIndex.toString()
-
-            if (current.includes(indexStr)) return true // Already completed
-
-            // 2. Update with new chapter
-            const updated = [...current, indexStr]
-
-            const { error: updateError } = await (supabase
-                .from('reading_progress') as unknown as SupabaseTable)
-                .update({
-                    completed_chapters: updated,
-                })
-                .eq('user_id', userId)
-
-            if (updateError) {
-                authLogger.error('Error completing chapter', { message: updateError.message })
-                return false
-            }
+            if (parseChapterId(chapterIndex) === null) return false
+            const response = await fetch('/api/reading-progress', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed_chapter: chapterIndex }),
+            })
+            if (!response.ok) return false
 
             authLogger.debug(`Chapter ${chapterIndex} marked as completed`)
             return true
@@ -1395,21 +1284,7 @@ class AuthSystem {
                 return { ok: false, error: 'فشل في إنشاء كود التحقق' }
             }
 
-            // 7. Create reading progress record (for later use)
-            const { error: progressError } = await (supabase.from('reading_progress') as any).insert({
-                user_id: newUser.id,
-                current_page: 1,
-                total_pages: TOTAL_BOOK_PAGES,
-                bookmarks: [],
-                completed_chapters: [],
-                completion_percentage: 0,
-            })
-
-            if (progressError) {
-                authLogger.warn('Could not create reading progress record', { message: progressError.message })
-            }
-
-
+            // Progress is initialized after authentication by the reading API.
             return {
                 ok: true,
                 userId: newUser.id,

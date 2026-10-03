@@ -24,6 +24,7 @@ interface TodayPlan {
   dayNumber: number
   totalDays: number
   progressPercent: number
+  needsRegeneration?: boolean
   tasks: DailyTask[]
   isFlexible: boolean
   summary: {
@@ -137,22 +138,17 @@ export default function MyPlanPage() {
       })
       const data = await res.json()
       if (data.ok) {
-        // Update local state
-        setTodayPlan(prev => {
-          if (!prev) return prev
-          return {
-            ...prev,
-            tasks: prev.tasks.map(t =>
-              t.id === taskId ? { ...t, status: action } : t
-            ),
-          }
-        })
+        const planResponse = await fetch('/api/learning-plan')
+        const refreshed = await planResponse.json()
+        if (planResponse.ok && refreshed.plan) setTodayPlan(refreshed.plan)
         setFullPlan(prev =>
           prev.map(t => t.id === taskId ? { ...t, status: action } : t)
         )
+      } else {
+        setError(data.error || 'تعذر تسجيل حالة المهمة')
       }
     } catch {
-      // silent
+      setError('تعذر تسجيل حالة المهمة. جرّب مرة أخرى.')
     }
   }, [])
 
@@ -170,7 +166,7 @@ export default function MyPlanPage() {
     )
   }
 
-  const hasPlan = todayPlan && (todayPlan.tasks.length > 0 || todayPlan.isFlexible)
+  const hasPlan = todayPlan && (todayPlan.summary || todayPlan.tasks.length > 0 || todayPlan.isFlexible)
   const noPlanYet = !hasPlan && !todayPlan?.summary
 
   // Group full plan by date
@@ -263,6 +259,7 @@ export default function MyPlanPage() {
                 progressPercent={todayPlan.progressPercent}
                 tasks={todayPlan.tasks}
                 isFlexible={todayPlan.isFlexible}
+                needsRegeneration={todayPlan.needsRegeneration}
                 onTaskAction={handleTaskAction}
               />
             )}

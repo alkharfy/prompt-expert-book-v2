@@ -55,11 +55,13 @@ export default function PathProgressBar() {
                 />
             </div>
             <div className="path-progress-stats">
-                <span>{completion}% مكتمل</span>
+                <span>موضع الاستئناف: {completion}% من صفحات المسار</span>
                 <span>
-                    {path.totalPages} صفحة · {path.estimatedHours} ساعات
+                    {path.totalPages} صفحة · نحو {path.estimatedHours} ساعة للقراءة والتجارب القصيرة
                 </span>
             </div>
+
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '8px' }}>موضع الصفحة لا يثبت إتمام كل ما سبقها. وقت المشاريع والمراجعة يُضاف حسب تطبيقك.</p>
 
             <style jsx>{`
                 .path-progress-bar {

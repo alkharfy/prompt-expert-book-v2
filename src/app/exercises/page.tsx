@@ -35,6 +35,8 @@ export default function ExercisesPage() {
     const [sectionProgress, setSectionProgress] = useState<Record<string, number>>({})
 
     useEffect(() => {
+        const requestedSection = new URLSearchParams(window.location.search).get('section')
+        if (requestedSection && allExercises[requestedSection]) setSelectedSection(requestedSection)
         checkAuthAndLoadData()
     }, [])
 
@@ -63,19 +65,26 @@ export default function ExercisesPage() {
             // Load completed exercises
             const { data: progress, error: progressError } = await supabase
                 .from('exercise_progress')
-                .select('exercise_id, section_id, is_completed')
+                .select('exercise_id, section_id, is_completed, is_correct, points_earned')
                 .eq('user_id', userId)
-                .eq('is_completed', true) as { data: Array<{ exercise_id: string; section_id: string; is_completed: boolean }> | null; error: any }
+                .eq('is_completed', true) as { data: Array<{ exercise_id: string; section_id: string; is_completed: boolean; is_correct: boolean | null; points_earned: number }> | null; error: any }
 
-            if (progress) {
-                const completed = new Set(progress.map(p => p.exercise_id))
+            if (progress && !progressError) {
+                const courseExercises = Object.values(allExercises).flat()
+                const validRecords = progress.filter(record => courseExercises.some(exercise => exercise.exerciseId === record.exercise_id && exercise.sectionId === record.section_id))
+                const completed = new Set(validRecords.map(p => p.exercise_id))
                 setCompletedExercises(completed)
+                setUserStats({
+                    total_completed: completed.size,
+                    total_correct: validRecords.filter(record => record.is_correct === true && courseExercises.find(exercise => exercise.exerciseId === record.exercise_id)?.type !== 'prompt_builder').length,
+                    total_points: validRecords.reduce((total, record) => total + (record.points_earned || 0), 0),
+                })
 
                 // Calculate section progress
                 const sectionProg: Record<string, number> = {}
                 Object.keys(allExercises).forEach(sectionId => {
                     const total = allExercises[sectionId].length
-                    const done = progress.filter(p => p.section_id === sectionId).length
+                    const done = allExercises[sectionId].filter(exercise => completed.has(exercise.exerciseId)).length
                     sectionProg[sectionId] = Math.round((done / total) * 100)
                 })
                 setSectionProgress(sectionProg)
@@ -87,7 +96,7 @@ export default function ExercisesPage() {
         }
     }
 
-    const handleExerciseComplete = (isCorrect: boolean, points: number) => {
+    const handleExerciseComplete = () => {
         // Refresh stats
         checkAuthAndLoadData()
     }

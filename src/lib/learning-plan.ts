@@ -5,10 +5,10 @@
 
 import 'server-only'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { SECTION_REGISTRY } from '@/config/sections'
-import { LEARNING_PATHS } from '@/data/learningPaths'
 import type { LearningPathId, LearningDurationId } from '@/types/learning'
 import { dbLogger } from './logger'
+import { calculatePlanProgress, DURATION_DAYS, hasCompleteReadingCoverage } from '@/lib/learning-plan-schedule'
+export { generatePlanTasks } from '@/lib/learning-plan-schedule'
 
 // ===== Types =====
 
@@ -46,6 +46,7 @@ export interface TodayPlan {
   tasks: DailyTask[]
   isFlexible: boolean
   summary: PlanSummary | null
+  needsRegeneration?: boolean
 }
 
 export interface DailyTask {
@@ -66,150 +67,11 @@ export interface DailyTask {
 
 // ===== Duration Config =====
 
-const DURATION_DAYS: Record<LearningDurationId, number> = {
-  '1week': 7,
-  '2weeks': 14,
-  '1month': 30,
-  '2months': 60,
-  'flexible': 0, // No fixed schedule
-}
-
 const TASK_TYPE_ORDER: Record<string, number> = {
   reading: 0,
   exercise: 1,
   review: 2,
   celebration: 3,
-}
-
-// ===== Section Page Count Helper =====
-
-function getSectionPages(sectionId: string): number {
-  const idx = SECTION_REGISTRY.findIndex(s => s.id === sectionId)
-  if (idx < 0) return 0
-  const nextOffset = idx + 1 < SECTION_REGISTRY.length
-    ? SECTION_REGISTRY[idx + 1].progressOffset
-    : SECTION_REGISTRY[idx].progressOffset + SECTION_REGISTRY[idx].pageCount
-  return nextOffset - SECTION_REGISTRY[idx].progressOffset
-}
-
-function getSectionLabel(sectionId: string): string {
-  const sec = SECTION_REGISTRY.find(s => s.id === sectionId)
-  return sec?.chapterLabel || sectionId
-}
-
-// ===== Core: Generate Plan =====
-
-export function generatePlanTasks(
-  learningPath: LearningPathId,
-  learningDuration: LearningDurationId,
-  startDate: string
-): PlanTask[] {
-  if (learningDuration === 'flexible') return []
-
-  const path = LEARNING_PATHS[learningPath]
-  if (!path) return []
-
-  const totalDays = DURATION_DAYS[learningDuration]
-  if (totalDays <= 0) return []
-
-  const sections = path.sections
-  const tasks: PlanTask[] = []
-
-  // Calculate total pages and exercises
-  let totalPages = 0
-  const sectionPages: { id: string; pages: number }[] = []
-  for (const secId of sections) {
-    const pages = getSectionPages(secId)
-    sectionPages.push({ id: secId, pages })
-    totalPages += pages
-  }
-
-  // Pages per day (at least 1)
-  const pagesPerDay = Math.max(1, Math.ceil(totalPages / totalDays))
-
-  // Distribute reading tasks across days
-  let currentDay = 1
-  let currentSectionIdx = 0
-  let currentPageInSection = 1
-  const start = new Date(startDate)
-
-  while (currentSectionIdx < sectionPages.length && currentDay <= totalDays) {
-    const sec = sectionPages[currentSectionIdx]
-    const sectionTotalPages = sec.pages
-    const sectionLabel = getSectionLabel(sec.id)
-
-    // How many pages to assign today
-    const remainingInSection = sectionTotalPages - currentPageInSection + 1
-    const pagesToday = Math.min(pagesPerDay, remainingInSection)
-    const startPage = currentPageInSection
-    const endPage = currentPageInSection + pagesToday - 1
-
-    const taskDate = new Date(start)
-    taskDate.setDate(taskDate.getDate() + currentDay - 1)
-    const dateStr = taskDate.toISOString().split('T')[0]
-
-    // Reading task
-    tasks.push({
-      taskDate: dateStr,
-      taskType: 'reading',
-      sectionId: sec.id,
-      startPage,
-      endPage,
-      titleAr: `📖 اقرأ: ${sectionLabel} — ص ${startPage}${startPage !== endPage ? `-${endPage}` : ''}`,
-      descriptionAr: `اقرأ ${pagesToday} ${pagesToday === 1 ? 'صفحة' : 'صفحات'} من ${sectionLabel}`,
-      dayNumber: currentDay,
-      estimatedMinutes: Math.max(5, pagesToday * 5),
-    })
-
-    // Add exercise task at end of section
-    if (endPage >= sectionTotalPages) {
-      tasks.push({
-        taskDate: dateStr,
-        taskType: 'exercise',
-        sectionId: sec.id,
-        exerciseId: `exercise-${sec.id}`,
-        titleAr: `✏️ حل تمرين: ${sectionLabel}`,
-        descriptionAr: `طبّق اللي اتعلمته في ${sectionLabel}`,
-        dayNumber: currentDay,
-        estimatedMinutes: 10,
-      })
-
-      currentSectionIdx++
-      currentPageInSection = 1
-    } else {
-      currentPageInSection = endPage + 1
-    }
-
-    // Review day every 5 days
-    if (currentDay % 5 === 0 && currentDay < totalDays) {
-      const reviewDate = new Date(start)
-      reviewDate.setDate(reviewDate.getDate() + currentDay - 1)
-      tasks.push({
-        taskDate: reviewDate.toISOString().split('T')[0],
-        taskType: 'review',
-        titleAr: '🔄 مراجعة سريعة',
-        descriptionAr: 'راجع أهم النقاط اللي اتعلمتها الأيام اللي فاتت',
-        dayNumber: currentDay,
-        estimatedMinutes: 10,
-      })
-    }
-
-    currentDay++
-  }
-
-  // Celebration on the last day
-  const lastDate = new Date(start)
-  lastDate.setDate(lastDate.getDate() + totalDays - 1)
-  tasks.push({
-    taskDate: lastDate.toISOString().split('T')[0],
-    taskType: 'celebration',
-    titleAr: '🎉 مبروك! أنهيت الخطة',
-    descriptionAr: 'أنت بطل! خلّصت خطة التعلم بتاعتك. خد شهادتك دلوقتي!',
-    dayNumber: totalDays,
-    estimatedMinutes: 0,
-  })
-
-  return tasks
 }
 
 // ===== DB Operations =====
@@ -225,8 +87,8 @@ export async function savePlan(
 
   try {
     const totalDays = DURATION_DAYS[learningDuration]
-    const endDate = new Date(startDate)
-    endDate.setDate(endDate.getDate() + totalDays - 1)
+    const endDate = new Date(`${startDate}T00:00:00.000Z`)
+    endDate.setUTCDate(endDate.getUTCDate() + totalDays - 1)
 
     // Delete existing plan
     await supabase.from('learning_plan_tasks').delete().eq('user_id', userId)
@@ -324,54 +186,25 @@ export async function getTodayPlan(userId: string): Promise<TodayPlan> {
       return { ...defaultResult, isFlexible: true, summary }
     }
 
-    // Get today's tasks
-    const { data: tasksData } = await supabase
-      .from('learning_plan_tasks')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('task_date', today)
-      .order('created_at', { ascending: true })
-
-    const tasks: DailyTask[] = (tasksData || []).map((t: Record<string, unknown>) => ({
-      id: t.id as string,
-      taskDate: t.task_date as string,
-      taskType: t.task_type as DailyTask['taskType'],
-      sectionId: t.section_id as string | undefined,
-      startPage: t.start_page as number | undefined,
-      endPage: t.end_page as number | undefined,
-      exerciseId: t.exercise_id as string | undefined,
-      titleAr: t.title_ar as string,
-      descriptionAr: t.description_ar as string | undefined,
-      dayNumber: t.day_number as number,
-      estimatedMinutes: t.estimated_minutes as number,
-      status: t.status as DailyTask['status'],
-      completedAt: t.completed_at as string | null,
-    })).sort((a, b) => (TASK_TYPE_ORDER[a.taskType] ?? 9) - (TASK_TYPE_ORDER[b.taskType] ?? 9))
+    const allTasks = await getFullPlan(userId)
+    const tasks = allTasks.filter(task => task.taskDate === today)
 
     // Calculate day number from start date
     const startMs = new Date(summary.startDate).getTime()
     const todayMs = new Date(today).getTime()
     const dayNumber = Math.floor((todayMs - startMs) / (1000 * 60 * 60 * 24)) + 1
 
-    // Count completed days
-    const { count } = await supabase
-      .from('learning_plan_tasks')
-      .select('task_date', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'completed')
-
-    const completedDays = count || 0
-    const progressPercent = summary.totalDays > 0
-      ? Math.min(100, Math.round((completedDays / summary.totalDays) * 100))
-      : 0
+    const { progressPercent, completedDays, skippedDays } = calculatePlanProgress(allTasks)
+    const needsRegeneration = !hasCompleteReadingCoverage(allTasks, summary.learningPath)
 
     return {
       dayNumber: Math.max(1, Math.min(dayNumber, summary.totalDays)),
       totalDays: summary.totalDays,
-      progressPercent,
+      progressPercent: needsRegeneration ? Math.min(99, progressPercent) : progressPercent,
       tasks,
       isFlexible: false,
-      summary,
+      summary: { ...summary, completedDays, skippedDays },
+      needsRegeneration,
     }
   } catch (error) {
     dbLogger.error('Error in getTodayPlan', error)
@@ -418,16 +251,26 @@ export async function updateTaskStatus(
   userId: string,
   taskId: string,
   status: 'completed' | 'skipped' | 'postponed'
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; error?: string }> {
   const supabase = getSupabaseAdmin()
 
   try {
+    const tasks = await getFullPlan(userId)
+    const task = tasks.find(item => item.id === taskId)
+    if (!task) return { ok: false, error: 'المهمة غير موجودة في خطتك' }
+    if (task.taskType === 'celebration' && status === 'completed' && !calculatePlanProgress(tasks).isComplete) {
+      return { ok: false, error: 'أكمل مهام القراءة والتطبيق والمراجعة قبل إتمام الخطة' }
+    }
+    if (task.taskType === 'celebration' && status === 'completed') {
+      const { data: summary } = await supabase.from('learning_plan_summary').select('learning_path').eq('user_id', userId).maybeSingle()
+      if (!summary || !hasCompleteReadingCoverage(tasks, summary.learning_path)) {
+        return { ok: false, error: 'الخطة القديمة لا تشمل كل الصفحات. أعد توليدها من إعدادات المسار قبل تسجيل الإتمام.' }
+      }
+    }
     const updateData: Record<string, unknown> = {
       status,
+      completed_at: status === 'completed' ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
-    }
-    if (status === 'completed') {
-      updateData.completed_at = new Date().toISOString()
     }
 
     const { error } = await supabase
