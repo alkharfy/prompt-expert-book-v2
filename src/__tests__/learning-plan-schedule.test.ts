@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LEARNING_SECTIONS } from '@/config/learningCatalog'
+import { getGlobalReadingTarget, getLearningReadingUrl, LEARNING_SECTIONS } from '@/config/learningCatalog'
 import { allExercises } from '@/data/exercisesData'
 import { LEARNING_PATHS } from '@/data/learningPaths'
 import { calculatePlanProgress, generatePlanTasks, hasCompleteReadingCoverage } from '@/lib/learning-plan-schedule'
@@ -165,6 +165,33 @@ describe('legacy learning plan reading coverage', () => {
     it.each(cases)('$path over $days days has complete coverage with or without ordinary exercises', ({ path, duration }) => {
         expect(hasCompleteReadingCoverage(generatePlanTasks(path, duration, startDate), path)).toBe(true)
         expect(hasCompleteReadingCoverage(generatePlanTasks(path, duration, startDate, { includeExercises: false, includeProject: true }), path)).toBe(true)
+    })
+
+    it.each(paths)('%s accepts saved ranges spanning the old free-page slots without rewriting later tasks', path => {
+        const tasks = LEARNING_PATHS[path].sections.map(sectionId => {
+            const section = LEARNING_SECTIONS.find(item => item.id === sectionId)!
+            return { taskType: 'reading' as const, sectionId, startPage: 1, endPage: section.slotSize }
+        })
+        const savedTasks = tasks.map(task => ({ ...task }))
+        expect(hasCompleteReadingCoverage(tasks, path)).toBe(true)
+        expect(tasks).toEqual(savedTasks)
+        expect(getLearningReadingUrl('intro', tasks[0].endPage)).toBe('/read/intro/3')
+        expect(getLearningReadingUrl('section-1', tasks[1].endPage)).toBe('/read/section-1/10')
+        expect(getGlobalReadingTarget(24)).toMatchObject({ section: { id: 'section-2' }, page: 1 })
+        expect(getGlobalReadingTarget(41)).toMatchObject({ section: { id: 'section-2' }, page: 18 })
+    })
+
+    it('maps gap-only saved reading tasks to the last real page without covering earlier pages', () => {
+        const tasks = [
+            { taskType: 'reading' as const, sectionId: 'intro', startPage: 1, endPage: 2 },
+            { taskType: 'reading' as const, sectionId: 'intro', startPage: 4, endPage: 6 },
+            { taskType: 'reading' as const, sectionId: 'section-1', startPage: 1, endPage: 9 },
+            { taskType: 'reading' as const, sectionId: 'section-1', startPage: 11, endPage: 17 },
+            { taskType: 'reading' as const, sectionId: 'section-2', startPage: 1, endPage: 18 },
+        ]
+        expect(hasCompleteReadingCoverage(tasks, 'quick')).toBe(true)
+        expect(hasCompleteReadingCoverage(tasks.slice(1), 'quick')).toBe(false)
+        expect(hasCompleteReadingCoverage(tasks.filter(task => task.endPage !== 9), 'quick')).toBe(false)
     })
 
     it.each(paths)('%s rejects a plan that is missing one page', path => {

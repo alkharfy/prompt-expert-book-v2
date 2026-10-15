@@ -12,6 +12,7 @@ import { authSystem } from '@/lib/auth_system'
 import BookmarkButton from '@/components/reading/BookmarkButton'
 import ScrollProgress from '@/components/reading/ScrollProgress'
 import type { PageContent } from '@/data/bookData'
+import { getLearningReadingUrl } from '@/config/learningCatalog'
 
 interface LibraryReaderProps {
     /** Entitlement-gated pages: locked pages arrive with empty contentBlocks. */
@@ -23,7 +24,14 @@ interface LibraryReaderProps {
 export default function LibraryReader({ data, initialHasAccess = false, initialAuthed = false }: LibraryReaderProps) {
     const params = useParams()
     const router = useRouter()
-    const pageNum = parseInt(params.page as string) || 1
+    const requestedPageNum = parseInt(params.page as string) || 1
+    const pageNum = Math.min(requestedPageNum, data.length)
+
+    useEffect(() => {
+        if (requestedPageNum > data.length) {
+            router.replace(getLearningReadingUrl('library', requestedPageNum))
+        }
+    }, [requestedPageNum, data.length, router])
 
     const [isAuthed, setIsAuthed] = useState(initialAuthed)
     const [isLockOverlayOpen, setIsLockOverlayOpen] = useState(!initialHasAccess)

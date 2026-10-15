@@ -125,16 +125,16 @@ export default function LeadMagnetModal() {
                             <>
                                 <div className="modal-icon">📘</div>
                                 <h3 className="modal-title">
-                                    دليل GOLDS المصغّر — مجاناً
+                                    دليل مجاني: إزاي تطلب من الـ AI صح
                                 </h3>
                                 <p className="modal-desc">
-                                    5 تقنيات Prompt أساسية في 10 دقائق — حمّلها الآن وابدأ تكتب prompts احترافية
+                                    في 10 دقايق هتعرف تكتب طلب يطلّع شغل يتسلّم — بنظام بسيط اسمه GOLDS
                                 </p>
 
                                 <ul className="modal-benefits">
-                                    <li>✅ إطار GOLDS الكامل مع أمثلة</li>
-                                    <li>✅ 5 قوالب prompt جاهزة للاستخدام</li>
-                                    <li>✅ أخطاء شائعة وكيف تتجنبها</li>
+                                    <li>✅ النظام خطوة بخطوة بأمثلة</li>
+                                    <li>✅ 5 قوالب جاهزة تنسخها وتعدّل عليها</li>
+                                    <li>✅ أشهر الأخطاء وإزاي تتجنبها</li>
                                 </ul>
 
                                 <form onSubmit={handleSubmit} className="lead-form">

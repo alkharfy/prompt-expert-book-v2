@@ -20,6 +20,7 @@ import Link from 'next/link'
 import { authSystem } from '@/lib/auth_system'
 import { useSubscription } from '@/context/SubscriptionContext'
 import { trackPaywallHit } from '@/lib/analytics'
+import { SECTION_REGISTRY } from '@/config/sections'
 
 interface LockedOverlayProps {
     isOpen: boolean
@@ -45,9 +46,10 @@ function getSafeRedirectPath(path: string): string {
 }
 
 /** فهرس فصول الكتاب للعرض في Paywall */
+const FIRST_CHAPTER = SECTION_REGISTRY.find(section => section.id === 'section-1')!
 const BOOK_CHAPTERS = [
-    { num: 1, title: 'أساسيات AI التوليدي', pages: 17, free: true, freeLabel: '🆓 مجاني بالكامل' },
-    { num: 2, title: 'تجربتك الأولى مع AI', pages: 18, free: false, freeLabel: '4 صفحات مجانية' },
+    { num: 1, title: 'الـ AI بيفكر إزاي؟', pages: FIRST_CHAPTER.pageCount, free: true, freeLabel: '🆓 مجاني بالكامل' },
+    { num: 2, title: 'تجربتك الأولى مع AI', pages: 18, free: false },
     { num: 3, title: 'إطار GOLDS الاحترافي', pages: 18, free: false },
     { num: 4, title: 'البرومبتات المتسلسلة', pages: 18, free: false },
     { num: 5, title: 'الجودة والتصحيح', pages: 18, free: false },
@@ -145,7 +147,7 @@ export default function LockedOverlay({
 
     const handleBack = () => {
         if (isDirectAccess) {
-            router.push('/read/section-1/17') // آخر صفحة مجانية (نهاية الفصل 1)
+            router.push(`/read/${FIRST_CHAPTER.id}/${FIRST_CHAPTER.pageCount}`) // آخر صفحة مجانية (نهاية الفصل 1)
         } else {
             onClose()
         }

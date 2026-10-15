@@ -9,8 +9,8 @@ describe('chapter completion ordering', () => {
             updateReadingProgress: vi.fn(() => new Promise<boolean>(resolve => { release = resolve })),
             completeChapter: vi.fn().mockResolvedValue(true),
         }
-        const pending = completeChapterWithProgress(writer, 23, 1)
-        expect(writer.updateReadingProgress).toHaveBeenCalledWith(23)
+        const pending = completeChapterWithProgress(writer, 16, 1)
+        expect(writer.updateReadingProgress).toHaveBeenCalledWith(16)
         expect(writer.completeChapter).not.toHaveBeenCalled()
         release(true)
         expect(await pending).toBeNull()
@@ -19,24 +19,25 @@ describe('chapter completion ordering', () => {
 
     it('does not mark a chapter complete when page saving fails', async () => {
         const writer = { updateReadingProgress: vi.fn().mockResolvedValue(false), completeChapter: vi.fn() }
-        expect(await completeChapterWithProgress(writer, 23, 1)).toContain('تعذّر حفظ الصفحة')
+        expect(await completeChapterWithProgress(writer, 16, 1)).toContain('تعذّر حفظ الصفحة')
         expect(writer.completeChapter).not.toHaveBeenCalled()
     })
 
     it('reports a rejected completion marker instead of treating it as success', async () => {
         const writer = { updateReadingProgress: vi.fn().mockResolvedValue(true), completeChapter: vi.fn().mockResolvedValue(false) }
-        expect(await completeChapterWithProgress(writer, 23, 1)).toContain('تعذّر تسجيل إتمام الفصل')
+        expect(await completeChapterWithProgress(writer, 16, 1)).toContain('تعذّر تسجيل إتمام الفصل')
     })
 
     it('saves the intro without sending an invalid chapter-zero marker', async () => {
         const writer = { updateReadingProgress: vi.fn().mockResolvedValue(true), completeChapter: vi.fn() }
-        expect(await completeChapterWithProgress(writer, 6, null)).toBeNull()
+        expect(await completeChapterWithProgress(writer, 3, null)).toBeNull()
+        expect(writer.updateReadingProgress).toHaveBeenCalledWith(3)
         expect(writer.completeChapter).not.toHaveBeenCalled()
     })
 
     it('reports transport errors so the reader can retry', async () => {
         const writer = { updateReadingProgress: vi.fn().mockRejectedValue(new Error('offline')), completeChapter: vi.fn() }
-        expect(await completeChapterWithProgress(writer, 23, 1)).toContain('تحقق من اتصالك')
+        expect(await completeChapterWithProgress(writer, 16, 1)).toContain('تحقق من اتصالك')
         expect(writer.completeChapter).not.toHaveBeenCalled()
     })
 })

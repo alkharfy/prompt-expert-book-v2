@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { verifySession } from '@/lib/auth'
 import { dbLogger } from '@/lib/logger'
 import { getBookmarks, toggleBookmark } from '@/actions/bookmarks'
+import { getGlobalReadingUrl, getLearningReadingUrl } from '@/config/learningCatalog'
 
 interface Bookmark {
     id: string
@@ -72,30 +73,10 @@ export default function BookmarksPage() {
     }
 
     const getBookmarkPath = (id: string): string => {
-        // Parse bookmark ID to get path
-        // Format: section-1-3 or intro-1 or library-2
-        const parts = id.split('-')
-
-        // Validate parts array
-        if (!parts || parts.length === 0) {
-            return '/toc' // Fallback
-        }
-
-        if (parts[0] === 'intro') {
-            return `/read/intro/${parts[1] || '1'}`
-        } else if (parts[0] === 'library') {
-            return `/library/${parts[1] || '1'}`
-        } else if (parts[0] === 'appendix') {
-            return `/read/appendix/${parts[1] || '1'}`
-        } else if (parts[0] === 'glossary') {
-            return `/read/glossary/${parts[1] || '1'}`
-        } else if (parts.length >= 3) {
-            // section-X-Y format
-            return `/read/${parts[0]}-${parts[1]}/${parts[2]}`
-        } else {
-            // Unknown format - fallback
-            return '/toc'
-        }
+        // Both global positions and legacy section-local IDs retain their section.
+        if (/^\d+$/.test(id)) return getGlobalReadingUrl(Number(id))
+        const match = id.match(/^(intro|section-\d+|library|appendix|glossary)(?:-(\d+))?$/)
+        return match ? getLearningReadingUrl(match[1], Number(match[2] || 1)) : '/toc'
     }
 
     const formatDate = (dateString: string): string => {

@@ -34,6 +34,7 @@ import SpecializationExamples from '@/components/reading/SpecializationExamples'
 import '@/styles/notes.css'
 import '@/styles/recaps.css'
 import type { SectionConfig } from '@/config/sections'
+import { getLearningReadingUrl } from '@/config/learningCatalog'
 import type { PageContent } from '@/data/bookData'
 
 // Running Project banner mapping: sectionNumber → phase info
@@ -80,7 +81,15 @@ interface SectionPageProps {
 export default function SectionPage({ config, data, initialHasAccess = false, initialAuthed = false, extras }: SectionPageProps) {
     const params = useParams()
     const router = useRouter()
-    const pageNum = parseInt(params.page as string) || 1
+    const requestedPageNum = parseInt(params.page as string) || 1
+    const pageNum = Math.min(requestedPageNum, config.pageCount)
+
+    // Old links may point into a reserved slot that no longer has lesson content.
+    useEffect(() => {
+        if (requestedPageNum > config.pageCount) {
+            router.replace(getLearningReadingUrl(config.id, requestedPageNum))
+        }
+    }, [requestedPageNum, config.id, config.pageCount, router])
 
     const [isAuthed, setIsAuthed] = useState(initialAuthed)
     const [hasPaid, setHasPaid] = useState(initialHasAccess) // server-resolved; fail-closed (no optimistic unlock)
@@ -130,7 +139,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
     }, [])
 
     const currentPage = data[pageNum - 1]
-    const totalPages = data.length
+    const totalPages = config.pageCount
     const isFirstPage = pageNum === 1
     const isLastPage = pageNum === totalPages
 
@@ -1309,7 +1318,8 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                 {block.title && <h3 style={{ color: '#FF6B35', marginBottom: '12px', fontSize: '1.4rem' }}>{block.title}</h3>}
                                                 <div className="code-block" style={{ margin: 0, padding: '24px', paddingTop: '50px', position: 'relative' }}>
                                                     <CopyButton text={block.code || ''} />
-                                                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}><code style={{ color: '#FFB800' }}>{block.code}</code></pre>
+                                                    {/* plaintext bidi: each line takes the direction of its first letter, so Arabic prompts and CSV rows read right-to-left */}
+                                                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap', unicodeBidi: 'plaintext', textAlign: 'start' }}><code style={{ color: '#FFB800' }}>{block.code}</code></pre>
                                                     {block.content && (
                                                         <div style={{
                                                             marginTop: '16px',

@@ -1,3 +1,5 @@
+import { LEARNING_SECTIONS } from '@/config/learningCatalog'
+
 // Configuration for the authentication and device fingerprinting system
 
 // ⚠️ Supabase Configuration - يتم جلبها من environment variables في supabase.ts
@@ -19,8 +21,8 @@ export const COOKIE_PATH = '/'
 export const COOKIE_SECURE = process.env.NODE_ENV === 'production' // Use secure cookies in production
 export const COOKIE_SAME_SITE = 'Lax' as const
 
-// Total pages in the book (for reading progress)
-// Intro 6 + main chapters 176 + library 12 + appendix 20 + glossary 8 = 222
+// Global page index space for saved progress validation, including reserved slots.
+// Intro slots 6 + main chapter slots 176 + library 12 + appendix 20 + glossary 8 = 222.
 export const TOTAL_BOOK_PAGES = 222
 
 // Total main chapters (excluding Glossary which is bonus content)
@@ -42,4 +44,4 @@ export const EMAIL_FROM_DEFAULT = process.env.EMAIL_FROM || `PromptMaster <norep
 
 // Single canonical page-count shown anywhere in marketing copy / structured data.
 // Includes the introduction, chapters, library, appendix and glossary.
-export const BOOK_PAGES_DISPLAY = TOTAL_BOOK_PAGES
+export const BOOK_PAGES_DISPLAY = LEARNING_SECTIONS.reduce((total, section) => total + section.pageCount, 0)

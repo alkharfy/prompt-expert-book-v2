@@ -7,6 +7,7 @@ import Navigation from '@/components/Navigation'
 import { verifySession } from '@/lib/auth'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import type { NoteData } from '@/components/reading/HighlightRenderer'
+import { getLearningReadingUrl } from '@/config/learningCatalog'
 import '@/styles/notes.css'
 
 // =====================================================
@@ -35,7 +36,7 @@ const COLOR_HEX: Record<string, string> = {
 
 const SECTION_NAMES: Record<string, string> = {
     'intro': 'المقدمة',
-    'section-1': 'الفصل 1: أساسيات البرومبت',
+    'section-1': 'الفصل 1: الـ AI بيفكر إزاي؟',
     'section-2': 'الفصل 2: من الفكرة للمواصفات',
     'section-3': 'الفصل 3: تصميم التجربة',
     'section-4': 'الفصل 4: كتابة المحتوى',
@@ -370,7 +371,7 @@ export default function NotesPage() {
                                             {/* Meta */}
                                             <div className="notes-card-meta">
                                                 <Link
-                                                    href={`/read/${note.section_id}/${note.page_number}`}
+                                                    href={getLearningReadingUrl(note.section_id, note.page_number)}
                                                     className="notes-card-link"
                                                 >
                                                     {SECTION_NAMES[note.section_id] || note.section_id} — صفحة {note.page_number}

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as book from '@/data/bookData'
 import { allExercises } from '@/data/exercisesData'
-import { EXERCISE_COUNTS_BY_SECTION, getLearningReadingUrl, LEARNING_SECTIONS } from '@/config/learningCatalog'
+import { EXERCISE_COUNTS_BY_SECTION, getGlobalReadingTarget, getGlobalReadingUrl, getLearningReadingUrl, LEARNING_SECTIONS } from '@/config/learningCatalog'
 import { getPathCompletion, isSectionInPath, LEARNING_PATHS } from '@/data/learningPaths'
 import type { LearningPathId } from '@/types/learning'
 
@@ -30,14 +30,15 @@ describe('learning catalog matches the shipped data', () => {
         }
         const actualTotal = Object.values(actualPages).reduce((sum, pages) => sum + pages.length, 0)
         expect(LEARNING_SECTIONS.reduce((sum, section) => sum + section.pageCount, 0)).toBe(actualTotal)
-        expect(actualTotal).toBe(222)
+        expect(actualTotal).toBe(212)
     })
 
-    it('has continuous global reading offsets, including the references', () => {
+    it('has continuous reserved global slots, including the references', () => {
         let expectedOffset = 0
         for (const section of LEARNING_SECTIONS) {
             expect(section.progressOffset, section.id).toBe(expectedOffset)
-            expectedOffset += section.pageCount
+            expect(section.slotSize).toBeGreaterThanOrEqual(section.pageCount)
+            expectedOffset += section.slotSize
         }
         expect(expectedOffset).toBe(222)
     })
@@ -56,11 +57,34 @@ describe('learning catalog matches the shipped data', () => {
         expect(getLearningReadingUrl('library', 12)).toBe('/library/12')
         expect(getLearningReadingUrl('appendix', 20)).toBe('/read/appendix/20')
         expect(getLearningReadingUrl('glossary', 8)).toBe('/read/glossary/8')
-        expect(getLearningReadingUrl('section-1', 999)).toBe('/read/section-1/17')
+        expect(getLearningReadingUrl('section-1', 999)).toBe('/read/section-1/10')
         expect(getLearningReadingUrl('section-1', -1)).toBe('/read/section-1/1')
         expect(getLearningReadingUrl('section-1', 1.5)).toBe('/read/section-1/1')
         expect(getLearningReadingUrl('section-1', Number.NaN)).toBe('/read/section-1/1')
         expect(getLearningReadingUrl('unknown', 1)).toBe('/toc')
+    })
+
+    it.each([
+        [4, '/read/intro/3'], [6, '/read/intro/3'],
+        [17, '/read/section-1/10'], [23, '/read/section-1/10'],
+    ])('clamps saved global gap %s to %s', (globalPage, url) => {
+        expect(getGlobalReadingUrl(globalPage)).toBe(url)
+        expect(getGlobalReadingTarget(globalPage)?.url).toBe(url)
+    })
+
+    it('keeps every real global position on its original section and page', () => {
+        for (const section of LEARNING_SECTIONS) {
+            for (let page = 1; page <= section.pageCount; page++) {
+                expect(getGlobalReadingTarget(section.progressOffset + page)).toEqual({
+                    section, page, url: getLearningReadingUrl(section.id, page),
+                })
+            }
+        }
+    })
+
+    it.each([0, -1, 223, 1.5, Number.NaN, Number.POSITIVE_INFINITY])('rejects invalid global position %s', page => {
+        expect(getGlobalReadingTarget(page)).toBeNull()
+        expect(getGlobalReadingUrl(page)).toBe('/toc')
     })
 })
 
@@ -81,7 +105,7 @@ describe('learning path totals', () => {
 
     it('includes the whole catalog in the comprehensive path', () => {
         expect(LEARNING_PATHS.comprehensive.sections).toEqual(LEARNING_SECTIONS.map(section => section.id))
-        expect(LEARNING_PATHS.comprehensive.totalPages).toBe(222)
+        expect(LEARNING_PATHS.comprehensive.totalPages).toBe(212)
         expect(getPathCompletion(182, 'comprehensive')).toBeLessThan(100)
         expect(getPathCompletion(222, 'comprehensive')).toBe(100)
     })
@@ -89,7 +113,7 @@ describe('learning path totals', () => {
     it.each(Object.keys(LEARNING_PATHS) as LearningPathId[])('%s clamps reading progress at its boundaries', pathId => {
         const path = LEARNING_PATHS[pathId]
         const lastSection = LEARNING_SECTIONS.find(section => section.id === path.sections.at(-1))!
-        const end = lastSection.progressOffset + lastSection.pageCount
+        const end = lastSection.progressOffset + lastSection.slotSize
         expect(getPathCompletion(-1, pathId)).toBe(0)
         expect(getPathCompletion(Number.NaN, pathId)).toBe(0)
         expect(getPathCompletion(end, pathId)).toBe(100)

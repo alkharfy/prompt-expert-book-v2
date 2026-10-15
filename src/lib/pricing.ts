@@ -2,6 +2,8 @@
 
 import { PLAN_FEATURES, FEATURE_NAMES } from './features'
 import type { PlanId } from '@/types/subscription'
+import { SECTION_REGISTRY } from '@/config/sections'
+import { BOOK_PAGES_DISPLAY } from '@/lib/config'
 
 // Estimates for internal reports only. Public prices always come from the API.
 export const FALLBACK_PLAN_PRICES: Record<string, number> = { basic: 299, pro: 499, vip: 999 }
@@ -15,9 +17,10 @@ export const AI56_FINAL_PRICE = 5
 export const PRODUCT_STATS = {
   templates: 95,      // libraryData cards
   exercises: 45,      // interactive exercisesData entries
-  readingPages: 222,  // intro, chapters, library, appendix and glossary
+  readingPages: BOOK_PAGES_DISPLAY, // Real pages, including all references.
   chapters: 10,
-  freePages: 23,      // intro (6) + full chapter 1 (17) — see src/config/sections.ts
+  freePages: SECTION_REGISTRY.reduce((total, section) => total
+    + (section.id === 'intro' ? section.pageCount : Math.min(section.freePageLimit, section.pageCount)), 0),
 } as const
 
 export interface PublicPricingPlan {

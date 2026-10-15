@@ -8,13 +8,16 @@ export const MAIN_CHAPTER_IDS = SECTION_REGISTRY
 export const CERTIFICATE_CHAPTER_COUNT = MAIN_CHAPTER_IDS.length
 export const CERTIFICATE_COURSE_NAME = 'PromptMaster — إتمام الفصول الأساسية العشرة'
 
+// Completion uses the last real page, even when unused global slots follow it.
 const chapterEndPages: Record<string, number> = Object.fromEntries(
     SECTION_REGISTRY.map(section => [String(section.chapterIndex), section.progressOffset + section.pageCount])
 )
 chapterEndPages['11'] = 194 // Template library
 chapterEndPages['12'] = 214 // Appendix; glossary is bonus content without a chapter marker.
 
-export const FREE_READING_LAST_PAGE = chapterEndPages['1']
+// Access checks retain the entire reserved free-preview range, including gaps.
+const firstChapter = SECTION_REGISTRY.find(section => section.id === 'section-1')!
+export const FREE_READING_LAST_PAGE = firstChapter.progressOffset + firstChapter.slotSize
 
 export function parseChapterId(value: unknown): string | null {
     const id = typeof value === 'number' && Number.isInteger(value) ? String(value) : value
