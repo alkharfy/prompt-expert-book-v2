@@ -108,7 +108,7 @@ export function calculatePlanProgress(tasks: Pick<DailyTask, 'taskDate' | 'taskT
     }
 }
 
-/** Detect schedules created by the earlier generator that skipped chapter boundaries. */
+/** Detect missing real pages while accepting legacy ranges within reserved slots. */
 export function hasCompleteReadingCoverage(
     tasks: Pick<PlanTask, 'taskType' | 'sectionId' | 'startPage' | 'endPage'>[],
     learningPath: string,
@@ -119,8 +119,10 @@ export function hasCompleteReadingCoverage(
     for (const task of tasks.filter(task => task.taskType === 'reading')) {
         const section = LEARNING_SECTIONS.find(item => item.id === task.sectionId)
         if (!section || !path.sections.includes(section.id) || !Number.isInteger(task.startPage) || !Number.isInteger(task.endPage)
-            || task.startPage! < 1 || task.endPage! > section.pageCount || task.startPage! > task.endPage!) return false
-        for (let page = task.startPage!; page <= task.endPage!; page++) covered.add(`${section.id}:${page}`)
+            || task.startPage! < 1 || task.endPage! > section.slotSize || task.startPage! > task.endPage!) return false
+        const startPage = Math.min(task.startPage!, section.pageCount)
+        const endPage = Math.min(task.endPage!, section.pageCount)
+        for (let page = startPage; page <= endPage; page++) covered.add(`${section.id}:${page}`)
     }
     return covered.size === path.totalPages
 }

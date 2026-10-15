@@ -113,7 +113,8 @@ export async function POST(request: NextRequest) {
         const addedChapters = requestedChapters.filter(id => !storedChapters.includes(id))
 
         // A page visit is not evidence that every earlier chapter was completed.
-        // Accept one explicit marker at the last SAVED page of that chapter only.
+        // Accept one explicit marker at the last SAVED real page of that chapter only.
+        // Reserved global slots beyond the content are not completion endpoints.
         if (addedChapters.length > 1 || addedChapters.some(id => previous?.current_page !== getChapterEndPage(id))) {
             return NextResponse.json({ error: 'سجّل إتمام الفصل من آخر صفحة فيه؛ لا يمكن إكمال عدة فصول دفعة واحدة' }, { status: 400 })
         }

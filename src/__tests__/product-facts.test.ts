@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import * as book from '@/data/bookData'
 import { allExercises } from '@/data/exercisesData'
 import { PRODUCT_STATS } from '@/lib/pricing'
-import { TOTAL_BOOK_PAGES } from '@/lib/config'
+import { BOOK_PAGES_DISPLAY, TOTAL_BOOK_PAGES } from '@/lib/config'
+import { FREE_READING_LAST_PAGE } from '@/lib/reading-completion'
 import { SECTION_REGISTRY } from '@/config/sections'
 import { LEARNING_SECTIONS } from '@/config/learningCatalog'
 import { LEARNING_PATHS, getPathCompletion } from '@/data/learningPaths'
@@ -11,24 +12,34 @@ describe('product facts match the shipped lessons', () => {
   it('counts every reading page, exercise and numbered library template', () => {
     const pages = Object.values(book).filter(Array.isArray).flat()
     expect(PRODUCT_STATS.readingPages).toBe(pages.length)
-    expect(TOTAL_BOOK_PAGES).toBe(pages.length)
+    expect(pages.length).toBe(212)
+    expect(BOOK_PAGES_DISPLAY).toBe(212)
+    expect(TOTAL_BOOK_PAGES).toBe(222)
+    expect(PRODUCT_STATS.freePages).toBe(13)
+    expect(FREE_READING_LAST_PAGE).toBe(23)
     expect(PRODUCT_STATS.exercises).toBe(Object.values(allExercises).flat().length)
     const templates = book.libraryData.flatMap(page => page.contentBlocks)
       .filter(block => block.type === 'card' && /^\d+\)/.test(block.title || ''))
     expect(PRODUCT_STATS.templates).toBe(templates.length)
   })
   it('keeps reading offsets and the final chapter learning plan in sync', () => {
+    expect(SECTION_REGISTRY.map(section => section.progressOffset)).toEqual([0, 6, 23, 41, 59, 77, 95, 115, 133, 149, 165])
+    expect(SECTION_REGISTRY[0]).toMatchObject({ pageCount: 3, slotSize: 6 })
+    expect(SECTION_REGISTRY[1]).toMatchObject({ pageCount: 10, slotSize: 17, freePageLimit: 10, prevSection: { lastPage: 3 } })
+    expect(SECTION_REGISTRY[2].prevSection?.lastPage).toBe(10)
     let offset = 0
     for (const section of SECTION_REGISTRY) {
       const data = section.id === 'intro' ? book.introData : book[`unit${section.sectionNumber}Data` as keyof typeof book]
       expect(section.progressOffset).toBe(offset)
       expect(section.pageCount).toBe(data.length)
-      offset += section.pageCount
+      expect(section.slotSize).toBeGreaterThanOrEqual(section.pageCount)
+      if (section.sectionNumber >= 2) expect(section.slotSize).toBe(section.pageCount)
+      offset += section.slotSize
     }
     expect(offset).toBe(182)
     const fullPath = Object.values(LEARNING_PATHS).find(p => p.sections.includes('section-10'))!
     const fullPageCount = LEARNING_SECTIONS.reduce((sum, section) => sum + section.pageCount, 0)
     expect(fullPath.totalPages).toBe(fullPageCount)
-    expect(getPathCompletion(fullPageCount, fullPath.id)).toBe(100)
+    expect(getPathCompletion(TOTAL_BOOK_PAGES, fullPath.id)).toBe(100)
   })
 })

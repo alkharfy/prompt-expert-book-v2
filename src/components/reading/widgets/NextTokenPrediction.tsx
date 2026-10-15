@@ -5,9 +5,9 @@
  *
  * جوهر الفصل الأول: النموذج مش "بيفكر" — بيحسب احتمالات لكل كلمة ممكنة،
  * ويختار الأعلى. هنا بنوريه بيحصل قدام عين القارئ:
- *   1. الجملة تتكتب حرف حرف: "القهوة السعودية تُقدم مع..."
- *   2. تتجمّد، ويطلع شريط احتمالات حي (التمر 78% / الحلويات 15% / الماء 5% / غير ذلك 2%)
- *   3. النموذج "يختار" الأعلى (التمر) ويضيفها للجملة.
+ *   1. الجملة تتكتب حرف حرف: "الفول بيتاكل الصبح مع..."
+ *   2. تتجمّد، ويطلع شريط احتمالات حي (العيش 72% / البيض 14% / الطعمية 10% / غير كده 4%)
+ *   3. النموذج "يختار" الأعلى (العيش) ويضيفها للجملة.
  *
  * مبني بالكامل بـ framer-motion (موجود في المشروع) — RTL مثالي، نص عربي حقيقي،
  * يحترم prefers-reduced-motion، وخفيف (صفر اعتمادات جديدة).
@@ -17,15 +17,15 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 
-const PREFIX = 'القهوة السعودية تُقدم مع'
-const WINNER = 'التمر'
+const PREFIX = 'الفول بيتاكل الصبح مع'
+const WINNER = 'العيش'
 
 type Candidate = { word: string; prob: number; winner?: boolean }
 const CANDIDATES: Candidate[] = [
-    { word: 'التمر', prob: 78, winner: true },
-    { word: 'الحلويات', prob: 15 },
-    { word: 'الماء', prob: 5 },
-    { word: 'غير ذلك', prob: 2 },
+    { word: 'العيش', prob: 72, winner: true },
+    { word: 'البيض', prob: 14 },
+    { word: 'الطعمية', prob: 10 },
+    { word: 'غير كده', prob: 4 },
 ]
 
 // مراحل العرض

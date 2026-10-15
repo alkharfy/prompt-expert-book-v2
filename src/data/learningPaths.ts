@@ -132,7 +132,7 @@ export function getPathCompletion(
     const lastSection = LEARNING_SECTIONS.find((s) => s.id === lastSectionId)
     if (!lastSection) return 0
 
-    const pathEndPage = lastSection.progressOffset + lastSection.pageCount
+    const pathEndPage = lastSection.progressOffset + lastSection.slotSize
     const clamped = Number.isFinite(currentPage) ? Math.max(0, Math.min(currentPage, pathEndPage)) : 0
     return Math.round((clamped / pathEndPage) * 100)
 }

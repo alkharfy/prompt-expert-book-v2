@@ -6,9 +6,11 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { Resend } from 'resend'
 import { dbLogger } from './logger'
 import { SITE_URL, SITE_DOMAIN, EMAIL_FROM_DEFAULT } from '@/lib/config'
+import { SECTION_REGISTRY } from '@/config/sections'
 
 const FROM_EMAIL = EMAIL_FROM_DEFAULT
 const APP_URL = SITE_URL
+const FIRST_CHAPTER_PAGES = SECTION_REGISTRY.find(section => section.id === 'section-1')!.pageCount
 
 function escapeHtml(text: string): string {
     return text
@@ -66,7 +68,7 @@ const dripTemplates = [
             <div class="card">
                 <span class="emoji-large">🎁</span>
                 <h2>مرحباً يا ${escapeHtml(name)}!</h2>
-                <p>جهزنالك <strong>فصل 1 كامل مجاناً</strong> — 17 صفحة عن كيفية عمل AI ونماذجه وحدوده واختيار الأدوات والاستخدام المسؤول.</p>
+                <p>جهزنالك <strong>فصل 1 كامل مجاناً</strong> — ${FIRST_CHAPTER_PAGES} ${FIRST_CHAPTER_PAGES <= 10 ? 'صفحات' : 'صفحة'} عن إزاي الـ AI بيشتغل، وإمتى يغلط، وإزاي تطلب منه وتراجعه، وتحمي بياناتك.</p>
                 <p>فيه تمارين عملية تقدر تجربها فوراً مع ChatGPT وأي أداة AI ثانية.</p>
                 <hr class="divider">
                 <div style="text-align:center;">

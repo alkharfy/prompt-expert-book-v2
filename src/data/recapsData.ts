@@ -1,6 +1,8 @@
 // بيانات ملخصات الفصول — Chapter Recaps
 // المرحلة 4: ملخصات نهاية كل فصل
 
+import { SECTION_REGISTRY } from '@/config/sections'
+
 export interface ChapterRecap {
     sectionId: string
     chapterLabel: string
@@ -34,31 +36,31 @@ export const recapsData: Record<string, ChapterRecap> = {
     'section-1': {
         sectionId: 'section-1',
         chapterLabel: 'الفصل 01',
-        chapterTitle: 'عالم الذكاء الاصطناعي',
+        chapterTitle: 'الـ AI بيفكر إزاي؟',
         keyTakeaways: [
             {
                 icon: '🧠',
-                title: 'الذكاء الاصطناعي التوليدي',
-                description: 'تعرفت على أساسيات AI التوليدي وكيف يختلف عن البرمجة التقليدية — هو بيفهم السياق ويولّد محتوى جديد.',
-            },
-            {
-                icon: '🔤',
-                title: 'دور البرومبت الأساسي',
-                description: 'البرومبت هو طريقتك للتواصل مع AI. كل ما كنت أوضح، كل ما النتيجة تبقى أحسن.',
-            },
-            {
-                icon: '⚙️',
-                title: 'أدوات AI المختلفة',
-                description: 'كل أداة (ChatGPT, Claude, Gemini) ليها نقاط قوة مختلفة — المهم تعرف تختار الأنسب لمهمتك.',
+                title: 'بيكمّل الكلام',
+                description: 'الـ AI بيحسب الكلمة الجاية حسب كلامك انت — عشان كده الطلب الواضح بيفرق.',
             },
             {
                 icon: '🎯',
-                title: 'العقلية الصح',
-                description: 'AI مش بيحل محلك — هو أداة بتضاعف إنتاجيتك لو عرفت تستخدمها صح.',
+                title: 'الطلب الواضح',
+                description: 'المهمة + المعلومات + القيود + شكل النتيجة.',
+            },
+            {
+                icon: '🔍',
+                title: 'راجع وراه',
+                description: 'ممكن يألّف رقم أو مصدر بثقة — اجمع بنفسك واطلب المصدر وافتحه.',
+            },
+            {
+                icon: '🔐',
+                title: 'بياناتك أمانة',
+                description: 'غيّر الأسامي والأرقام الحساسة قبل ما ترفع أي ملف — وانت المسؤول عن النتيجة.',
             },
         ],
         proTip: {
-            text: 'جرب تفتح ChatGPT أو Claude وتطلب منه يشرحلك مفهوم صعب في مجالك — شوف الفرق لما تكون محدد في طلبك vs لما تكون عام.',
+            text: 'خد شيت أو إيميل من شغلك واكتب الطلب بالأربع حاجات: المهمة، والمعلومات، والقيود، وشكل النتيجة — وبعدين راجع الأرقام بنفسك.',
             icon: '💡',
         },
         nextChapterTeaser: {
@@ -66,10 +68,10 @@ export const recapsData: Record<string, ChapterRecap> = {
             description: 'هتجرّب بنفسك! هتفتح أدوات AI وتبدأ أول محادثة حقيقية وتتعلم أساسيات التعامل.',
             icon: '🔮',
         },
-        stats: { pages: 17, estimatedMinutes: 25, exercises: 3 },
+        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-1')!.pageCount, estimatedMinutes: 30, exercises: 2 },
         keyQuote: {
-            text: 'البرومبت مش مجرد سؤال — ده لغة جديدة بينك وبين الذكاء الاصطناعي.',
-            pageNumber: 3,
+            text: 'مش سحر. طلب واضح، ومعلومات صح، ومراجعة.',
+            pageNumber: 10,
         },
     },
 

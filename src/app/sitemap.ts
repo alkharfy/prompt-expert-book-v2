@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { BLOG_POSTS } from '@/data/blogPosts'
 import { SITE_URL } from '@/lib/config'
+import { SECTION_REGISTRY } from '@/config/sections'
 
 const BASE_URL = SITE_URL
 
@@ -40,13 +41,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // empty shells to guests, so listing them would be soft-404s that hurt crawl
     // quality — they are intentionally EXCLUDED from the sitemap.
     const sectionPages: MetadataRoute.Sitemap = []
-    const freeSections = [
-        { id: 'intro', pages: 6 },
-        { id: 'section-1', pages: 17 },
-    ]
+    const freeSections = SECTION_REGISTRY.filter(section => section.id === 'intro' || section.freePageLimit > 0)
 
     for (const section of freeSections) {
-        for (let page = 1; page <= section.pages; page++) {
+        const freePageCount = section.id === 'intro' ? section.pageCount : Math.min(section.pageCount, section.freePageLimit)
+        for (let page = 1; page <= freePageCount; page++) {
             sectionPages.push({
                 url: `${BASE_URL}/read/${section.id}/${page}`,
                 lastModified: now,

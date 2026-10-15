@@ -5,6 +5,7 @@ export interface LearningSection {
     id: string
     label: string
     pageCount: number
+    slotSize: number
     progressOffset: number
     basePath: string
 }
@@ -14,13 +15,28 @@ export const LEARNING_SECTIONS: LearningSection[] = [
         id: section.id,
         label: section.chapterLabel,
         pageCount: section.pageCount,
+        slotSize: section.slotSize,
         progressOffset: section.progressOffset,
         basePath: `/read/${section.id}`,
     })),
-    { id: 'library', label: 'مكتبة القوالب', pageCount: 12, progressOffset: 182, basePath: '/library' },
-    { id: 'appendix', label: 'الملحق', pageCount: 20, progressOffset: 194, basePath: '/read/appendix' },
-    { id: 'glossary', label: 'المصطلحات', pageCount: 8, progressOffset: 214, basePath: '/read/glossary' },
+    { id: 'library', label: 'مكتبة القوالب', pageCount: 12, slotSize: 12, progressOffset: 182, basePath: '/library' },
+    { id: 'appendix', label: 'الملحق', pageCount: 20, slotSize: 20, progressOffset: 194, basePath: '/read/appendix' },
+    { id: 'glossary', label: 'المصطلحات', pageCount: 8, slotSize: 8, progressOffset: 214, basePath: '/read/glossary' },
 ]
+
+/** Resolve a saved global position; unused slots land on the last real page. */
+export function getGlobalReadingTarget(globalPage: number): { section: LearningSection; page: number; url: string } | null {
+    if (!Number.isInteger(globalPage)) return null
+    const section = LEARNING_SECTIONS.find(item => globalPage > item.progressOffset
+        && globalPage <= item.progressOffset + item.slotSize)
+    if (!section) return null
+    const page = Math.min(globalPage - section.progressOffset, section.pageCount)
+    return { section, page, url: getLearningReadingUrl(section.id, page) }
+}
+
+export function getGlobalReadingUrl(globalPage: number): string {
+    return getGlobalReadingTarget(globalPage)?.url ?? '/toc'
+}
 
 // Checked against the exercise data by the catalog regression test. Keeping this
 // lightweight prevents importing paid questions/answers into onboarding bundles.

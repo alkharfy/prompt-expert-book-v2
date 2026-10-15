@@ -12,6 +12,8 @@ import LockedOverlay from '@/components/reading/LockedOverlay'
 import ReadingPagination from '@/components/reading/ReadingPagination'
 import BookmarkButton from '@/components/reading/BookmarkButton'
 import ScrollProgress from '@/components/reading/ScrollProgress'
+import { getGlobalReadingUrl, getLearningReadingUrl } from '@/config/learningCatalog'
+import { FREE_READING_LAST_PAGE } from '@/lib/reading-completion'
 
 interface GlossaryReaderProps {
     /** Entitlement-gated pages: locked pages arrive with empty contentBlocks. */
@@ -23,7 +25,14 @@ interface GlossaryReaderProps {
 export default function GlossaryReader({ data, initialHasAccess = false, initialAuthed = false }: GlossaryReaderProps) {
     const params = useParams()
     const router = useRouter()
-    const pageNum = parseInt(params.page as string) || 1
+    const requestedPageNum = parseInt(params.page as string) || 1
+    const pageNum = Math.min(requestedPageNum, data.length)
+
+    useEffect(() => {
+        if (requestedPageNum > data.length) {
+            router.replace(getLearningReadingUrl('glossary', requestedPageNum))
+        }
+    }, [requestedPageNum, data.length, router])
 
     const [isAuthed, setIsAuthed] = useState(initialAuthed)
     const [isLockOverlayOpen, setIsLockOverlayOpen] = useState(!initialHasAccess)
@@ -90,7 +99,7 @@ export default function GlossaryReader({ data, initialHasAccess = false, initial
             <LockedOverlay
                 isOpen={isLockOverlayOpen}
                 onClose={() => {
-                    if (!initialHasAccess) router.push(isAuthed ? '/payment?plan=pro' : '/read/section-1/17')
+                    if (!initialHasAccess) router.push(isAuthed ? '/payment?plan=pro' : getGlobalReadingUrl(FREE_READING_LAST_PAGE))
                     else setIsLockOverlayOpen(false)
                 }}
                 nextPath={`/read/glossary/${pageNum}`}

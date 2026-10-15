@@ -6,16 +6,7 @@ import { useState, useEffect } from 'react'
 import { authSystem } from '@/lib/auth_system'
 import { trackCtaClick } from '@/lib/analytics'
 import { dbLogger } from '@/lib/logger'
-
-function getResumeUrl(page: number): string {
-    const sections = [['/read/intro', 6], ['/read/section-1', 17], ['/read/section-2', 18], ['/read/section-3', 18], ['/read/section-4', 18], ['/read/section-5', 18], ['/read/section-6', 20], ['/read/section-7', 18], ['/read/section-8', 16], ['/read/section-9', 16], ['/read/section-10', 17], ['/library', 12], ['/read/appendix', 20], ['/read/glossary', 8]] as const
-    let offset = 0
-    for (const [path, count] of sections) {
-        if (page <= offset + count) return path + '/' + Math.max(1, page - offset)
-        offset += count
-    }
-    return '/toc'
-}
+import { getGlobalReadingUrl } from '@/config/learningCatalog'
 
 export default function HeroSection() {
     const [progress, setProgress] = useState<{ currentPage: number, percentage: number } | null>(null)
@@ -53,22 +44,22 @@ export default function HeroSection() {
 
                         <div className="hero-text-container hero-fade">
                             <h1 className="hero-title">
-                                استخدم <span className="text-gradient">AI في شغلك ودراستك</span> بخطوات واضحة
+                                اتعلّم تخلّي <span className="text-gradient">الـ AI يخلّص شغلك</span> — وتعرف إمتى يغلط
                             </h1>
 
                             <p className="hero-description">
-                                دليل تفاعلي بالعربي يعلّمك كتابة برومبت واضح، مراجعة النتائج، وتطبيق AI على الإيميلات والتقارير والتلخيص — حتى لو بتبدأ من الصفر.
+                                دليل تفاعلي بالمصري للمحاسب والموظف والمدرس والمسوّق وأي حد عايز يبدأ: إزاي تطلب من ChatGPT وGemini شغل حقيقي — شيت إكسل، تقرير، إيميل، خطة — وتراجعه قبل ما تسلّمه. من غير مصطلحات، وحتى لو أول مرة تستخدمه.
                             </p>
 
                             <div className="hero-benefits hero-fade">
-                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> ابدأ بمهمة عملية ثم طبّقها على شغلك أو مذاكرتك</div>
-                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> 10 فصول + 45 تمرين عملي قابل للتطبيق</div>
-                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> المقدمة + الفصل الأول كامل مجاناً — جرّب قبل ما تشتري</div>
+                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> أول نتيجة في دقيقة: تجربة عملية في أول صفحة</div>
+                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> أمثلة مصرية حسب شغلك + 45 تمرين و95 قالب جاهز</div>
+                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> المقدمة والفصل الأول مجاناً — من غير تسجيل</div>
                             </div>
 
                             <div className="hero-actions hero-fade" style={{ marginTop: '20px' }}>
                                 {progress ? (
-                                    <Link href={getResumeUrl(progress.currentPage)} className="btn btn-primary btn-pulse">
+                                    <Link href={getGlobalReadingUrl(progress.currentPage)} className="btn btn-primary btn-pulse">
                                         <span>أكمل من حيث توقفت</span>
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M15 18l-6-6 6-6" />
@@ -80,7 +71,7 @@ export default function HeroSection() {
                                             <span>شاهد الباقات والأسعار ←</span>
                                         </Link>
                                         <Link href="/read/intro/1" className="btn btn-secondary" onClick={() => trackCtaClick('جرّب الفصل الأول مجاناً', 'hero_section_secondary')}>
-                                            <span>جرّب الفصل الأول مجاناً</span>
+                                            <span>ابدأ مجاناً — أول تجربة في دقيقة</span>
                                         </Link>
                                     </>
                                 )}

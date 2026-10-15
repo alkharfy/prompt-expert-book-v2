@@ -16,6 +16,7 @@ vi.mock('@/lib/supabase-admin', () => ({ getSupabaseAdmin: () => ({ from: h.from
 
 import { GET, POST } from '@/app/api/reading-progress/route'
 import { POST as proxy } from '@/app/api/auth/db-operation/route'
+import { FREE_READING_LAST_PAGE, getChapterEndPage } from '@/lib/reading-completion'
 
 beforeEach(() => {
     h.user = 'u1'; h.row = { current_page: 1, completed_chapters: [] }; h.allowed = true
@@ -61,8 +62,31 @@ describe('validated self-reported reading', () => {
         expect((await POST(request({ current_page: 24 }))).status).toBe(403)
         expect(h.writes).toHaveLength(0)
     })
+    it('keeps the free access boundary at the end of its reserved global slots', async () => {
+        h.allowed = false
+        expect(FREE_READING_LAST_PAGE).toBe(23)
+        expect((await POST(request({ current_page: 23 }))).status).toBe(200)
+        expect(h.writes[0]).toMatchObject({ current_page: 23, total_pages: 222 })
+    })
+    it.each([
+        { chapter: 0, endpoint: 3, completed: ['0'], percentage: 0 },
+        { chapter: 1, endpoint: 16, completed: ['1'], percentage: 10 },
+    ])('accepts chapter $chapter completion at its real endpoint $endpoint', async ({ chapter, endpoint, completed, percentage }) => {
+        h.allowed = false; h.row.current_page = endpoint
+        expect(getChapterEndPage(String(chapter))).toBe(endpoint)
+        expect((await POST(request({ completed_chapter: chapter }))).status).toBe(200)
+        expect(h.writes[0]).toMatchObject({ completed_chapters: completed, completion_percentage: percentage })
+    })
+    it.each([
+        { chapter: 0, reservedEnd: 6 },
+        { chapter: 1, reservedEnd: 23 },
+    ])('does not treat chapter $chapter reserved end $reservedEnd as a completion endpoint', async ({ chapter, reservedEnd }) => {
+        h.row.current_page = reservedEnd
+        expect((await POST(request({ completed_chapter: chapter }))).status).toBe(400)
+        expect(h.writes).toHaveLength(0)
+    })
     it('allows the free chapter without payment and counts it once', async () => {
-        h.allowed = false; h.row = { current_page: 23, completed_chapters: ['0'] }
+        h.allowed = false; h.row = { current_page: 16, completed_chapters: ['0'] }
         expect((await POST(request({ completed_chapter: 1 }))).status).toBe(200)
         expect(h.writes[0]).toMatchObject({ completed_chapters: ['0', '1'], completion_percentage: 10 })
         expect(h.sync).toHaveBeenCalledWith('u1', 1, expect.anything())
@@ -73,7 +97,7 @@ describe('validated self-reported reading', () => {
         expect(h.writes).toHaveLength(0)
     })
     it('requires the end page to have been saved separately', async () => {
-        expect((await POST(request({ current_page: 23, completed_chapter: 1 }))).status).toBe(400)
+        expect((await POST(request({ current_page: 16, completed_chapter: 1 }))).status).toBe(400)
         expect(h.writes).toHaveLength(0)
     })
     it('merges a valid last-chapter marker and sanitizes legacy duplicates', async () => {

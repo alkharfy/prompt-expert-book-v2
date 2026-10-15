@@ -2,6 +2,8 @@ export interface SectionConfig {
     id: string
     sectionNumber: number
     pageCount: number
+    /** Global page numbers reserved for this section, including unused slots. */
+    slotSize: number
     chapterLabel: string
     progressOffset: number
     freePageLimit: number
@@ -18,7 +20,8 @@ export const SECTION_REGISTRY: SectionConfig[] = [
     {
         id: 'intro',
         sectionNumber: 0,
-        pageCount: 6,
+        pageCount: 3,
+        slotSize: 6,
         chapterLabel: 'المقدمة',
         progressOffset: 0,
         freePageLimit: 0, // Always free (no lock)
@@ -33,12 +36,13 @@ export const SECTION_REGISTRY: SectionConfig[] = [
     {
         id: 'section-1',
         sectionNumber: 1,
-        pageCount: 17,
+        pageCount: 10,
+        slotSize: 17,
         chapterLabel: 'الفصل 01',
-        progressOffset: 6, // Intro: 6
-        freePageLimit: 17, // الفصل كامل مجاني — 17 صفحة
+        progressOffset: 6, // Intro reserves 6 global slots (3 real pages).
+        freePageLimit: 10, // الفصل كامل مجاني — 10 صفحات
         chapterIndex: 1,
-        prevSection: { path: '/read/intro', lastPage: 6 },
+        prevSection: { path: '/read/intro', lastPage: 3 },
         nextSection: { path: '/read/section-2/1' },
         robotSize: 100,
         hasGlossary: false,
@@ -49,11 +53,12 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         id: 'section-2',
         sectionNumber: 2,
         pageCount: 18,
+        slotSize: 18,
         chapterLabel: 'الفصل 02',
-        progressOffset: 23, // Intro: 6 + S1: 17
+        progressOffset: 23, // Reserved slots: Intro 6 + S1 17.
         freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
         chapterIndex: 2,
-        prevSection: { path: '/read/section-1', lastPage: 17 },
+        prevSection: { path: '/read/section-1', lastPage: 10 },
         nextSection: { path: '/read/section-3/1' },
         robotSize: 350,
         hasGlossary: true,
@@ -64,8 +69,9 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         id: 'section-3',
         sectionNumber: 3,
         pageCount: 18,
+        slotSize: 18,
         chapterLabel: 'الفصل 03',
-        progressOffset: 41, // Intro: 6 + S1: 17 + S2: 18
+        progressOffset: 41, // Reserved slots: Intro 6 + S1 17 + S2 18.
         freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
         chapterIndex: 3,
         prevSection: { path: '/read/section-2', lastPage: 18 },
@@ -79,6 +85,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         id: 'section-4',
         sectionNumber: 4,
         pageCount: 18,
+        slotSize: 18,
         chapterLabel: 'الفصل 04',
         progressOffset: 59, // + S3: 18
         freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
@@ -94,6 +101,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         id: 'section-5',
         sectionNumber: 5,
         pageCount: 18,
+        slotSize: 18,
         chapterLabel: 'الفصل 05',
         progressOffset: 77, // + S4: 18
         freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
@@ -109,6 +117,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         id: 'section-6',
         sectionNumber: 6,
         pageCount: 20,
+        slotSize: 20,
         chapterLabel: 'الفصل 06',
         progressOffset: 95, // + S5: 18
         freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
@@ -124,6 +133,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         id: 'section-7',
         sectionNumber: 7,
         pageCount: 18,
+        slotSize: 18,
         chapterLabel: 'الفصل 07',
         progressOffset: 115, // + S6: 20
         freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
@@ -139,6 +149,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         id: 'section-8',
         sectionNumber: 8,
         pageCount: 16,
+        slotSize: 16,
         chapterLabel: 'الفصل 08',
         progressOffset: 133, // + S7: 18
         freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
@@ -154,6 +165,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         id: 'section-9',
         sectionNumber: 9,
         pageCount: 16,
+        slotSize: 16,
         chapterLabel: 'الفصل 09',
         progressOffset: 149, // + S8: 16
         freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
@@ -169,6 +181,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         id: 'section-10',
         sectionNumber: 10,
         pageCount: 17,
+        slotSize: 17,
         chapterLabel: 'الفصل 10',
         progressOffset: 165, // + S9: 16
         freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)

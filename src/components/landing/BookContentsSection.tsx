@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { SECTION_REGISTRY } from '@/config/sections'
 
 interface Chapter {
     num: number
@@ -17,9 +18,9 @@ interface Chapter {
 const chapters: Chapter[] = [
     {
         num: 1,
-        title: 'كيف يفكر الذكاء الاصطناعي فعلاً (GPT-6, Claude, Gemini)',
-        description: 'فهم كيف يعمل الذكاء الاصطناعي التوليدي وأنواعه',
-        pages: 17,
+        title: 'الـ AI بيفكر إزاي؟ — وأول شغلانة بيه',
+        description: 'تخلّص أول مهمة شغل بالـ AI: تطلب صح، وتراجع، وتحمي بياناتك',
+        pages: SECTION_REGISTRY.find(section => section.id === 'section-1')!.pageCount,
         icon: '🧠',
         free: true,
     },
