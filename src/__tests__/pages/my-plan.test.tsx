@@ -3,15 +3,17 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import type { ReactNode } from 'react'
 import MyPlanPage from '@/app/my-plan/page'
 
-const { router, request, currentUser } = vi.hoisted(() => ({
+const { router, request, currentUser, hasFeature } = vi.hoisted(() => ({
   router: { push: vi.fn(), replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() },
   request: vi.fn(),
   currentUser: vi.fn(),
+  hasFeature: vi.fn(),
 }))
 
 // The page depends on router identity; use one instance instead of the setup mock's fresh object.
 vi.mock('next/navigation', () => ({ useRouter: () => router }))
 vi.mock('@/lib/auth_system', () => ({ authSystem: { getCurrentUserId: currentUser } }))
+vi.mock('@/context/SubscriptionContext', () => ({ useSubscription: () => ({ hasFeature }) }))
 vi.mock('framer-motion', async () => {
   const React = await import('react')
   return { motion: { div: (props: Record<string, unknown>) => {
@@ -41,9 +43,95 @@ beforeEach(() => {
   vi.clearAllMocks()
   request.mockReset()
   currentUser.mockReturnValue('learner')
+  hasFeature.mockReset().mockReturnValue(false)
   vi.stubGlobal('fetch', request)
 })
+
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
+
+describe('MyPlanPage creates and extends plans sized by daily minutes', () => {
+  const noPlan = {
+    dayNumber: 0, totalDays: 0, progressPercent: 0, tasks: [], isFlexible: false, summary: null,
+  }
+
+  it('offers minute choices without a plan and reloads after saving the selected time', async () => {
+    request.mockResolvedValueOnce(response({ plan: noPlan }))
+      .mockResolvedValueOnce(response({ ok: true }))
+      .mockResolvedValueOnce(response({ plan }))
+    render(<MyPlanPage />)
+    expect(await screen.findByText('لسه ما عندكش خطة!')).toBeInTheDocument()
+    for (const name of ['10 دقايق', '20 دقيقة', 'نص ساعة']) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: '20 دقيقة' }))
+
+    expect(await screen.findByText('⚡ المسار السريع')).toBeInTheDocument()
+    expect(request).toHaveBeenNthCalledWith(2, '/api/learning-plan', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"dailyMinutes":20}',
+    })
+    expect(request.mock.calls.map(([, options]) => options?.method || 'GET')).toEqual(['GET', 'POST', 'GET'])
+    expect(request).toHaveBeenLastCalledWith('/api/learning-plan')
+    expect(screen.queryByText('لسه ما عندكش خطة!')).not.toBeInTheDocument()
+  })
+
+  it('still offers minute choices for the legacy empty response marked flexible', async () => {
+    request.mockResolvedValueOnce(response({ plan: { ...noPlan, isFlexible: true } }))
+    render(<MyPlanPage />)
+
+    expect(await screen.findByText('لسه ما عندكش خطة!')).toBeInTheDocument()
+    for (const name of ['10 دقايق', '20 دقيقة', 'نص ساعة']) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
+    }
+    expect(screen.queryByRole('button', { name: '📊 نظرة عامة' })).not.toBeInTheDocument()
+  })
+
+  it('asks for daily minutes when regeneration receives needsMinutes', async () => {
+    request.mockResolvedValueOnce(response({ plan }))
+      .mockResolvedValueOnce(response({ needsMinutes: true }, 400))
+    render(<MyPlanPage />)
+    fireEvent.click(await screen.findByRole('button', { name: '🔄 أعد توليد الخطة' }))
+
+    expect(await screen.findByText(/اختار وقتك في اليوم/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '20 دقيقة' })).toBeInTheDocument()
+    expect(request).toHaveBeenCalledTimes(2)
+  })
+
+  it('lets a reader with full reading access extend a free plan without changing minutes', async () => {
+    hasFeature.mockImplementation(feature => feature === 'reading')
+    request.mockResolvedValueOnce(response({ plan: { ...plan, summary: { ...summary, learningPath: 'free' } } }))
+      .mockResolvedValueOnce(response({ ok: true }))
+      .mockResolvedValueOnce(response({ plan: { ...plan, summary: { ...summary, learningPath: 'comprehensive' } } }))
+    render(<MyPlanPage />)
+    fireEvent.click(await screen.findByRole('button', { name: 'حدّثها لباقي الكتاب' }))
+
+    expect(await screen.findByText('🏆 المسار الشامل')).toBeInTheDocument()
+    expect(hasFeature).toHaveBeenCalledWith('reading')
+    expect(request).toHaveBeenNthCalledWith(2, '/api/learning-plan', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+    })
+    expect(request.mock.calls.map(([, options]) => options?.method || 'GET')).toEqual(['GET', 'POST', 'GET'])
+    expect(screen.queryByRole('button', { name: 'حدّثها لباقي الكتاب' })).not.toBeInTheDocument()
+  })
+
+  it('hides extension of a free plan without full reading access', async () => {
+    request.mockResolvedValueOnce(response({ plan: { ...plan, summary: { ...summary, learningPath: 'free' } } }))
+    render(<MyPlanPage />)
+
+    expect(await screen.findByText('🆓 الجزء المجاني')).toBeInTheDocument()
+    expect(hasFeature).toHaveBeenCalledWith('reading')
+    expect(screen.queryByRole('button', { name: 'حدّثها لباقي الكتاب' })).not.toBeInTheDocument()
+    expect(request).toHaveBeenCalledTimes(1)
+  })
+
+  it('sends an unauthenticated reader to login with the return path', async () => {
+    currentUser.mockReturnValue(null)
+    render(<MyPlanPage />)
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/login?next=/my-plan'))
+    expect(request).not.toHaveBeenCalled()
+  })
+})
 
 describe('MyPlanPage displays saved plans and confirmed task updates', () => {
   it('keeps a summary-only plan visible before or after its schedule and links an old plan to onboarding', async () => {

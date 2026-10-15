@@ -455,14 +455,14 @@ export default function RoadmapPath() {
                                 }}
                             >
                                 <motion.div
-                                    className={`step-card ${isCompleted ? 'completed' : ''} ${!inPath ? 'outside-path' : ''}`}
-                                    whileHover={inPath ? { scale: 1.05, y: -5 } : undefined}
-                                    whileTap={inPath ? { scale: 0.98 } : undefined}
-                                    onClick={() => inPath ? handleCardClick(index, chapter.href) : undefined}
-                                    style={{ cursor: inPath ? 'pointer' : 'default' }}
+                                    className={`step-card ${isCompleted ? 'completed' : ''}`}
+                                    whileHover={{ scale: 1.05, y: -5 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => handleCardClick(index, chapter.href)}
+                                    style={{ cursor: 'pointer', opacity: inPath ? 1 : 0.75 }}
                                 >
                                     {isCompleted && <div className="completed-check-overlay">✓</div>}
-                                    {!inPath && (
+                                    {!inPath && !chapter.isFree && (
                                         <span style={{
                                             position: 'absolute',
                                             top: '-28px',
@@ -481,10 +481,10 @@ export default function RoadmapPath() {
                                             alignItems: 'center',
                                             gap: '4px'
                                         }}>
-                                            🔒 خارج مسارك
+                                            مش في مسارك
                                         </span>
                                     )}
-                                    {inPath && chapter.isFree && (
+                                    {chapter.isFree && (
                                         <span style={{
                                             position: 'absolute',
                                             top: '-28px',
@@ -504,27 +504,11 @@ export default function RoadmapPath() {
                                         </span>
                                     )}
                                     <div className="step-number-circle">
-                                        <span>{!inPath ? '🔒' : index === 0 ? '⭐' : chapter.number}</span>
+                                        <span>{index === 0 ? '⭐' : chapter.number}</span>
                                     </div>
                                     <div className="step-icon">{chapter.icon}</div>
                                     <h3 className="step-title">{chapter.title}</h3>
                                     <p className="step-desc">{chapter.description}</p>
-                                    {!inPath && (
-                                        <Link
-                                            href="/payment"
-                                            onClick={(e) => e.stopPropagation()}
-                                            style={{
-                                                display: 'inline-block',
-                                                marginTop: '8px',
-                                                fontSize: '0.72rem',
-                                                color: '#FF6B35',
-                                                textDecoration: 'none',
-                                                fontWeight: 'bold'
-                                            }}
-                                        >
-                                            ترقية للوصول ←
-                                        </Link>
-                                    )}
                                 </motion.div>
                             </motion.div>
                         )

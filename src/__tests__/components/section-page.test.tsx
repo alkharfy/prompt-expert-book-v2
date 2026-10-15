@@ -22,7 +22,8 @@ vi.mock('@/lib/auth', () => ({ verifySession: () => true }))
 vi.mock('@/lib/auth_system', () => ({
     authSystem: { updateReadingProgress, completeChapter, verifySession },
 }))
-vi.mock('@/lib/analytics', () => ({ trackPaywallHit: vi.fn(), trackGuestReading: vi.fn() }))
+vi.mock('@/lib/analytics', () => ({ trackPaywallHit: vi.fn(), trackGuestReading: vi.fn(), trackTryCopy: vi.fn() }))
+vi.mock('@/context/LearningContext', () => ({ useLearning: () => ({ preferences: null, isLoading: false, refreshPreferences: vi.fn() }) }))
 vi.mock('@/hooks/useReducedMotion', () => ({ useReducedMotion: () => true }))
 vi.mock('@/components/reading/claimReadingReward', () => ({ claimReadingReward: vi.fn() }))
 vi.mock('@/components/Navigation', () => ({ default: () => null }))

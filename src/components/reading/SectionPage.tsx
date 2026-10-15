@@ -14,7 +14,7 @@ import GuestBanner from '@/components/GuestBanner'
 import ReadingPagination from '@/components/reading/ReadingPagination'
 import { completeChapterWithProgress } from '@/components/reading/completeChapterWithProgress'
 import { claimReadingReward } from '@/components/reading/claimReadingReward'
-import { trackPaywallHit, trackGuestReading } from '@/lib/analytics'
+import { trackPaywallHit, trackGuestReading, trackTryCopy } from '@/lib/analytics'
 import CopyButton from '@/components/reading/CopyButton'
 import BookmarkButton from '@/components/reading/BookmarkButton'
 import ScrollProgress from '@/components/reading/ScrollProgress'
@@ -31,6 +31,10 @@ import DailyMissionsWidget from '@/components/missions/DailyMissionsWidget'
 import ChapterRecap from '@/components/reading/ChapterRecap'
 import QuickRecapButton from '@/components/reading/QuickRecapButton'
 import SpecializationExamples from '@/components/reading/SpecializationExamples'
+import AdvancedCollapsedCard from '@/components/reading/AdvancedCollapsedCard'
+import { useLearning } from '@/context/LearningContext'
+import { personalizeBlocks } from '@/lib/personalizeBlocks'
+import { GUEST_LAST_PAGE_KEY } from '@/lib/onboarding'
 import '@/styles/notes.css'
 import '@/styles/recaps.css'
 import type { SectionConfig } from '@/config/sections'
@@ -143,6 +147,16 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
     const isFirstPage = pageNum === 1
     const isLastPage = pageNum === totalPages
 
+    // Onboarding v2: own-profession live try on intro p1; ⚡ cards collapsed for first-time AI users.
+    const { preferences: learner } = useLearning()
+    const learnerProfession = learner?.profession ?? null
+    const learnerLevel = learner?.aiLevel ?? null
+    const pageBlocks = React.useMemo(
+        () => personalizeBlocks(currentPage?.contentBlocks ?? [], { profession: learnerProfession, aiLevel: learnerLevel }),
+        [currentPage, learnerProfession, learnerLevel],
+    )
+    const onTryCopy = useCallback(() => trackTryCopy(learnerProfession ?? 'other'), [learnerProfession])
+
     // Lock logic — requires both authentication AND payment for non-free pages
     const isIntro = config.id === 'intro'
     const hasFreePages = config.freePageLimit > 0
@@ -172,6 +186,10 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
         // Track guest reading (unauthenticated user on free content)
         if (!authed && !isCurrentPageLocked) {
             trackGuestReading(config.id, pageNum)
+            // Remember the last free page so signing up returns the guest here, not to page 1.
+            try {
+                localStorage.setItem(GUEST_LAST_PAGE_KEY, getLearningReadingUrl(config.id, pageNum))
+            } catch { /* storage blocked */ }
         }
 
         // Show lock overlay for non-authenticated users on locked sections
@@ -927,7 +945,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                             }}
                         >
                             {/* Mobile Card Mode Toggle */}
-                            {isMobile && !isCurrentPageLocked && currentPage.contentBlocks.length > 2 && (
+                            {isMobile && !isCurrentPageLocked && pageBlocks.length > 2 && (
                                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                                     <button
                                         onClick={() => setIsCardMode(!isCardMode)}
@@ -948,18 +966,19 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                             )}
 
                             {/* Knowledge Card View (mobile only) */}
-                            {isMobile && isCardMode && !isCurrentPageLocked && currentPage.contentBlocks.length > 2 ? (
+                            {isMobile && isCardMode && !isCurrentPageLocked && pageBlocks.length > 2 ? (
                                 <KnowledgeCardView
-                                    blocks={currentPage.contentBlocks.filter(
-                                        (block, idx) => !(block.type === 'image' && idx === currentPage.contentBlocks.findIndex((b) => b.type === 'image'))
+                                    blocks={pageBlocks.filter(
+                                        (block, idx) => !(block.type === 'image' && idx === pageBlocks.findIndex((b) => b.type === 'image'))
                                     )}
                                     formatText={formatText}
                                     onExit={() => setIsCardMode(false)}
+                                    onTryCopy={onTryCopy}
                                 />
                             ) : (
                             /* Normal scroll view */
-                            currentPage.contentBlocks
-                                .filter((block, idx) => !(block.type === 'image' && idx === currentPage.contentBlocks.findIndex((b) => b.type === 'image')))
+                            pageBlocks
+                                .filter((block, idx) => !(block.type === 'image' && idx === pageBlocks.findIndex((b) => b.type === 'image')))
                                 .map((block, index) => (
                                     <div key={index} data-block-index={index}>
                                         {/* Text Block */}
@@ -1077,7 +1096,10 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                         )}
 
                                         {/* Card Block */}
-                                        {block.type === 'card' && (
+                                        {block.type === 'card' && block.collapsed && (
+                                            <AdvancedCollapsedCard title={block.title} content={block.content} items={block.items} formatText={formatText} />
+                                        )}
+                                        {block.type === 'card' && !block.collapsed && (
                                             <motion.div
                                                 className="card card-glow responsive-card"
                                                 style={{
@@ -1317,7 +1339,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                             <div className="code-block-wrapper" role="region" aria-label={block.title || 'مثال كود'} style={{ marginTop: '10px' }}>
                                                 {block.title && <h3 style={{ color: '#FF6B35', marginBottom: '12px', fontSize: '1.4rem' }}>{block.title}</h3>}
                                                 <div className="code-block" style={{ margin: 0, padding: '24px', paddingTop: '50px', position: 'relative' }}>
-                                                    <CopyButton text={block.code || ''} />
+                                                    <CopyButton text={block.code || ''} onCopy={block.personalize === 'profession-try' ? onTryCopy : undefined} />
                                                     {/* plaintext bidi: each line takes the direction of its first letter, so Arabic prompts and CSV rows read right-to-left */}
                                                     <pre style={{ margin: 0, whiteSpace: 'pre-wrap', unicodeBidi: 'plaintext', textAlign: 'start' }}><code style={{ color: '#FFB800' }}>{block.code}</code></pre>
                                                     {block.content && (

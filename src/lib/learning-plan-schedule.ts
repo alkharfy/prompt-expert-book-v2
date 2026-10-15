@@ -1,12 +1,26 @@
 import { LEARNING_SECTIONS } from '@/config/learningCatalog'
 import { LEARNING_PATHS } from '@/data/learningPaths'
 import { allExercises } from '@/data/exercisesData'
-import type { LearningDurationId, LearningPathId } from '@/types/learning'
+import {
+    FREE_SCOPE_SECTIONS,
+    compareReadingPositions,
+    countPagesFrom,
+    getScopeSections,
+    planDaysFor,
+    type PlanScopeId,
+    type ReadingPosition,
+} from '@/lib/onboarding'
+import type { DailyMinutes, LearningDurationId, LearningPathId } from '@/types/learning'
 import type { DailyTask, PlanTask } from '@/lib/learning-plan'
 
 export const DURATION_DAYS: Record<LearningDurationId, number> = {
     '1week': 7, '2weeks': 14, '1month': 30, '2months': 60, flexible: 0,
 }
+
+/** `learning_plan_summary.learning_duration` for plans sized from minutes per day. */
+export const minutesDurationLabel = (minutes: DailyMinutes) => `${minutes}min`
+const MINUTES_DURATION = /^(10|20|30)min$/
+export const isMinutesDuration = (duration: string | null | undefined) => MINUTES_DURATION.test(duration || '')
 
 const PROJECT_PHASE_AFTER_SECTION: Record<string, number> = {
     'section-2': 0, 'section-3': 1, 'section-4': 2, 'section-5': 3,
@@ -21,16 +35,68 @@ export function generatePlanTasks(
 ): PlanTask[] {
     const path = LEARNING_PATHS[learningPath]
     const totalDays = DURATION_DAYS[learningDuration]
-    if (!path || !totalDays || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return []
+    if (!path || !totalDays) return []
+    return buildPlanTasks({
+        sectionIds: path.sections,
+        start: { sectionId: path.sections[0], page: 1 },
+        totalDays,
+        startDate,
+        includeExercises: options.includeExercises,
+        includeProject: learningPath === 'comprehensive' && options.includeProject,
+    })
+}
+
+/**
+ * Onboarding v2 plan: from `start` to the end of `scope` (what the reader can open
+ * now), sized so each day is about `dailyMinutes` of reading.
+ */
+export function generateMinutesPlanTasks(input: {
+    scope: PlanScopeId
+    start: ReadingPosition
+    dailyMinutes: DailyMinutes
+    startDate: string
+    includeExercises?: boolean
+    includeProject?: boolean
+}): PlanTask[] {
+    const totalDays = planDaysFor(countPagesFrom(input.scope, input.start), input.dailyMinutes)
+    if (!totalDays) return []
+    return buildPlanTasks({
+        sectionIds: getScopeSections(input.scope),
+        start: input.start,
+        totalDays,
+        startDate: input.startDate,
+        includeExercises: input.includeExercises,
+        includeProject: input.scope === 'comprehensive' && input.includeProject,
+    })
+}
+
+function buildPlanTasks(input: {
+    sectionIds: readonly string[]
+    start: ReadingPosition
+    totalDays: number
+    startDate: string
+    includeExercises?: boolean
+    includeProject?: boolean
+}): PlanTask[] {
+    const { totalDays, startDate } = input
+    if (!Number.isInteger(totalDays) || totalDays < 1 || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return []
     const startMs = Date.parse(`${startDate}T00:00:00.000Z`)
     if (!Number.isFinite(startMs) || new Date(startMs).toISOString().slice(0, 10) !== startDate) return []
 
-    const sections = path.sections.map(id => LEARNING_SECTIONS.find(section => section.id === id))
-    if (sections.some(section => !section || section.pageCount <= 0)) return []
+    const allSections = input.sectionIds.map(id => LEARNING_SECTIONS.find(section => section.id === id))
+    if (allSections.some(section => !section || section.pageCount <= 0)) return []
+    // Sections that end before the start position are not part of this plan.
+    const sections = allSections.filter(section =>
+        compareReadingPositions({ sectionId: section!.id, page: section!.pageCount }, input.start) >= 0)
+    if (sections.length === 0) return []
     const tasks: PlanTask[] = []
-    let remainingPages = path.totalPages
+    let remainingPages = sections.reduce((total, section) => total + section!.pageCount, 0)
     let sectionIndex = 0
     let nextPage = 1
+    if (sections[0]!.id === input.start.sectionId) {
+        nextPage = Math.min(Math.max(1, input.start.page), sections[0]!.pageCount)
+        remainingPages -= nextPage - 1
+    }
 
     for (let day = 1; day <= totalDays && remainingPages > 0; day++) {
         const taskDate = new Date(startMs + (day - 1) * 86_400_000).toISOString().slice(0, 10)
@@ -51,7 +117,7 @@ export function generatePlanTasks(
             nextPage = endPage + 1
 
             if (endPage === section.pageCount) {
-                for (const exercise of options.includeExercises === false ? [] : allExercises[section.id] || []) {
+                for (const exercise of input.includeExercises === false ? [] : allExercises[section.id] || []) {
                     tasks.push({
                         taskDate, taskType: 'exercise', sectionId: section.id,
                         exerciseId: exercise.exerciseId, dayNumber: day,
@@ -61,7 +127,7 @@ export function generatePlanTasks(
                     })
                 }
                 const phase = PROJECT_PHASE_AFTER_SECTION[section.id]
-                if (learningPath === 'comprehensive' && options.includeProject && phase !== undefined) {
+                if (input.includeProject && phase !== undefined) {
                     tasks.push({
                         taskDate, taskType: 'exercise', sectionId: 'running-project',
                         exerciseId: `running-project-phase-${phase}`, dayNumber: day,
@@ -108,21 +174,49 @@ export function calculatePlanProgress(tasks: Pick<DailyTask, 'taskDate' | 'taskT
     }
 }
 
-/** Detect missing real pages while accepting legacy ranges within reserved slots. */
+/** Plan scopes: the three legacy paths plus the v2 free-part scope. */
+function getPlanSections(learningPath: string): readonly string[] | null {
+    if (learningPath === 'free') return FREE_SCOPE_SECTIONS
+    return LEARNING_PATHS[learningPath as LearningPathId]?.sections ?? null
+}
+
+/**
+ * Detect missing real pages while accepting legacy ranges within reserved slots.
+ * `fromFirstTask` is for v2 minutes plans, which may start mid-intro (daily users)
+ * or at the page a guest returned to: they must be contiguous from their first
+ * reading task to the end of the scope. Legacy plans must start at page 1.
+ */
 export function hasCompleteReadingCoverage(
     tasks: Pick<PlanTask, 'taskType' | 'sectionId' | 'startPage' | 'endPage'>[],
     learningPath: string,
+    options: { fromFirstTask?: boolean } = {},
 ): boolean {
-    const path = LEARNING_PATHS[learningPath as LearningPathId]
-    if (!path) return false
+    const scopeSections = getPlanSections(learningPath)
+    if (!scopeSections) return false
     const covered = new Set<string>()
+    let first: ReadingPosition | null = null
     for (const task of tasks.filter(task => task.taskType === 'reading')) {
         const section = LEARNING_SECTIONS.find(item => item.id === task.sectionId)
-        if (!section || !path.sections.includes(section.id) || !Number.isInteger(task.startPage) || !Number.isInteger(task.endPage)
+        if (!section || !scopeSections.includes(section.id) || !Number.isInteger(task.startPage) || !Number.isInteger(task.endPage)
             || task.startPage! < 1 || task.endPage! > section.slotSize || task.startPage! > task.endPage!) return false
         const startPage = Math.min(task.startPage!, section.pageCount)
         const endPage = Math.min(task.endPage!, section.pageCount)
+        const taskStart = { sectionId: section.id, page: startPage }
+        if (!first || compareReadingPositions(taskStart, first) < 0) first = taskStart
         for (let page = startPage; page <= endPage; page++) covered.add(`${section.id}:${page}`)
     }
-    return covered.size === path.totalPages
+    if (!first) return false
+    const from = options.fromFirstTask ? first : { sectionId: scopeSections[0], page: 1 }
+    return covered.size === countSectionPagesFrom(scopeSections, from)
+}
+
+function countSectionPagesFrom(sectionIds: readonly string[], from: ReadingPosition): number {
+    let pages = 0
+    for (const section of LEARNING_SECTIONS) {
+        if (!sectionIds.includes(section.id)) continue
+        for (let page = 1; page <= section.pageCount; page++) {
+            if (compareReadingPositions({ sectionId: section.id, page }, from) >= 0) pages++
+        }
+    }
+    return pages
 }

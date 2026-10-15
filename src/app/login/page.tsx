@@ -12,6 +12,7 @@ import { authSystem } from '@/lib/auth_system'
 import type { DeviceDisplayInfo } from '@/lib/auth_system'
 import { auth, signInWithEmailAndPassword } from '@/lib/firebase_client'
 import { trackLogin } from '@/lib/analytics'
+import { onboardingUrlFor } from '@/lib/signup-redirect'
 import '@/app/auth.css'
 
 // التحقق من أن المسار آمن (داخلي فقط) لمنع Open Redirect
@@ -23,7 +24,7 @@ function getSafeRedirectPath(path: string | null): string {
         return '/toc'
     }
     // التحقق من المسارات المسموحة فقط
-    const allowedPrefixes = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard', '/billing/admin', '/payment', '/onboarding']
+    const allowedPrefixes = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard', '/billing/admin', '/payment', '/onboarding', '/my-plan']
     if (!allowedPrefixes.some(prefix => trimmed.startsWith(prefix))) {
         return '/toc'
     }
@@ -265,10 +266,12 @@ function LoginContent() {
                             const result = await signInWithGoogle()
                             if (result.ok) {
                                 trackLogin('google')
-                                // Navigate BEFORE any state update to prevent re-render interference
-                                const hasCompletedOnboarding = localStorage.getItem('user_learning_goal')
-                                if (!hasCompletedOnboarding && result.userId) {
-                                    window.location.href = `/onboarding?uid=${result.userId}`
+                                // Navigate BEFORE any state update to prevent re-render interference.
+                                // A brand-new account goes to onboarding — decided by the SERVER's
+                                // isNewUser (as on /register), not a browser-wide flag; the user id
+                                // never goes in the URL (identity is the httpOnly cookie).
+                                if (result.isNewUser) {
+                                    window.location.href = onboardingUrlFor('login', nextPath)
                                 } else {
                                     window.location.href = nextPath
                                 }

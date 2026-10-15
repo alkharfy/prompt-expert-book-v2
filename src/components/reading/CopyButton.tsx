@@ -6,15 +6,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 interface CopyButtonProps {
     text: string
     className?: string
+    /** Called after a successful copy (e.g. analytics). */
+    onCopy?: () => void
 }
 
-export default function CopyButton({ text, className = '' }: CopyButtonProps) {
+export default function CopyButton({ text, className = '', onCopy }: CopyButtonProps) {
     const [copied, setCopied] = useState(false)
 
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(text)
             setCopied(true)
+            onCopy?.()
             setTimeout(() => setCopied(false), 2000)
         } catch {
             // Silent fail for clipboard

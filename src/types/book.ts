@@ -28,5 +28,12 @@ export interface PageContent {
         autoplay?: boolean;       // default true (muted) — plays when scrolled into view
         // For type: 'interactive' — an in-page React animation rendered by key
         widget?: string;          // widget id, e.g. 'next-token-prediction'
+        // ── Personalisation (onboarding v2) ───────────────────────
+        /** '⚡ للمتمرسين' cards: collapsed to one tappable line for first-time AI users. */
+        audience?: 'advanced';
+        /** Replaced by the reader's own-profession live try when their profession is known. */
+        personalize?: 'profession-try';
+        /** Set at render time for collapsed advanced cards (not authored in data). */
+        collapsed?: boolean;
     }[];
 }

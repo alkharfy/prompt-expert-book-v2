@@ -5,10 +5,27 @@
 
 import 'server-only'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import type { LearningPathId, LearningDurationId } from '@/types/learning'
+import type { AiLevelId, DailyMinutes, LearningPathId, LearningDurationId } from '@/types/learning'
 import { dbLogger } from './logger'
-import { calculatePlanProgress, DURATION_DAYS, hasCompleteReadingCoverage } from '@/lib/learning-plan-schedule'
-export { generatePlanTasks } from '@/lib/learning-plan-schedule'
+import { getGlobalReadingTarget } from '@/config/learningCatalog'
+import { userHasFeature } from '@/lib/subscription'
+import {
+  countPagesFrom,
+  getLevelStart,
+  laterPosition,
+  planDaysFor,
+  type PlanScopeId,
+  type ReadingPosition,
+} from '@/lib/onboarding'
+import {
+  calculatePlanProgress,
+  DURATION_DAYS,
+  generateMinutesPlanTasks,
+  hasCompleteReadingCoverage,
+  isMinutesDuration,
+  minutesDurationLabel,
+} from '@/lib/learning-plan-schedule'
+export { generatePlanTasks, generateMinutesPlanTasks } from '@/lib/learning-plan-schedule'
 
 // ===== Types =====
 
@@ -78,15 +95,18 @@ const TASK_TYPE_ORDER: Record<string, number> = {
 
 export async function savePlan(
   userId: string,
-  learningPath: LearningPathId,
-  learningDuration: LearningDurationId,
+  learningPath: LearningPathId | 'free',
+  learningDuration: LearningDurationId | string,
   startDate: string,
-  tasks: PlanTask[]
+  tasks: PlanTask[],
+  /** Required for v2 minutes plans; legacy plans derive it from the duration. */
+  totalDaysOverride?: number,
 ): Promise<{ ok: boolean; error?: string }> {
   const supabase = getSupabaseAdmin()
 
   try {
-    const totalDays = DURATION_DAYS[learningDuration]
+    const totalDays = totalDaysOverride ?? DURATION_DAYS[learningDuration as LearningDurationId]
+    if (!Number.isInteger(totalDays) || totalDays < 1) return { ok: false, error: 'Invalid plan length' }
     const endDate = new Date(`${startDate}T00:00:00.000Z`)
     endDate.setUTCDate(endDate.getUTCDate() + totalDays - 1)
 
@@ -144,6 +164,77 @@ export async function savePlan(
   }
 }
 
+export interface MinutesPlanResult {
+  ok: boolean
+  created: boolean
+  /** An active plan already existed and was left untouched. */
+  existing?: boolean
+  scope?: PlanScopeId
+  totalDays?: number
+  error?: string
+}
+
+/** Last page the reader opened (saved as a global page number), as a position. */
+export async function getReadingPosition(userId: string): Promise<ReadingPosition | null> {
+  const { data } = await getSupabaseAdmin()
+    .from('reading_progress')
+    .select('current_page')
+    .eq('user_id', userId)
+    .maybeSingle()
+  const target = getGlobalReadingTarget(Number(data?.current_page))
+  return target ? { sectionId: target.section.id, page: target.page } : null
+}
+
+/**
+ * Onboarding v2 plan: from the later of the level's start and `startFrom`, over
+ * what the reader can open now (free part, or the whole book for subscribers),
+ * sized to `dailyMinutes`. Never replaces an active plan unless asked.
+ */
+export async function createMinutesPlan(
+  userId: string,
+  input: {
+    dailyMinutes: DailyMinutes
+    aiLevel: AiLevelId | null
+    startFrom?: ReadingPosition | null
+    replaceExisting?: boolean
+  },
+): Promise<MinutesPlanResult> {
+  try {
+    const supabase = getSupabaseAdmin()
+    if (!input.replaceExisting) {
+      const { data: active } = await supabase
+        .from('learning_plan_summary')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle()
+      if (active) return { ok: true, created: false, existing: true }
+    }
+
+    const [hasReading, includeExercises, includeProject] = await Promise.all([
+      userHasFeature(userId, 'reading'),
+      userHasFeature(userId, 'exercises'),
+      userHasFeature(userId, 'tools'),
+    ])
+    const scope: PlanScopeId = hasReading ? 'comprehensive' : 'free'
+    const start = laterPosition(getLevelStart(input.aiLevel), input.startFrom)
+    const totalDays = planDaysFor(countPagesFrom(scope, start), input.dailyMinutes)
+    const startDate = new Date().toISOString().split('T')[0]
+    const tasks = generateMinutesPlanTasks({
+      scope, start, dailyMinutes: input.dailyMinutes, startDate, includeExercises, includeProject,
+    })
+    // Nothing left in scope (e.g. a free reader who already finished the free part).
+    if (tasks.length === 0) return { ok: true, created: false, scope, totalDays: 0 }
+
+    const saved = await savePlan(userId, scope, minutesDurationLabel(input.dailyMinutes), startDate, tasks, totalDays)
+    if (!saved.ok) return { ok: false, created: false, error: saved.error }
+    return { ok: true, created: true, scope, totalDays }
+  } catch (error) {
+    dbLogger.error('Error in createMinutesPlan', error)
+    return { ok: false, created: false, error: 'Internal error' }
+  }
+}
+
 export async function getTodayPlan(userId: string): Promise<TodayPlan> {
   const supabase = getSupabaseAdmin()
   const today = new Date().toISOString().split('T')[0]
@@ -153,7 +244,8 @@ export async function getTodayPlan(userId: string): Promise<TodayPlan> {
     totalDays: 0,
     progressPercent: 0,
     tasks: [],
-    isFlexible: true,
+    // No plan is NOT a flexible plan — /my-plan must offer to create one.
+    isFlexible: false,
     summary: null,
   }
 
@@ -195,7 +287,9 @@ export async function getTodayPlan(userId: string): Promise<TodayPlan> {
     const dayNumber = Math.floor((todayMs - startMs) / (1000 * 60 * 60 * 24)) + 1
 
     const { progressPercent, completedDays, skippedDays } = calculatePlanProgress(allTasks)
-    const needsRegeneration = !hasCompleteReadingCoverage(allTasks, summary.learningPath)
+    const needsRegeneration = !hasCompleteReadingCoverage(allTasks, summary.learningPath, {
+      fromFirstTask: isMinutesDuration(summary.learningDuration),
+    })
 
     return {
       dayNumber: Math.max(1, Math.min(dayNumber, summary.totalDays)),
@@ -262,8 +356,8 @@ export async function updateTaskStatus(
       return { ok: false, error: 'أكمل مهام القراءة والتطبيق والمراجعة قبل إتمام الخطة' }
     }
     if (task.taskType === 'celebration' && status === 'completed') {
-      const { data: summary } = await supabase.from('learning_plan_summary').select('learning_path').eq('user_id', userId).maybeSingle()
-      if (!summary || !hasCompleteReadingCoverage(tasks, summary.learning_path)) {
+      const { data: summary } = await supabase.from('learning_plan_summary').select('learning_path, learning_duration').eq('user_id', userId).maybeSingle()
+      if (!summary || !hasCompleteReadingCoverage(tasks, summary.learning_path, { fromFirstTask: isMinutesDuration(summary.learning_duration) })) {
         return { ok: false, error: 'الخطة القديمة لا تشمل كل الصفحات. أعد توليدها من إعدادات المسار قبل تسجيل الإتمام.' }
       }
     }

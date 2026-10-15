@@ -1,13 +1,16 @@
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import {
+  createMinutesPlan,
   generatePlanTasks,
+  getReadingPosition,
   savePlan,
   getTodayPlan,
   getFullPlan,
   updateTaskStatus,
 } from '@/lib/learning-plan'
-import { getLearningPreferences } from '@/lib/learning-preferences'
+import { getLearningPreferences, saveOnboardingAnswers } from '@/lib/learning-preferences'
+import { isDailyMinutes } from '@/lib/onboarding'
 import type { LearningPathId, LearningDurationId } from '@/types/learning'
 import { userHasFeature } from '@/lib/subscription'
 
@@ -42,14 +45,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Optional { dailyMinutes } from /my-plan's time buttons (no plan yet, or a
+    // legacy "flexible" reader). Saved first, then the plan is sized from it.
+    const body = await request.json().catch(() => null) as Record<string, unknown> | null
+    const requestedMinutes = body?.dailyMinutes
+    if (requestedMinutes !== undefined && !isDailyMinutes(requestedMinutes)) {
+      return NextResponse.json({ error: 'وقت غير صالح' }, { status: 400 })
+    }
+    if (requestedMinutes !== undefined) {
+      const saved = await saveOnboardingAnswers(userId, { dailyMinutes: requestedMinutes })
+      if (!saved.ok) return NextResponse.json({ error: 'فشل حفظ الوقت' }, { status: 500 })
+    }
+
     // Get user preferences
     const prefs = await getLearningPreferences(userId)
     if (!prefs) {
-      return NextResponse.json({ error: 'لم يتم تحديد تفضيلات التعلم بعد' }, { status: 400 })
+      return NextResponse.json({ error: 'لم يتم تحديد تفضيلات التعلم بعد', needsMinutes: true }, { status: 400 })
     }
 
+    // v2 readers: plan from where they are now, over what they can open now.
+    if (prefs.dailyMinutes) {
+      const plan = await createMinutesPlan(userId, {
+        dailyMinutes: prefs.dailyMinutes,
+        aiLevel: prefs.aiLevel,
+        startFrom: await getReadingPosition(userId),
+        replaceExisting: true,
+      })
+      if (!plan.ok) return NextResponse.json({ error: plan.error || 'فشل توليد الخطة' }, { status: 500 })
+      if (!plan.created) {
+        return NextResponse.json({ error: 'خلّصت كل الصفحات المتاحة ليك دلوقتي', nothingLeft: true }, { status: 400 })
+      }
+      return NextResponse.json({ ok: true, totalDays: plan.totalDays, scope: plan.scope })
+    }
+
+    // Legacy "flexible" never produced a plan; ask for minutes instead.
     if (prefs.learningDuration === 'flexible') {
-      return NextResponse.json({ ok: true, message: 'الخطة المرنة لا تحتاج جدول زمني', flexible: true })
+      return NextResponse.json({ error: 'اختار وقتك في اليوم عشان نعمل خطتك', needsMinutes: true }, { status: 400 })
     }
 
     // Generate plan tasks

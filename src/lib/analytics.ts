@@ -190,9 +190,26 @@ export function trackGoogleAdsConversion(amount: number, orderId?: string) {
 
 // ── Engagement Events ──────────────────────────
 
-/** User completed an onboarding step */
-export function trackOnboardingStep(step: number, totalSteps: number) {
-  trackEvent('onboarding_step', { step, total_steps: totalSteps })
+// ── Onboarding v2 (GA4 event names: onboarding_*) ──
+// Answer codes only — never names, emails or prompt text.
+
+type OnboardingEvent =
+  | 'view'          // { source, version }
+  | 'answer'        // { step, value }
+  | 'skip'          // { at_step }
+  | 'complete'      // { profession, ai_level, minutes, seconds }
+  | 'save_error'    // { at }
+  | 'start'         // { target_source, target }
+  | 'first_check'   // { profession, caught_mistake }
+  | 'plan'          // { outcome: created|existing|none|failed, scope, minutes }
+
+export function trackOnboarding(event: OnboardingEvent, params: Record<string, string | number | boolean | null> = {}) {
+  trackEvent(`onboarding_${event}`, { version: 2, ...params })
+}
+
+/** Reader copied the profession request for a live try (intro p1). */
+export function trackTryCopy(profession: string) {
+  trackEvent('try_copy', { profession })
 }
 
 /** User completed an exercise */

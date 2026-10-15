@@ -11,6 +11,7 @@ import { signInWithGoogle } from '@/lib/google_auth'
 import { trackLead, trackCompleteRegistration } from '@/lib/meta-pixel'
 import { trackSignUp, trackFunnelStep } from '@/lib/analytics'
 import { leadEventId } from '@/lib/tracking-config'
+import { getSignupRedirect } from '@/lib/signup-redirect'
 import '@/app/auth.css'
 
 // التحقق من أن المسار آمن (داخلي فقط) لمنع Open Redirect
@@ -20,7 +21,7 @@ function getSafeRedirectPath(path: string | null): string {
     if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('://')) {
         return '/toc'
     }
-    const allowedPrefixes = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard', '/community', '/onboarding', '/payment']
+    const allowedPrefixes = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard', '/community', '/onboarding', '/payment', '/my-plan']
     if (!allowedPrefixes.some(prefix => trimmed.startsWith(prefix))) {
         return '/toc'
     }
@@ -150,15 +151,12 @@ function RegisterContent() {
             trackSignUp('email')
             trackFunnelStep('registration', 4)
             // Buy-intent flow: if they arrived from a pricing/buy CTA, send them
-            // straight to checkout; otherwise the free-trial path (onboarding).
-            const goingToPayment = !!planParam || nextPath.startsWith('/payment')
+            // straight to checkout; otherwise onboarding, which then returns them
+            // to the page that brought them here (`next`), not page 1.
             // SECURITY: Don't pass userId in URL — cookie is already set
-            if (goingToPayment) {
-                trackFunnelStep('payment_intent', 5)
-                window.location.href = nextPath.startsWith('/payment') ? nextPath : `/payment?plan=${planParam || 'basic'}`
-            } else {
-                window.location.href = '/onboarding'
-            }
+            const redirect = getSignupRedirect({ method: 'email', planParam, nextPath })
+            if (redirect.paymentIntent) trackFunnelStep('payment_intent', 5)
+            window.location.href = redirect.href
             return
         } else {
             setError(result.error || 'حدث خطأ غير متوقع')
@@ -196,15 +194,9 @@ function RegisterContent() {
                                 // Navigate BEFORE any state update to prevent re-render interference.
                                 // Buy-intent wins; otherwise new users → onboarding, returning → nextPath.
                                 // Decision uses the SERVER's isNewUser signal, not a stale localStorage flag.
-                                const goingToPayment = !!planParam || nextPath.startsWith('/payment')
-                                if (goingToPayment) {
-                                    trackFunnelStep('payment_intent', 5)
-                                    window.location.href = planParam ? `/payment?plan=${planParam}` : '/payment'
-                                } else if (result.isNewUser) {
-                                    window.location.href = '/onboarding'
-                                } else {
-                                    window.location.href = nextPath
-                                }
+                                const redirect = getSignupRedirect({ method: 'google', planParam, nextPath, isNewUser: result.isNewUser })
+                                if (redirect.paymentIntent) trackFunnelStep('payment_intent', 5)
+                                window.location.href = redirect.href
                                 return // Don't update state after redirect
                             }
                             setIsGoogleLoading(false)

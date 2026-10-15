@@ -45,13 +45,35 @@ export interface LearningDuration {
   dailyMinutes: number
 }
 
+// إجابات شاشات البداية (onboarding v2)
+export type ProfessionId =
+  | 'accounting'
+  | 'hr_admin'
+  | 'teacher'
+  | 'marketing_business'
+  | 'sales_service'
+  | 'student_jobseeker'
+  | 'programmer'
+  | 'other'
+
+export type AiLevelId = 'new' | 'some' | 'daily'
+
+export type DailyMinutes = 10 | 20 | 30
+
+export type OnboardingStatus = 'completed' | 'skipped'
+
 // تفضيلات المستخدم الكاملة
 export interface UserLearningPreferences {
   userId: string
-  learningGoal: LearningGoalId
+  /** No longer asked since onboarding v2 — null for new rows. */
+  learningGoal: LearningGoalId | null
   specialization: SpecializationId
   learningPath: LearningPathId
   learningDuration: LearningDurationId
   planStartDate: string
   isActive: boolean
+  profession: ProfessionId | null
+  aiLevel: AiLevelId | null
+  dailyMinutes: DailyMinutes | null
+  onboardingStatus: OnboardingStatus | null
 }

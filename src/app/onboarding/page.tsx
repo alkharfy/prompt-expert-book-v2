@@ -1,192 +1,336 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import ProgressIndicator from '@/components/onboarding/ProgressIndicator';
-import StepGoalAndSpec from '@/components/onboarding/StepGoalAndSpec';
-import StepPathAndDuration from '@/components/onboarding/StepPathAndDuration';
-import QuickWin from '@/components/onboarding/QuickWin';
-import { trackOnboardingStep } from '@/lib/analytics';
-import type {
-  LearningGoalId,
-  SpecializationId,
-  LearningPathId,
-  LearningDurationId,
-} from '@/types/learning';
+import ChoiceStep, { type ChoiceOption } from '@/components/onboarding/ChoiceStep';
+import ResultScreen, { type PlanOutcome } from '@/components/onboarding/ResultScreen';
+import { days, duration } from '@/components/onboarding/arabicCounts';
+import { useSubscription } from '@/context/SubscriptionContext';
+import { PROFESSION_TRIES } from '@/data/professionTries';
+import { trackOnboarding } from '@/lib/analytics';
+import { authSystem } from '@/lib/auth_system';
+import {
+  DAILY_MINUTES_OPTIONS,
+  GUEST_LAST_PAGE_KEY,
+  PROFESSION_IDS,
+  estimatePlan,
+  getSafeDestination,
+  isAiLevelId,
+  isDailyMinutes,
+  isProfessionId,
+  resolveStartDestination,
+} from '@/lib/onboarding';
+import type { AiLevelId, DailyMinutes, OnboardingStatus, ProfessionId } from '@/types/learning';
+
+const PROFESSION_OPTIONS: ChoiceOption<ProfessionId>[] = PROFESSION_IDS.map(id => ({
+  id,
+  icon: PROFESSION_TRIES[id].icon,
+  label: PROFESSION_TRIES[id].label,
+}));
+
+const LEVEL_OPTIONS: ChoiceOption<AiLevelId>[] = [
+  { id: 'new', icon: '🌱', label: 'أول مرة', hint: 'عايز أبدأ خطوة بخطوة' },
+  { id: 'some', icon: '🙂', label: 'جرّبته كام مرة', hint: 'بس النتيجة مش بتعجبني' },
+  { id: 'daily', icon: '⚡', label: 'بستخدمه كل يوم تقريباً', hint: 'عايز أوفّر وقت وفلوس' },
+];
+
+const MINUTES_LABEL: Record<DailyMinutes, string> = { 10: '10 دقايق', 20: '20 دقيقة', 30: 'نص ساعة' };
+const MINUTES_ICON: Record<DailyMinutes, string> = { 10: '☕', 20: '⏱️', 30: '🚀' };
+const ADVANCE_MS = 220;
+const STEP_COUNT = 3;
+
+function readGuestLastPage(): string | null {
+  try { return localStorage.getItem(GUEST_LAST_PAGE_KEY); } catch { return null; }
+}
+function clearGuestLastPage() {
+  try { localStorage.removeItem(GUEST_LAST_PAGE_KEY); } catch { /* storage blocked */ }
+}
+
+interface SaveBody {
+  profession: ProfessionId | null;
+  aiLevel: AiLevelId | null;
+  dailyMinutes: DailyMinutes | null;
+}
 
 function OnboardingContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const uid = searchParams.get('uid') || '';
+  const next = useMemo(() => getSafeDestination(searchParams.get('next')), [searchParams]);
+  const source = (searchParams.get('from') || 'direct').replace(/[^a-z_-]/gi, '').slice(0, 20);
+  const { hasFeature, isLoading: subscriptionLoading } = useSubscription();
+  const hasFullAccess = !subscriptionLoading && hasFeature('reading');
 
+  const [ready, setReady] = useState(false);
   const [step, setStep] = useState(0);
-  const [goal, setGoal] = useState<LearningGoalId | null>(null);
-  const [spec, setSpec] = useState<SpecializationId | null>(null);
-  const [path, setPath] = useState<LearningPathId | null>(null);
-  const [duration, setDuration] = useState<LearningDurationId | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [profession, setProfession] = useState<ProfessionId | null>(null);
+  const [level, setLevel] = useState<AiLevelId | null>(null);
+  const [minutes, setMinutes] = useState<DailyMinutes | null>(null);
+  const [guestLastPath, setGuestLastPath] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<'saving' | 'saved' | 'error'>('saving');
+  const [plan, setPlan] = useState<PlanOutcome | null>(null);
+  const [replanState, setReplanState] = useState<'idle' | 'working' | 'done' | 'error'>('idle');
+  const startedAt = useRef(Date.now());
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const goStep = (n: number) => {
-    setStep(n);
-    trackOnboardingStep(n + 1, 3);
-  };
+  useEffect(() => {
+    if (!authSystem.getCurrentUserId()) {
+      router.replace('/login?next=/onboarding');
+      return;
+    }
+    setGuestLastPath(readGuestLastPage());
+    setReady(true);
+    trackOnboarding('view', { source, has_next: !!next });
 
-  const handleSkip = () => {
-    localStorage.setItem(
-      'user_learning_goal',
-      JSON.stringify({ goal: 'skipped', selectedAt: new Date().toISOString() })
-    );
-    window.location.href = '/read/intro/1';
-  };
+    // Returning reader ("change my settings"): start from their saved answers.
+    fetch('/api/learning-preferences')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        const saved = data?.preferences;
+        if (!saved) return;
+        if (isProfessionId(saved.profession)) setProfession(current => current ?? saved.profession);
+        if (isAiLevelId(saved.aiLevel)) setLevel(current => current ?? saved.aiLevel);
+        if (isDailyMinutes(saved.dailyMinutes)) setMinutes(current => current ?? saved.dailyMinutes);
+      })
+      .catch(() => { /* prefill is optional */ });
 
-  const handleFinish = async () => {
-    if (!goal || !spec || !path || !duration) return;
-    setSaving(true);
+    return () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); };
+    // Runs once per visit; source/next come from the URL that opened the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // save to localStorage for compatibility
-    localStorage.setItem(
-      'user_learning_goal',
-      JSON.stringify({ goal, selectedAt: new Date().toISOString() })
-    );
+  const destination = useMemo(
+    () => resolveStartDestination({ next, guestLastPath, level }),
+    [next, guestLastPath, level],
+  );
 
-    // persist to Supabase via API
+  const save = useCallback(async (status: OnboardingStatus, body: SaveBody) => {
+    const res = await fetch('/api/onboarding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, status, startPath: destination.href }),
+      keepalive: true,
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) throw new Error('save_failed');
+    return data as { ok: true; plan: { created: boolean; existing: boolean; failed: boolean; scope: string | null } | null };
+  }, [destination.href]);
+
+  const complete = useCallback(async (chosenMinutes: DailyMinutes) => {
+    setSaveState('saving');
+    setPlan(null);
     try {
-      await fetch('/api/learning-preferences', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ learningGoal: goal, specialization: spec, learningPath: path, learningDuration: duration }),
+      const data = await save('completed', { profession, aiLevel: level, dailyMinutes: chosenMinutes });
+      const result = data.plan;
+      setPlan({ created: !!result?.created, existing: !!result?.existing, failed: !!result?.failed });
+      setSaveState('saved');
+      trackOnboarding('plan', {
+        outcome: result?.created ? 'created' : result?.existing ? 'existing' : result?.failed ? 'failed' : 'none',
+        scope: result?.scope ?? null,
+        minutes: chosenMinutes,
       });
     } catch {
-      // non-blocking — localStorage already saved
+      setSaveState('error');
+      trackOnboarding('save_error', { at: 'complete' });
     }
+  }, [save, profession, level]);
 
-    window.location.href = '/read/intro/1';
+  const advance = (to: number, after?: () => void) => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
+    advanceTimer.current = setTimeout(() => { setStep(to); after?.(); }, ADVANCE_MS);
   };
 
+  const chooseProfession = (value: ProfessionId) => {
+    setProfession(value);
+    trackOnboarding('answer', { step: 1, value });
+    advance(1);
+  };
+  const chooseLevel = (value: AiLevelId) => {
+    setLevel(value);
+    trackOnboarding('answer', { step: 2, value });
+    advance(2);
+  };
+  const chooseMinutes = (value: DailyMinutes) => {
+    setMinutes(value);
+    trackOnboarding('answer', { step: 3, value });
+    trackOnboarding('complete', {
+      profession,
+      ai_level: level,
+      minutes: value,
+      seconds: Math.round((Date.now() - startedAt.current) / 1000),
+    });
+    advance(3, () => { void complete(value); });
+  };
+
+  const skip = () => {
+    trackOnboarding('skip', { at_step: step + 1 });
+    save('skipped', { profession, aiLevel: level, dailyMinutes: null })
+      .catch(() => trackOnboarding('save_error', { at: 'skip' }));
+    clearGuestLastPage();
+    window.location.href = destination.href;
+  };
+
+  const start = () => {
+    trackOnboarding('start', { target_source: destination.source, target: destination.href });
+    clearGuestLastPage();
+    window.location.href = destination.href;
+  };
+
+  const replan = async () => {
+    setReplanState('working');
+    try {
+      const res = await fetch('/api/learning-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      const data = await res.json().catch(() => null);
+      setReplanState(res.ok && data?.ok ? 'done' : 'error');
+    } catch {
+      setReplanState('error');
+    }
+  };
+
+  const minutesOptions: ChoiceOption<DailyMinutes>[] = DAILY_MINUTES_OPTIONS.map(value => {
+    const estimate = estimatePlan(value, destination.planStart);
+    const hint = hasFullAccess
+      ? `الكتاب كله في ${duration(estimate.fullDays)}`
+      : estimate.freePages > 0
+        ? `الجزء المجاني يخلص في ${days(estimate.freeDays)}`
+        : `الكتاب كله في ${duration(estimate.fullDays)} لو اشتركت`;
+    return { id: value, icon: MINUTES_ICON[value], label: MINUTES_LABEL[value], hint };
+  });
+
+  if (!ready) return <div className="ob-page" />;
+
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(180deg, #0a0a0a 0%, #121212 50%, #0a0a0a 100%)',
-        direction: 'rtl',
-        color: '#ffffff',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-      }}
-    >
+    <div className="ob-page">
       <Navigation />
-
-      <main style={{ maxWidth: 640, margin: '0 auto', padding: '48px 20px 80px' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h1
-            style={{
-              fontSize: 'clamp(1.5rem, 4vw, 2rem)',
-              fontWeight: 800,
-              marginBottom: 8,
-              background: 'linear-gradient(135deg, #ffffff 0%, #ff6b35 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            {step === 0 && 'حدد هدفك ومجالك'}
-            {step === 1 && 'اختر مسارك ومدتك'}
-            {step === 2 && 'أول نجاح سريع! 🎯'}
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.92rem', margin: '0 0 8px' }}>
-            يساعدنا نخصصلك أفضل تجربة تعلّم
-          </p>
-          {step < 2 && (
-            <button onClick={handleSkip} style={skipBtn}>
-              تخطي ←
-            </button>
-          )}
-        </div>
-
-        <ProgressIndicator currentStep={step} />
+      <main className="ob-main">
+        {step < STEP_COUNT && (
+          <div className="ob-topbar">
+            {step > 0 ? (
+              <button type="button" className="ob-back" onClick={() => setStep(step - 1)} aria-label="رجوع">→ رجوع</button>
+            ) : <span />}
+            <span className="ob-progress" aria-live="polite">{step + 1} من {STEP_COUNT}</span>
+            <button type="button" className="ob-skip" onClick={skip}>تخطي</button>
+          </div>
+        )}
+        {step < STEP_COUNT && (
+          <div className="ob-bar" aria-hidden="true">
+            <div className="ob-bar-fill" style={{ width: `${((step + 1) / STEP_COUNT) * 100}%` }} />
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           {step === 0 && (
-            <StepGoalAndSpec
-              key="step0"
-              selectedGoal={goal}
-              selectedSpec={spec}
-              onGoalChange={setGoal}
-              onSpecChange={setSpec}
-              onNext={() => goStep(1)}
+            <ChoiceStep
+              key="profession"
+              title="بتشتغل إيه؟"
+              helper="عشان الأمثلة تبقى من شغلك"
+              options={PROFESSION_OPTIONS}
+              selected={profession}
+              columns={2}
+              onSelect={chooseProfession}
             />
           )}
           {step === 1 && (
-            <StepPathAndDuration
-              key="step1"
-              selectedPath={path}
-              selectedDuration={duration}
-              onPathChange={setPath}
-              onDurationChange={setDuration}
-              onNext={() => goStep(2)}
-              onBack={() => goStep(0)}
+            <ChoiceStep
+              key="level"
+              title="استخدمت الـ AI قبل كده؟"
+              helper="عشان نبدأ معاك من المكان الصح"
+              options={LEVEL_OPTIONS}
+              selected={level}
+              columns={1}
+              onSelect={chooseLevel}
             />
           )}
-          {step === 2 && spec && (
-            <QuickWin
-              key="step2"
-              specialization={spec}
-              onFinish={handleFinish}
+          {step === 2 && (
+            <ChoiceStep
+              key="minutes"
+              title="قد إيه وقتك في اليوم للكتاب؟"
+              helper="مش لازم تلتزم بالدقيقة — ده عشان نحسبلك خطتك، وتقدر تغيّره بعدين"
+              options={minutesOptions}
+              selected={minutes}
+              columns={1}
+              onSelect={chooseMinutes}
+            />
+          )}
+          {step === STEP_COUNT && minutes && (
+            <ResultScreen
+              key="result"
+              profession={profession}
+              level={level}
+              minutes={minutes}
+              destination={destination}
+              hasFullAccess={hasFullAccess}
+              saveState={saveState}
+              plan={plan}
+              replanState={replanState}
+              onRetrySave={() => { void complete(minutes); }}
+              onReplan={() => { void replan(); }}
+              onCheckAnswer={caught => trackOnboarding('first_check', { profession, caught_mistake: caught })}
+              onStart={start}
+              onEdit={() => { setReplanState('idle'); setStep(0); }}
             />
           )}
         </AnimatePresence>
-
-        {saving && (
-          <div style={{ textAlign: 'center', marginTop: 24, color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
-            جاري الحفظ...
-          </div>
-        )}
       </main>
+      <style jsx>{`
+        .ob-page {
+          min-height: 100vh;
+          background: linear-gradient(180deg, #0a0a0a 0%, #121212 50%, #0a0a0a 100%);
+          direction: rtl;
+          color: #fff;
+          font-family: inherit;
+        }
+        .ob-main {
+          max-width: 560px;
+          margin: 0 auto;
+          padding: 20px 16px 24px;
+        }
+        .ob-topbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+        .ob-back,
+        .ob-skip {
+          min-height: 44px;
+          padding: 0 6px;
+          background: none;
+          border: none;
+          color: rgba(255, 255, 255, 0.6);
+          font-family: inherit;
+          font-size: 0.92rem;
+          cursor: pointer;
+        }
+        .ob-progress {
+          color: rgba(255, 255, 255, 0.55);
+          font-size: 0.85rem;
+        }
+        .ob-bar {
+          height: 4px;
+          border-radius: 4px;
+          background: rgba(255, 255, 255, 0.08);
+          margin-bottom: 24px;
+          overflow: hidden;
+        }
+        .ob-bar-fill {
+          height: 100%;
+          background: #ff6b35;
+          transition: width 0.25s ease;
+        }
+      `}</style>
     </div>
   );
 }
 
-const skipBtn: React.CSSProperties = {
-  marginTop: 8,
-  background: 'none',
-  border: '1px solid rgba(255,255,255,0.15)',
-  color: 'rgba(255,255,255,0.5)',
-  padding: '6px 20px',
-  borderRadius: 8,
-  cursor: 'pointer',
-  fontSize: '0.85rem',
-  fontFamily: 'inherit',
-};
-
 export default function OnboardingPage() {
   return (
-    <Suspense
-      fallback={
-        <div
-          style={{
-            minHeight: '100vh',
-            background: '#0a0a0a',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            direction: 'rtl',
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              border: '3px solid rgba(255, 107, 53, 0.2)',
-              borderTopColor: '#ff6b35',
-              borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
-            }}
-          />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      }
-    >
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0a0a0a' }} />}>
       <OnboardingContent />
     </Suspense>
   );

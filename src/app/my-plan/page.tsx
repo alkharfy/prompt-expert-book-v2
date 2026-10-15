@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { authSystem } from '@/lib/auth_system'
 import DailyTaskCard from '@/components/plan/DailyTaskCard'
+import { useSubscription } from '@/context/SubscriptionContext'
+import type { DailyMinutes } from '@/types/learning'
 
 interface DailyTask {
   id: string
@@ -38,6 +40,7 @@ interface TodayPlan {
 }
 
 const PATH_NAMES: Record<string, string> = {
+  free: '🆓 الجزء المجاني',
   quick: '⚡ المسار السريع',
   intermediate: '📘 المسار المتوسط',
   comprehensive: '🏆 المسار الشامل',
@@ -49,10 +52,20 @@ const DURATION_NAMES: Record<string, string> = {
   '1month': 'شهر واحد',
   '2months': 'شهرين',
   'flexible': 'مرن',
+  '10min': '10 دقايق في اليوم',
+  '20min': '20 دقيقة في اليوم',
+  '30min': 'نص ساعة في اليوم',
 }
+
+const MINUTE_CHOICES: { value: DailyMinutes; label: string }[] = [
+  { value: 10, label: '10 دقايق' },
+  { value: 20, label: '20 دقيقة' },
+  { value: 30, label: 'نص ساعة' },
+]
 
 export default function MyPlanPage() {
   const router = useRouter()
+  const { hasFeature } = useSubscription()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [todayPlan, setTodayPlan] = useState<TodayPlan | null>(null)
@@ -65,7 +78,7 @@ export default function MyPlanPage() {
     const checkAuth = async () => {
       const userId = authSystem.getCurrentUserId()
       if (!userId) {
-        router.push('/login?redirect=/my-plan')
+        router.push('/login?next=/my-plan')
         return
       }
       setIsLoggedIn(true)
@@ -90,16 +103,23 @@ export default function MyPlanPage() {
     }
   }
 
-  const generatePlan = async () => {
+  /** With minutes: saves them first (no plan yet, or a legacy flexible reader). */
+  const generatePlan = async (dailyMinutes?: DailyMinutes) => {
     setGenerating(true)
     setError(null)
     try {
-      const res = await fetch('/api/learning-plan', { method: 'POST' })
+      const res = await fetch('/api/learning-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dailyMinutes ? { dailyMinutes } : {}),
+      })
       const data = await res.json()
       if (data.ok) {
+        setFullPlan([])
         await fetchTodayPlan()
-      } else if (data.flexible) {
-        await fetchTodayPlan()
+      } else if (data.needsMinutes) {
+        setTodayPlan(null)
+        setError('اختار وقتك في اليوم الأول، ونعملك الخطة على طول.')
       } else {
         setError(data.error || 'فشل توليد الخطة')
       }
@@ -166,8 +186,11 @@ export default function MyPlanPage() {
     )
   }
 
-  const hasPlan = todayPlan && (todayPlan.summary || todayPlan.tasks.length > 0 || todayPlan.isFlexible)
-  const noPlanYet = !hasPlan && !todayPlan?.summary
+  // A plan exists only if a summary or tasks were saved. ("No plan" used to come
+  // back as isFlexible:true, which hid the create button for everyone.)
+  const hasPlan = !!todayPlan && (!!todayPlan.summary || todayPlan.tasks.length > 0)
+  const noPlanYet = !hasPlan
+  const canExtendFreePlan = todayPlan?.summary?.learningPath === 'free' && hasFeature('reading')
 
   // Group full plan by date
   const groupedPlan: Record<string, DailyTask[]> = {}
@@ -201,22 +224,22 @@ export default function MyPlanPage() {
           <div className="plan-empty">
             <div className="plan-empty-icon">🗺️</div>
             <h2>لسه ما عندكش خطة!</h2>
-            <p>بناءً على تفضيلاتك في الـ Onboarding، هنولّدلك خطة تعلم يومية مخصصة ليك.</p>
-            <button
-              className="plan-generate-btn"
-              onClick={generatePlan}
-              disabled={generating}
-            >
-              {generating ? (
-                <>
-                  <span className="plan-spinner-inline" /> جاري التوليد...
-                </>
-              ) : (
-                '🚀 ولّد خطتي'
-              )}
-            </button>
+            <p>قد إيه وقتك في اليوم للكتاب؟ اختار، ونعملك خطة يوم بيوم على طول.</p>
+            <div className="plan-minutes">
+              {MINUTE_CHOICES.map(choice => (
+                <button
+                  key={choice.value}
+                  className="plan-generate-btn"
+                  onClick={() => generatePlan(choice.value)}
+                  disabled={generating}
+                >
+                  {choice.label}
+                </button>
+              ))}
+            </div>
+            {generating && <p><span className="plan-spinner-inline" /> بنعمل خطتك...</p>}
             <p className="plan-tip">
-              💡 لو مش عامل Onboarding، <a href="/onboarding">ابدأ من هنا</a>
+              💡 عايز أمثلة من شغلك ونقطة بداية على قد مستواك؟ <a href="/onboarding?from=my-plan">جاوب 3 أسئلة</a>
             </p>
           </div>
         )}
@@ -224,6 +247,15 @@ export default function MyPlanPage() {
         {/* Has Plan */}
         {hasPlan && (
           <>
+            {canExtendFreePlan && (
+              <div className="plan-upgrade">
+                <span>🎉 اشتراكك شغال — خطتك لسه على الجزء المجاني بس.</span>
+                <button className="plan-regen-btn" onClick={() => generatePlan()} disabled={generating}>
+                  {generating ? 'بنحدّثها...' : 'حدّثها لباقي الكتاب'}
+                </button>
+              </div>
+            )}
+
             {/* Summary badge */}
             {todayPlan.summary && (
               <div className="plan-summary-bar">
@@ -315,7 +347,7 @@ export default function MyPlanPage() {
             <div className="plan-footer">
               <button
                 className="plan-regen-btn"
-                onClick={generatePlan}
+                onClick={() => generatePlan()}
                 disabled={generating}
               >
                 {generating ? 'جاري إعادة التوليد...' : '🔄 أعد توليد الخطة'}
@@ -457,6 +489,25 @@ const pageStyles = `
   .plan-generate-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+  .plan-minutes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 8px 0 12px;
+  }
+  .plan-upgrade {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background: rgba(39, 201, 63, 0.08);
+    border: 1px solid rgba(39, 201, 63, 0.3);
   }
   .plan-tip {
     margin-top: 16px;

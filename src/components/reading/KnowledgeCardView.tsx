@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import CopyButton from '@/components/reading/CopyButton'
 import { InteractiveWidget } from '@/components/reading/widgets'
+import AdvancedCollapsedCard from '@/components/reading/AdvancedCollapsedCard'
 
 interface ContentBlock {
     type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive'
@@ -20,12 +21,16 @@ interface ContentBlock {
     loop?: boolean
     autoplay?: boolean
     widget?: string
+    personalize?: 'profession-try'
+    collapsed?: boolean
 }
 
 interface KnowledgeCardViewProps {
     blocks: ContentBlock[]
     formatText: (text: string) => React.ReactNode
     onExit: () => void
+    /** Analytics for the reader's own-profession try (intro p1). */
+    onTryCopy?: () => void
 }
 
 /** Group content blocks into cards (~2-3 blocks per card) */
@@ -52,6 +57,7 @@ export default function KnowledgeCardView({
     blocks,
     formatText,
     onExit,
+    onTryCopy,
 }: KnowledgeCardViewProps) {
     const [activeCard, setActiveCard] = useState(0)
     const touchStartX = useRef(0)
@@ -180,7 +186,10 @@ export default function KnowledgeCardView({
                             <InteractiveWidget widget={block.widget} />
                         )}
 
-                        {block.type === 'card' && (
+                        {block.type === 'card' && block.collapsed && (
+                            <AdvancedCollapsedCard title={block.title} content={block.content} items={block.items} formatText={formatText} />
+                        )}
+                        {block.type === 'card' && !block.collapsed && (
                             <div className="kc-card-block">
                                 {block.title && (
                                     <h3 className="kc-card-block-title">
@@ -209,7 +218,7 @@ export default function KnowledgeCardView({
                                     <h4 className="kc-block-title">{block.title}</h4>
                                 )}
                                 <div className="kc-code-container">
-                                    <CopyButton text={block.code || ''} />
+                                    <CopyButton text={block.code || ''} onCopy={block.personalize === 'profession-try' ? onTryCopy : undefined} />
                                     <pre>
                                         <code>{block.code}</code>
                                     </pre>
