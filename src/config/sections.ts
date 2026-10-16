@@ -36,11 +36,11 @@ export const SECTION_REGISTRY: SectionConfig[] = [
     {
         id: 'section-1',
         sectionNumber: 1,
-        pageCount: 10,
+        pageCount: 5,
         slotSize: 17,
-        chapterLabel: 'الفصل 01',
+        chapterLabel: 'المستوى ١',
         progressOffset: 6, // Intro reserves 6 global slots (3 real pages).
-        freePageLimit: 10, // الفصل كامل مجاني — 10 صفحات
+        freePageLimit: 0, // المستوى ١ مدفوع — المجاني = التمهيد بس (قرار صاحب المشروع 2026-10-16)
         chapterIndex: 1,
         prevSection: { path: '/read/intro', lastPage: 3 },
         nextSection: { path: '/read/section-2/1' },
@@ -56,9 +56,9 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         slotSize: 18,
         chapterLabel: 'الفصل 02',
         progressOffset: 23, // Reserved slots: Intro 6 + S1 17.
-        freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
+        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 2,
-        prevSection: { path: '/read/section-1', lastPage: 10 },
+        prevSection: { path: '/read/section-1', lastPage: 5 },
         nextSection: { path: '/read/section-3/1' },
         robotSize: 350,
         hasGlossary: true,
@@ -72,7 +72,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         slotSize: 18,
         chapterLabel: 'الفصل 03',
         progressOffset: 41, // Reserved slots: Intro 6 + S1 17 + S2 18.
-        freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
+        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 3,
         prevSection: { path: '/read/section-2', lastPage: 18 },
         nextSection: { path: '/read/section-4/1' },
@@ -88,7 +88,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         slotSize: 18,
         chapterLabel: 'الفصل 04',
         progressOffset: 59, // + S3: 18
-        freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
+        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 4,
         prevSection: { path: '/read/section-3', lastPage: 18 },
         nextSection: { path: '/read/section-5/1' },
@@ -104,7 +104,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         slotSize: 18,
         chapterLabel: 'الفصل 05',
         progressOffset: 77, // + S4: 18
-        freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
+        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 5,
         prevSection: { path: '/read/section-4', lastPage: 18 },
         nextSection: { path: '/read/section-6/1' },
@@ -120,7 +120,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         slotSize: 20,
         chapterLabel: 'الفصل 06',
         progressOffset: 95, // + S5: 18
-        freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
+        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 6,
         prevSection: { path: '/read/section-5', lastPage: 18 },
         nextSection: { path: '/read/section-7/1' },
@@ -136,7 +136,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         slotSize: 18,
         chapterLabel: 'الفصل 07',
         progressOffset: 115, // + S6: 20
-        freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
+        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 7,
         prevSection: { path: '/read/section-6', lastPage: 20 },
         nextSection: { path: '/read/section-8/1' },
@@ -152,7 +152,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         slotSize: 16,
         chapterLabel: 'الفصل 08',
         progressOffset: 133, // + S7: 18
-        freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
+        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 8,
         prevSection: { path: '/read/section-7', lastPage: 18 },
         nextSection: { path: '/read/section-9/1' },
@@ -168,7 +168,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         slotSize: 16,
         chapterLabel: 'الفصل 09',
         progressOffset: 149, // + S8: 16
-        freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
+        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 9,
         prevSection: { path: '/read/section-8', lastPage: 16 },
         nextSection: { path: '/read/section-10/1' },
@@ -184,7 +184,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         slotSize: 17,
         chapterLabel: 'الفصل 10',
         progressOffset: 165, // + S9: 16
-        freePageLimit: 0, // مقفول — المعاينة المجانية = المقدمة + الفصل 1 فقط (قرار 2026-06)
+        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 10,
         prevSection: { path: '/read/section-9', lastPage: 16 },
         nextSection: { path: '/library/1' },

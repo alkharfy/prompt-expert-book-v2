@@ -21,19 +21,30 @@ async function verifyAdmin() {
 }
 
 /**
- * GET /api/admin/plans - Get all plans
- * Public route - anyone can view plans
+ * GET /api/admin/plans - Get active plans (public)
+ * GET /api/admin/plans?all=1 - Get every plan with its is_active flag (admin only),
+ * so the admin page shows each plan's real status and can re-enable a disabled one.
  */
 export async function GET(request: NextRequest) {
   try {
+    const includeInactive = request.nextUrl.searchParams.get('all') === '1'
+    if (includeInactive && !(await verifyAdmin())) {
+      return NextResponse.json(
+        { ok: false, error: 'Unauthorized or not admin' },
+        { status: 403 }
+      )
+    }
+
     const supabase = getSupabaseAdmin()
 
     // SECURITY: Select specific safe columns — don't expose internal fields
-    const { data: plans, error } = await supabase
+    let query = supabase
       .from('plans' as any)
-      .select('id, name, name_ar, price, features, features_ar, display_order')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true })
+      .select(includeInactive
+        ? 'id, name, name_ar, price, features, features_ar, display_order, is_active'
+        : 'id, name, name_ar, price, features, features_ar, display_order')
+    if (!includeInactive) query = query.eq('is_active', true)
+    const { data: plans, error } = await query.order('display_order', { ascending: true })
 
     if (error) {
       dbLogger.error('Failed to fetch plans:', error)

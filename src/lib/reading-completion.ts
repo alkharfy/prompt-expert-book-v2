@@ -16,8 +16,9 @@ chapterEndPages['11'] = 194 // Template library
 chapterEndPages['12'] = 214 // Appendix; glossary is bonus content without a chapter marker.
 
 // Access checks retain the entire reserved free-preview range, including gaps.
-const firstChapter = SECTION_REGISTRY.find(section => section.id === 'section-1')!
-export const FREE_READING_LAST_PAGE = firstChapter.progressOffset + firstChapter.slotSize
+// Since 2026-10-16 the free preview is the intro only; Level 1 (section-1) is paid.
+const intro = SECTION_REGISTRY.find(section => section.id === 'intro')!
+export const FREE_READING_LAST_PAGE = intro.progressOffset + intro.slotSize
 
 export function parseChapterId(value: unknown): string | null {
     const id = typeof value === 'number' && Number.isInteger(value) ? String(value) : value

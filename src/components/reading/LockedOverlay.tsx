@@ -47,8 +47,9 @@ function getSafeRedirectPath(path: string): string {
 
 /** فهرس فصول الكتاب للعرض في Paywall */
 const FIRST_CHAPTER = SECTION_REGISTRY.find(section => section.id === 'section-1')!
-const BOOK_CHAPTERS = [
-    { num: 1, title: 'الـ AI بيفكر إزاي؟', pages: FIRST_CHAPTER.pageCount, free: true, freeLabel: '🆓 مجاني بالكامل' },
+const INTRO = SECTION_REGISTRY.find(section => section.id === 'intro')!
+const BOOK_CHAPTERS: { num: number; title: string; pages: number; free: boolean; freeLabel?: string }[] = [
+    { num: 1, title: 'بتستخدمه صح (المستوى ١)', pages: FIRST_CHAPTER.pageCount, free: false },
     { num: 2, title: 'تجربتك الأولى مع AI', pages: 18, free: false },
     { num: 3, title: 'إطار GOLDS الاحترافي', pages: 18, free: false },
     { num: 4, title: 'البرومبتات المتسلسلة', pages: 18, free: false },
@@ -147,7 +148,7 @@ export default function LockedOverlay({
 
     const handleBack = () => {
         if (isDirectAccess) {
-            router.push(`/read/${FIRST_CHAPTER.id}/${FIRST_CHAPTER.pageCount}`) // آخر صفحة مجانية (نهاية الفصل 1)
+            router.push(`/read/${INTRO.id}/${INTRO.pageCount}`) // آخر صفحة مجانية (نهاية التمهيد)
         } else {
             onClose()
         }
@@ -166,7 +167,7 @@ export default function LockedOverlay({
     switch (status) {
         case 'unauthenticated':
             title = 'متابعة الكتاب تحتاج اشتراكًا'
-            description = 'المقدمة والفصل الأول مجانيان. باقي الكتاب والتمارين يحتاجان اشتراكًا نشطًا. سجّل دخولك إذا كنت مشتركًا، أو شاهد الباقات قبل الشراء.'
+            description = 'التمهيد مجاني. المستوى الأول وباقي الكورس والتمارين محتاجين اشتراك. سجّل دخولك لو مشترك، أو شوف الباقات قبل ما تشتري.'
             actionLabel = 'تسجيل الدخول'
             showPaymentIcon = false
             showValueProps = true
@@ -175,7 +176,7 @@ export default function LockedOverlay({
         case 'unpaid':
         case 'no_subscription':
             title = 'أكملت المحتوى المجاني — جاهز تكمل؟'
-            description = 'المقدمة والفصل الأول متاحان مجانًا. اختر اشتراكًا لمتابعة باقي الكتاب والتمارين؛ المزايا الإضافية تختلف حسب الباقة.'
+            description = 'التمهيد مجاني. اختار اشتراك عشان تبدأ المستوى الأول وتكمّل باقي الكورس والتمارين؛ المزايا الإضافية بتختلف حسب الباقة.'
             actionLabel = 'اشترك الآن — حسب الباقة المختارة'
             showPaymentIcon = true
             showValueProps = true

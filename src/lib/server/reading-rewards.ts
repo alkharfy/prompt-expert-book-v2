@@ -7,7 +7,7 @@ const sections = [introData, unit1Data, unit2Data, unit3Data, unit4Data, unit5Da
 const rewards = new Map<string, { points: number; requiresReading: boolean }>()
 sections.forEach((pages, chapter) => pages.forEach(page => page.contentBlocks.forEach(block => {
     if (block.isReward && block.rewardId && Number.isInteger(block.points) && block.points! >= 0) {
-        rewards.set(block.rewardId, { points: block.points!, requiresReading: chapter > 1 })
+        rewards.set(block.rewardId, { points: block.points!, requiresReading: chapter > 0 }) // only intro rewards are free since 2026-10-16
     }
 })))
 

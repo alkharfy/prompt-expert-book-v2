@@ -13,18 +13,17 @@ const readingPages = (tasks: PlanTask[]) => tasks.filter(task => task.taskType =
   Array.from({ length: task.endPage! - task.startPage! + 1 }, (_, index) => `${task.sectionId}:${task.startPage! + index}`))
 
 describe('minutes-based learning plans', () => {
-  it('covers the thirteen free pages once and finishes the 20-minute plan on day four', () => {
+  it('covers the three free intro pages once and finishes the 20-minute plan on day one', () => {
     const tasks = generateMinutesPlanTasks({
       scope: 'free', start: { sectionId: 'intro', page: 1 }, dailyMinutes: 20, startDate, includeExercises: false,
     })
     const pages = readingPages(tasks)
     expect(pages).toEqual([
       ...Array.from({ length: 3 }, (_, index) => `intro:${index + 1}`),
-      ...Array.from({ length: 10 }, (_, index) => `section-1:${index + 1}`),
     ])
-    expect(new Set(pages).size).toBe(13)
-    expect(Math.max(...tasks.filter(task => task.taskType === 'reading').map(task => task.dayNumber))).toBeLessThanOrEqual(4)
-    expect(tasks.at(-1)).toMatchObject({ taskType: 'celebration', dayNumber: 4, taskDate: '2026-10-23' })
+    expect(new Set(pages).size).toBe(3)
+    expect(Math.max(...tasks.filter(task => task.taskType === 'reading').map(task => task.dayNumber))).toBe(1)
+    expect(tasks.at(-1)).toMatchObject({ taskType: 'celebration', dayNumber: 1, taskDate: '2026-10-20' })
     expect(tasks.some(task => task.taskType === 'exercise')).toBe(false)
     expect(hasCompleteReadingCoverage(tasks, 'free')).toBe(true)
     expect(hasCompleteReadingCoverage(tasks, 'free', { fromFirstTask: true })).toBe(true)

@@ -54,7 +54,7 @@ export default function HeroSection() {
                             <div className="hero-benefits hero-fade">
                                 <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> أول نتيجة في دقيقة: تجربة عملية في أول صفحة</div>
                                 <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> أمثلة مصرية حسب شغلك + 45 تمرين و95 قالب جاهز</div>
-                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> المقدمة والفصل الأول مجاناً — من غير تسجيل</div>
+                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> التمهيد مجاناً — من غير تسجيل</div>
                             </div>
 
                             <div className="hero-actions hero-fade" style={{ marginTop: '20px' }}>
@@ -70,7 +70,7 @@ export default function HeroSection() {
                                         <Link href="#pricing" className="btn btn-primary btn-pulse" onClick={() => trackCtaClick('اشترك الآن', 'hero_section')}>
                                             <span>شاهد الباقات والأسعار ←</span>
                                         </Link>
-                                        <Link href="/read/intro/1" className="btn btn-secondary" onClick={() => trackCtaClick('جرّب الفصل الأول مجاناً', 'hero_section_secondary')}>
+                                        <Link href="/read/intro/1" className="btn btn-secondary" onClick={() => trackCtaClick('جرّب التمهيد مجاناً', 'hero_section_secondary')}>
                                             <span>ابدأ مجاناً — أول تجربة في دقيقة</span>
                                         </Link>
                                     </>

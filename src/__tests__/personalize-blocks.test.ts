@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { introData } from '@/data/introData'
 import { PROFESSION_TRIES } from '@/data/professionTries'
 import { unit1Data } from '@/data/unit1Data'
-import { personalizeBlocks } from '@/lib/personalizeBlocks'
+import { personalizeBlocks, readerTrack } from '@/lib/personalizeBlocks'
 
 const introBlocks = introData[0].contentBlocks
 const pages = [...introData, ...unit1Data]
@@ -31,8 +31,10 @@ describe('reading block personalization', () => {
   it('collapses every advanced block and no other block for a first-time AI reader', () => {
     for (const page of pages) {
       const result = personalizeBlocks(page.contentBlocks, { profession: null, aiLevel: 'new' })
+      const visible = page.contentBlocks.filter(block => !block.track || block.track === 'accounting')
+      expect(result).toHaveLength(visible.length)
       result.forEach((block, index) => {
-        const original = page.contentBlocks[index]
+        const original = visible[index]
         if (original.audience === 'advanced') {
           expect(block).toEqual({ ...original, collapsed: true })
         } else {
@@ -58,8 +60,35 @@ describe('reading block personalization', () => {
         if (block.audience === 'advanced') expect(block.title?.startsWith('⚡')).toBe(true)
       }
     }
-    const advancedCards = unit1Data.flatMap(page => page.contentBlocks)
-      .filter(block => block.type === 'card' && block.title?.startsWith('⚡') && block.audience === 'advanced')
-    expect(advancedCards.length).toBeGreaterThanOrEqual(9)
+  })
+
+  it('maps only customer service to the service track; everyone else reads the accounting version', () => {
+    expect(readerTrack('sales_service')).toBe('service')
+    for (const profession of ['accounting', 'teacher', 'marketing_business', 'other', null] as const) {
+      expect(readerTrack(profession)).toBe('accounting')
+    }
+  })
+
+  it.each([
+    ['sales_service', 'service', 'accounting'],
+    ['accounting', 'accounting', 'service'],
+    ['teacher', 'accounting', 'service'],
+  ] as const)('shows a %s reader the %s blocks and hides the %s blocks on every Level 1 page', (profession, shown, hidden) => {
+    for (const page of unit1Data) {
+      const result = personalizeBlocks(page.contentBlocks, { profession, aiLevel: 'some' })
+      expect(result.some(block => block.track === hidden)).toBe(false)
+      expect(result.filter(block => block.track === shown)).toHaveLength(page.contentBlocks.filter(block => block.track === shown).length)
+      expect(result.filter(block => !block.track)).toHaveLength(page.contentBlocks.filter(block => !block.track).length)
+    }
+  })
+
+  it('gives both pilot tracks their own version of every lesson and answer key', () => {
+    for (const page of unit1Data.slice(1)) {
+      expect(page.contentBlocks.some(block => block.track === 'accounting'), page.title).toBe(true)
+      expect(page.contentBlocks.some(block => block.track === 'service'), page.title).toBe(true)
+    }
+    const hiddenAnswers = unit1Data.flatMap(page => page.contentBlocks).filter(block => block.reveal)
+    expect(hiddenAnswers.length).toBeGreaterThanOrEqual(10)
+    expect(hiddenAnswers.every(block => block.type === 'card')).toBe(true)
   })
 })

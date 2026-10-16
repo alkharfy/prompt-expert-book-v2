@@ -68,14 +68,14 @@ export interface ReadingPosition {
 
 export type PlanScopeId = 'free' | 'comprehensive'
 
-/** Intro + chapter 1 are free for everyone (sections.ts freePageLimit). */
-export const FREE_SCOPE_SECTIONS: readonly string[] = ['intro', 'section-1']
+/** Only the intro is free since 2026-10-16; Level 1 (section-1) is paid (sections.ts freePageLimit). */
+export const FREE_SCOPE_SECTIONS: readonly string[] = ['intro']
 
 export function getScopeSections(scope: PlanScopeId): readonly string[] {
   return scope === 'free' ? FREE_SCOPE_SECTIONS : LEARNING_PATHS.comprehensive.sections
 }
 
-/** Daily users skip the intro demo but keep p3 (dummy-data rule + characters). */
+/** Daily users skip the intro demo and land on p3 «هتتعلم إيه» (level map, last free page). */
 export function getLevelStart(level: AiLevelId | null | undefined): ReadingPosition {
   return level === 'daily' ? { sectionId: 'intro', page: 3 } : { sectionId: 'intro', page: 1 }
 }

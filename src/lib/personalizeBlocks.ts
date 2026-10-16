@@ -1,4 +1,5 @@
-// Onboarding v2 personalisation of reading-page blocks — no new lesson content:
+// Onboarding v2 personalisation of reading-page blocks:
+// * Level 1 blocks tagged with a track show only to that track (customer service vs everyone else);
 // * the intro p1 «جرّبها بنفسك» card becomes a live try of the SAME request the
 //   reader checked on the onboarding result screen (their profession);
 // * '⚡ للمتمرسين' cards collapse to one tappable line for first-time AI users.
@@ -10,13 +11,22 @@ import type { AiLevelId, ProfessionId } from '@/types/learning'
 
 export type ContentBlock = PageContent['contentBlocks'][number]
 
+/** Level-1 pilot tracks: customer service gets Mona's version, everyone else Ahmed's (accounting). */
+export function readerTrack(profession: ProfessionId | null): 'accounting' | 'service' {
+  return profession === 'sales_service' ? 'service' : 'accounting'
+}
+
 export function personalizeBlocks(
   blocks: ContentBlock[],
   reader: { profession: ProfessionId | null; aiLevel: AiLevelId | null },
 ): ContentBlock[] {
-  if (!reader.profession && reader.aiLevel !== 'new') return blocks
+  const track = readerTrack(reader.profession)
+  const onTrack = blocks.some(block => block.track)
+    ? blocks.filter(block => !block.track || block.track === track)
+    : blocks
+  if (!reader.profession && reader.aiLevel !== 'new') return onTrack
   const result: ContentBlock[] = []
-  for (const block of blocks) {
+  for (const block of onTrack) {
     if (block.personalize === 'profession-try' && reader.profession) {
       const item = getProfessionTry(reader.profession)
       result.push({

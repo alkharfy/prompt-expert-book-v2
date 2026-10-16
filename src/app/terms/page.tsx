@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SUPPORT_EMAIL } from '@/lib/config'
+import { LIVE_LECTURES_PER_MONTH } from '@/lib/pricing'
 
 export const metadata: Metadata = {
   title: 'الشروط والأحكام',
@@ -47,6 +48,11 @@ export default function TermsPage() {
         <li>الخطة المتقدمة: الأساسية مع أدوات البرومبت والإنجازات وشهادة الإتمام.</li>
         <li>خطة VIP: المتقدمة مع المحادثة الذكية، حتى 30 رسالة خلال 24 ساعة.</li>
       </ul>
+      <p style={p}>
+        كل خطة تشمل محاضرات أونلاين مباشرة طوال سنة الاشتراك:
+        {' '}{LIVE_LECTURES_PER_MONTH.basic} شهريًا في الأساسية، و{LIVE_LECTURES_PER_MONTH.pro} في المتقدمة، و{LIVE_LECTURES_PER_MONTH.vip} في VIP.
+        نعلن موعد كل محاضرة ورابطها لأصحاب الاشتراكات قبلها.
+      </p>
       <p style={p}>
         كل الباقات تتيح الوصول لمدة سنة. تظهر الأسعار الحالية في <Link href="/#pricing" style={link}>مقارنة الباقات</Link> وقبل الدفع.
         الأسعار قابلة للتغيير، وتُعرض الأسعار النهائية وأي ضرائب أو رسوم سارية وقت الشراء،

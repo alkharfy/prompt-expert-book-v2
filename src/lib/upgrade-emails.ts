@@ -6,11 +6,8 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { Resend } from 'resend'
 import { dbLogger } from './logger'
 import { SITE_URL, SITE_DOMAIN, EMAIL_FROM_DEFAULT } from '@/lib/config'
-import { SECTION_REGISTRY } from '@/config/sections'
-
 const FROM_EMAIL = EMAIL_FROM_DEFAULT
 const APP_URL = SITE_URL
-const FIRST_CHAPTER_PAGES = SECTION_REGISTRY.find(section => section.id === 'section-1')!.pageCount
 
 function escapeHtml(text: string): string {
     return text
@@ -63,35 +60,33 @@ const dripTemplates = [
     {
         day: 1,
         type: 'upgrade_drip_1' as const,
-        subject: (name: string) => `🎁 أهلاً ${name}! فصل 1 كامل مجاناً بيستناك`,
+        subject: (name: string) => `🎁 أهلاً ${name}! التمهيد مستنيك — مجاناً`,
         body: (name: string) => `
             <div class="card">
                 <span class="emoji-large">🎁</span>
                 <h2>مرحباً يا ${escapeHtml(name)}!</h2>
-                <p>جهزنالك <strong>فصل 1 كامل مجاناً</strong> — ${FIRST_CHAPTER_PAGES} ${FIRST_CHAPTER_PAGES <= 10 ? 'صفحات' : 'صفحة'} عن إزاي الـ AI بيشتغل، وإمتى يغلط، وإزاي تطلب منه وتراجعه، وتحمي بياناتك.</p>
+                <p>جهزنالك <strong>التمهيد مجاناً</strong>: جرّب في دقيقة إزاي الطلب الواضح بيفرق، وشوف الكورس ماشي إزاي في 5 مستويات، وهتطلع من كل مستوى بإيه.</p>
                 <p>فيه تمارين عملية تقدر تجربها فوراً مع ChatGPT وأي أداة AI ثانية.</p>
                 <hr class="divider">
                 <div style="text-align:center;">
-                    <a href="${APP_URL}/read/section-1/1" class="btn">ابدأ فصل 1 مجاناً ←</a>
+                    <a href="${APP_URL}/read/intro/1" class="btn">ابدأ التمهيد مجاناً ←</a>
                 </div>
             </div>`,
     },
     {
         day: 3,
         type: 'upgrade_drip_2' as const,
-        subject: (name: string) => `💡 خلصت فصل 1 يا ${name}؟ أهم 3 حاجات اتعلمتها`,
+        subject: (name: string) => `💡 يا ${name}، الرد ده صح ولا غلط؟`,
         body: (name: string) => `
             <div class="card">
                 <span class="emoji-large">💡</span>
-                <h2>ملخص سريع — فصل 1</h2>
-                <p>يا <strong>${escapeHtml(name)}</strong>، لو خلصت فصل 1 فأنت دلوقتي بتعرف:</p>
-                <p>1️⃣ <strong>كيف يعمل AI</strong> — مقدمة مبسطة عن توليد النصوص</p>
-                <p>2️⃣ <strong>النماذج وحدودها</strong> — السياق والمعلومات التي تحتاج مراجعة</p>
-                <p>3️⃣ <strong>اختيار الأدوات واستخدامها بمسؤولية</strong> — التكلفة والخصوصية والأخلاقيات</p>
-                <p>💪 الجزء الأحلى؟ فصل 2 فيه تطبيقات أقوى بكتير!</p>
+                <h2>اختبار في 10 ثواني</h2>
+                <p>يا <strong>${escapeHtml(name)}</strong>، أداة AI قالت: «السعر العام لضريبة القيمة المضافة في مصر 10٪، طبقاً للمادة (3) من قانون 67 لسنة 2016».</p>
+                <p>رقم القانون صح، ورقم المادة صح… <strong>والنسبة غلط.</strong> وده اللي بيخلّي الغلط يعدّي: كلام صح جنب كلام غلط.</p>
+                <p>في <strong>المستوى الأول</strong> هتتعلم تكشف ده في دقيقتين، وتعرف إيه اللي متحطوش في أدوات الـ AI أبداً، وتطلع بقائمة مراجعة تستخدمها في شغلك.</p>
                 <hr class="divider">
                 <div style="text-align:center;">
-                    <a href="${APP_URL}/read/section-2/1" class="btn">أكمل لفصل 2 ←</a>
+                    <a href="${APP_URL}/read/intro/3" class="btn">شوف هتتعلم إيه ←</a>
                 </div>
             </div>`,
     },

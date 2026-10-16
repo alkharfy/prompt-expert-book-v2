@@ -22,7 +22,7 @@ export default function BlogCTA() {
       </Link>
       <div style={{ marginTop: '12px' }}>
         <Link href="/read/intro/1" className="blog-cta-secondary">
-          أو جرّب الفصل الأول مجاناً
+          أو جرّب التمهيد مجاناً
         </Link>
       </div>
 

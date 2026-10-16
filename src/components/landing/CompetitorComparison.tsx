@@ -87,7 +87,7 @@ export default function CompetitorComparison() {
                         <span className="callout-emoji">💡</span>
                         <div>
                             <p className="callout-title">
-                                ابدأ بالفصل الأول المجاني قبل اختيار الباقة
+                                ابدأ بالتمهيد المجاني قبل اختيار الباقة
                             </p>
                             <p className="callout-subtitle">
                                 <strong>الأسعار وشروط الخصم تظهر قبل الدفع.</strong> الشهادة تسجّل إتمام قراءة ذاتي للفصول الأساسية العشرة، ولا تمثل اعتمادًا مهنيًا أو إثبات مهارة.

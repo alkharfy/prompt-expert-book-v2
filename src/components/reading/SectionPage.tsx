@@ -32,6 +32,7 @@ import ChapterRecap from '@/components/reading/ChapterRecap'
 import QuickRecapButton from '@/components/reading/QuickRecapButton'
 import SpecializationExamples from '@/components/reading/SpecializationExamples'
 import AdvancedCollapsedCard from '@/components/reading/AdvancedCollapsedCard'
+import RevealCard from '@/components/reading/RevealCard'
 import { useLearning } from '@/context/LearningContext'
 import { personalizeBlocks } from '@/lib/personalizeBlocks'
 import { GUEST_LAST_PAGE_KEY } from '@/lib/onboarding'
@@ -1096,10 +1097,13 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                         )}
 
                                         {/* Card Block */}
-                                        {block.type === 'card' && block.collapsed && (
+                                        {block.type === 'card' && block.reveal && (
+                                            <RevealCard label={block.reveal} title={block.title} content={block.content} items={block.items} formatText={formatText} />
+                                        )}
+                                        {block.type === 'card' && !block.reveal && block.collapsed && (
                                             <AdvancedCollapsedCard title={block.title} content={block.content} items={block.items} formatText={formatText} />
                                         )}
-                                        {block.type === 'card' && !block.collapsed && (
+                                        {block.type === 'card' && !block.reveal && !block.collapsed && (
                                             <motion.div
                                                 className="card card-glow responsive-card"
                                                 style={{

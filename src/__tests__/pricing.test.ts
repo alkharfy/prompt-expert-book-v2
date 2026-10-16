@@ -16,8 +16,8 @@ describe('pricing constants (single source of truth)', () => {
   it('canonical product stats match the real data', () => {
     expect(PRODUCT_STATS.templates).toBe(95)
     expect(PRODUCT_STATS.exercises).toBe(45)
-    expect(PRODUCT_STATS.readingPages).toBe(212)
-    expect(PRODUCT_STATS.freePages).toBe(13)
+    expect(PRODUCT_STATS.readingPages).toBe(207)
+    expect(PRODUCT_STATS.freePages).toBe(3)
   })
 
   it('AI56 intro offer is 5 EGP', () => {
@@ -36,6 +36,14 @@ describe('public pricing without a stale fallback', () => {
     expect(plans[1].features_ar).not.toContain('تحديثات AI')
     expect(plans[1].features_ar).not.toContain('مكتبة المصادر')
     expect(plans[0].cta_link).toBe('/payment?plan=basic')
+  })
+  it('promises 1, 2 and 4 live lectures a month for the subscription year', () => {
+    const plans = normalizePricingPlans([{ id: 'basic', price: 2900 }, { id: 'pro', price: 4900 }, { id: 'vip', price: 9900 }])
+    expect(plans.map(p => p.features_ar[1])).toEqual([
+      'محاضرة أونلاين مباشرة كل شهر طوال سنة الاشتراك',
+      'محاضرتان أونلاين مباشرتان كل شهر طوال سنة الاشتراك',
+      '4 محاضرات أونلاين مباشرة كل شهر طوال سنة الاشتراك',
+    ])
   })
   it.each([[], null, [{ id: 'basic', price: true }], [{ id: 'basic', price: 0 }],
     [{ id: 'basic', price: 'not a number' }], [{ id: 'other', price: 99 }],

@@ -35,5 +35,10 @@ export interface PageContent {
         personalize?: 'profession-try';
         /** Set at render time for collapsed advanced cards (not authored in data). */
         collapsed?: boolean;
+        // ── Level-based course (docs/curriculum) ──────────────────
+        /** Hidden behind a tappable line with this label (answers, worked solutions). */
+        reveal?: string;
+        /** Shown only to readers on this track; untagged blocks are shown to everyone. */
+        track?: 'accounting' | 'service';
     }[];
 }

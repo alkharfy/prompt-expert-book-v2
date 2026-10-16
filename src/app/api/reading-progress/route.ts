@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         if (addedChapters.length > 1 || addedChapters.some(id => previous?.current_page !== getChapterEndPage(id))) {
             return NextResponse.json({ error: 'سجّل إتمام الفصل من آخر صفحة فيه؛ لا يمكن إكمال عدة فصول دفعة واحدة' }, { status: 400 })
         }
-        if ((current_page > FREE_READING_LAST_PAGE || addedChapters.some(id => Number(id) > 1))
+        if ((current_page > FREE_READING_LAST_PAGE || addedChapters.some(id => Number(id) > 0)) // only the intro (chapter 0) is free since 2026-10-16
             && !await userHasFeature(userId, 'reading')) {
             return NextResponse.json({ error: 'يلزم اشتراك نشط لحفظ تقدم الفصول المدفوعة' }, { status: 403 })
         }

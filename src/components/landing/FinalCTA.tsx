@@ -26,7 +26,7 @@ export default function FinalCTA() {
                     </Link>
                     <div style={{ marginTop: '16px' }}>
                         <Link href="/read/intro/1" className="final-cta-secondary" onClick={() => trackCtaClick('جرّب مجاناً', 'final_cta_secondary')}>
-                            أو جرّب المقدمة والفصل الأول مجاناً
+                            أو جرّب التمهيد مجاناً
                         </Link>
                     </div>
                     <p className="guarantee-cta">🆓 المعاينة المجانية بدون تسجيل — <Link href="/refund-policy">🛡️ ضمان استرداد 30 يوم</Link></p>

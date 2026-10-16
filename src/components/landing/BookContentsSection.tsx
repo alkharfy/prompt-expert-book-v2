@@ -18,11 +18,10 @@ interface Chapter {
 const chapters: Chapter[] = [
     {
         num: 1,
-        title: 'الـ AI بيفكر إزاي؟ — وأول شغلانة بيه',
-        description: 'تخلّص أول مهمة شغل بالـ AI: تطلب صح، وتراجع، وتحمي بياناتك',
+        title: 'المستوى ١ — بتستخدمه صح',
+        description: 'تطلب شغلك بالـ AI صح، وتراجع الرد قبل ما تسلّمه، وتعرف إيه اللي متحطوش أبداً',
         pages: SECTION_REGISTRY.find(section => section.id === 'section-1')!.pageCount,
         icon: '🧠',
-        free: true,
     },
     {
         num: 2,
@@ -30,7 +29,6 @@ const chapters: Chapter[] = [
         description: 'خطواتك الأولى في استخدام أدوات AI العملية',
         pages: 18,
         icon: '🚀',
-        freePages: 4,
     },
     {
         num: 3,
@@ -167,7 +165,7 @@ export default function BookContentsSection() {
                         💳 اشترك الآن — حسب الباقة المختارة
                     </Link>
                     <Link href="/read/intro/1" className="btn-contents-secondary">
-                        🆓 جرّب الفصل المجاني
+                        🆓 جرّب التمهيد المجاني
                     </Link>
                 </motion.div>
             </div>

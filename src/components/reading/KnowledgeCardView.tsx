@@ -5,6 +5,7 @@ import Image from 'next/image'
 import CopyButton from '@/components/reading/CopyButton'
 import { InteractiveWidget } from '@/components/reading/widgets'
 import AdvancedCollapsedCard from '@/components/reading/AdvancedCollapsedCard'
+import RevealCard from '@/components/reading/RevealCard'
 
 interface ContentBlock {
     type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive'
@@ -23,6 +24,7 @@ interface ContentBlock {
     widget?: string
     personalize?: 'profession-try'
     collapsed?: boolean
+    reveal?: string
 }
 
 interface KnowledgeCardViewProps {
@@ -186,10 +188,13 @@ export default function KnowledgeCardView({
                             <InteractiveWidget widget={block.widget} />
                         )}
 
-                        {block.type === 'card' && block.collapsed && (
+                        {block.type === 'card' && block.reveal && (
+                            <RevealCard label={block.reveal} title={block.title} content={block.content} items={block.items} formatText={formatText} />
+                        )}
+                        {block.type === 'card' && !block.reveal && block.collapsed && (
                             <AdvancedCollapsedCard title={block.title} content={block.content} items={block.items} formatText={formatText} />
                         )}
-                        {block.type === 'card' && !block.collapsed && (
+                        {block.type === 'card' && !block.reveal && !block.collapsed && (
                             <div className="kc-card-block">
                                 {block.title && (
                                     <h3 className="kc-card-block-title">

@@ -95,8 +95,8 @@ export function gateSectionPages(
 /**
  * Server-computed "extras" (chapter recaps + spec availability) passed into the
  * client SectionPage as props, so the recap and specialization data modules are
- * never bundled into the client. Recaps are returned only for free chapters
- * (intro / section-1) or for entitled users — paid chapters' recaps stay server-side.
+ * never bundled into the client. Recaps are returned only for the free intro or
+ * for entitled users — paid chapters' recaps stay server-side.
  */
 export function getSectionExtras(config: SectionConfig, hasAccess: boolean): {
   recap: ReturnType<typeof getRecapForSection> | null
@@ -109,9 +109,8 @@ export function getSectionExtras(config: SectionConfig, hasAccess: boolean): {
   let prevRecap: ReturnType<typeof getRecapForSection> | null = null
   if (config.sectionNumber > 1) {
     const prevId = `section-${config.sectionNumber - 1}`
-    // section-1 is the only free chapter; its recap may show to everyone.
-    const prevIsFree = prevId === 'section-1'
-    if (hasAccess || prevIsFree) {
+    // Since 2026-10-16 no numbered section is free (Level 1 is paid), so only entitled users see it.
+    if (hasAccess) {
       prevRecap = getRecapForSection(prevId) ?? null
     }
   }

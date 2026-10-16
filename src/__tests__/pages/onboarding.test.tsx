@@ -118,7 +118,7 @@ describe('OnboardingPage', () => {
   it('estimates the free plan, saves all answers, and starts a new reader at intro page 1', async () => {
     await reachMinutes()
     const twentyMinutes = screen.getByRole('radio', { name: /^20 دقيقة/ })
-    expect(within(twentyMinutes).getByText('الجزء المجاني يخلص في 4 أيام')).toBeInTheDocument()
+    expect(within(twentyMinutes).getByText('الجزء المجاني يخلص في يوم واحد')).toBeInTheDocument()
     await chooseOption(/^20 دقيقة/)
 
     expect(screen.getByRole('heading', { name: 'خطتك جاهزة 👌' })).toBeInTheDocument()

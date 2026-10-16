@@ -22,22 +22,22 @@ const dailyStart = { sectionId: 'intro', page: 3 }
 
 describe('onboarding reading estimates', () => {
   it.each([
-    [introStart, 13],
-    [dailyStart, 11],
+    [introStart, 3],
+    [dailyStart, 1],
     [{ sectionId: 'section-2', page: 1 }, 0],
   ] as const)('counts free pages from %j', (start, pages) => {
     expect(countPagesFrom('free', start)).toBe(pages)
   })
 
   it.each([
-    { minutes: 10, pagesPerDay: 2, freeDays: 7, dailyFreeDays: 6 },
-    { minutes: 20, pagesPerDay: 4, freeDays: 4, dailyFreeDays: 3 },
-    { minutes: 30, pagesPerDay: 6, freeDays: 3, dailyFreeDays: 2 },
+    { minutes: 10, pagesPerDay: 2, freeDays: 2, dailyFreeDays: 1 },
+    { minutes: 20, pagesPerDay: 4, freeDays: 1, dailyFreeDays: 1 },
+    { minutes: 30, pagesPerDay: 6, freeDays: 1, dailyFreeDays: 1 },
   ] as const)('estimates a $minutes-minute plan from the selected start', ({ minutes, pagesPerDay, freeDays, dailyFreeDays }) => {
     const estimate = estimatePlan(minutes, introStart)
     expect(estimate).toEqual({
       pagesPerDay,
-      freePages: 13,
+      freePages: 3,
       freeDays,
       fullPages: LEARNING_PATHS.comprehensive.totalPages,
       fullDays: Math.ceil(LEARNING_PATHS.comprehensive.totalPages * 5 / minutes),

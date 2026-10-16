@@ -10,6 +10,15 @@ export const FALLBACK_PLAN_PRICES: Record<string, number> = { basic: 299, pro: 4
 export const PLAN_NAMES_AR: Record<string, string> = { basic: 'الأساسية', pro: 'المتقدمة', vip: 'VIP' }
 export const PLAN_ORDER: Record<string, number> = { basic: 1, pro: 2, vip: 3 }
 
+/** Live online lectures per month, for the whole subscription year (owner decision 2026-10-16). */
+export const LIVE_LECTURES_PER_MONTH: Record<PlanId, number> = { basic: 1, pro: 2, vip: 4 }
+
+export function liveLecturesLabel(id: PlanId): string {
+  const count = LIVE_LECTURES_PER_MONTH[id]
+  const lectures = count === 1 ? 'محاضرة أونلاين مباشرة' : count === 2 ? 'محاضرتان أونلاين مباشرتان' : `${count} محاضرات أونلاين مباشرة`
+  return `${lectures} كل شهر طوال سنة الاشتراك`
+}
+
 /** The "full book for 5 EGP" intro offer (promo code AI56, discount_type 'fixed_final'). */
 export const AI56_FINAL_PRICE = 5
 
@@ -56,6 +65,7 @@ export function normalizePricingPlans(rows: unknown): PublicPricingPlan[] {
       if (feature === 'chat') return 'المحادثة الذكية حتى 30 رسالة خلال 24 ساعة'
       return FEATURE_NAMES[feature]
     })
+    features.splice(1, 0, liveLecturesLabel(id))
     features.push('وصول لمدة سنة؛ التحديثات المتاحة مشمولة خلال الاشتراك')
     return {
       id, name: PLAN_NAMES_AR[id], name_ar: PLAN_NAMES_AR[id], price: Number(row.price),

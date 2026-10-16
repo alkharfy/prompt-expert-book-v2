@@ -68,7 +68,7 @@ export default function AdminPlansPage() {
 
   const fetchPlans = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/plans')
+      const response = await fetch('/api/admin/plans?all=1', { cache: 'no-store' })
       const data = await response.json()
 
       if (data.ok) {
