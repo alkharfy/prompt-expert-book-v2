@@ -17,3 +17,10 @@ describe('confidence check on intro page 3', () => {
     expect(checks[1].answer).toContain('14 يوم')
   })
 })
+
+describe('confidence check on a sound reply', () => {
+  it('does not praise doubt when the reply was actually correct', () => {
+    expect(confidenceMessage(0, true)).toContain('شكّيت في رد سليم')
+    expect(confidenceMessage(100, true)).toContain('سليم')
+  })
+})

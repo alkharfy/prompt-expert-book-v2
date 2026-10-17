@@ -1028,7 +1028,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                             <ChecklistBlock id={`${config.id}-${pageNum}-${index}`} title={block.title} items={block.items} outro={block.content} formatText={formatEnhancedText} />
                                         )}
                                         {block.type === 'confidence' && block.answer && (
-                                            <ConfidenceCheck id={`${config.id}-${pageNum}-${index}`} title={block.title} claim={block.content} answer={block.answer} formatText={formatEnhancedText} />
+                                            <ConfidenceCheck id={`${config.id}-${pageNum}-${index}`} title={block.title} claim={block.content} answer={block.answer} sound={block.sound} formatText={formatEnhancedText} />
                                         )}
                                         {block.type === 'quiz' && block.quiz && (
                                             <QuizBlock id={`${config.id}-${pageNum}`} title={block.title} questions={block.quiz} outro={block.content} formatText={formatEnhancedText} />
@@ -1311,7 +1311,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                                     color: '#b0b0b0',
                                                                     lineHeight: '1.5',
                                                                 }}>
-                                                                    {item.content}
+                                                                    {formatText(item.content)}
                                                                 </div>
                                                             </details>
                                                         ))}
@@ -1333,11 +1333,16 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                             marginTop: '16px',
                                                             paddingTop: '16px',
                                                             borderTop: '1px solid rgba(255,107,53,0.2)',
-                                                            fontSize: '0.9rem',
-                                                            color: '#888',
+                                                            fontSize: '0.95rem',
+                                                            lineHeight: 1.8,
+                                                            color: '#b8b8b8',
                                                             whiteSpace: 'pre-line',
+                                                            // The note under a prompt is Arabic prose, not code (.code-block is LTR monospace).
+                                                            direction: 'rtl',
+                                                            textAlign: 'right',
+                                                            fontFamily: 'var(--font-primary)',
                                                         }}>
-                                                            {block.content}
+                                                            {formatText(block.content)}
                                                         </div>
                                                     )}
                                                 </div>

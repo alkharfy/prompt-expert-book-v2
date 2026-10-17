@@ -8,27 +8,34 @@ interface ConfidenceCheckProps {
     title?: string
     /** The AI reply the reader judges. */
     claim: string
-    /** Where the mistake is; shown after the reader picks. */
+    /** Where the mistake is (or why it is sound); shown after the reader picks. */
     answer: string
+    /** The reply is actually correct — a control case, so doubt is not automatically right. */
+    sound?: boolean
     formatText?: (text: string) => React.ReactNode
 }
 
 const LEVELS = [0, 25, 50, 75, 100]
 
-export function confidenceMessage(level: number): string {
+export function confidenceMessage(level: number, sound = false): string {
+    if (sound) {
+        if (level >= 75) return `واثق ${level}٪، وفي محلها: الرد ده سليم. بس الثقة لوحدها مش دليل، شوف إزاي تتأكد.`
+        if (level === 50) return 'نص نص. الرد ده طلع سليم، والفرق بين الشك والتأكد هو الدليل.'
+        return 'شكّيت في رد سليم. الشك كويس، بس المراجعة هي اللي بتحسم، مش الإحساس.'
+    }
     if (level >= 75) return `كنت واثق ${level}٪… يعني كنت هتبعته. وده بالظبط اللي بيوقّع ناس كتير.`
     if (level === 50) return 'نص نص. الإحساس ده كويس، بس الشك لوحده مش كفاية: لازم تعرف الغلطة فين.'
     return 'عندك حق تشك. بس تعرف الغلطة فين بالظبط؟'
 }
 
 /** «واثق فيه بكام في المية؟»: the reader commits to a number before seeing where the planted mistake is. */
-export default function ConfidenceCheck({ id, title, claim, answer, formatText = text => text }: ConfidenceCheckProps) {
+export default function ConfidenceCheck({ id, title, claim, answer, sound = false, formatText = text => text }: ConfidenceCheckProps) {
     const [picked, setPicked] = useState<number | null>(null)
 
     const pick = (level: number) => {
         if (picked !== null) return
         setPicked(level)
-        trackEvent('confidence_check', { check: id, confidence: level })
+        trackEvent('confidence_check', { check: id, confidence: level, sound })
     }
 
     return (
@@ -64,7 +71,7 @@ export default function ConfidenceCheck({ id, title, claim, answer, formatText =
             </div>
             {picked !== null && (
                 <div aria-live="polite" style={{ marginTop: '16px' }}>
-                    <p style={{ color: '#FF8C5A', fontWeight: 700, lineHeight: 1.8, margin: '0 0 10px' }}>{confidenceMessage(picked)}</p>
+                    <p style={{ color: '#FF8C5A', fontWeight: 700, lineHeight: 1.8, margin: '0 0 10px' }}>{confidenceMessage(picked, sound)}</p>
                     <div style={{ color: '#ddd', lineHeight: 1.9, whiteSpace: 'pre-line' }}>{formatText(answer)}</div>
                 </div>
             )}

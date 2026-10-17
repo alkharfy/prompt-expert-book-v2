@@ -38,8 +38,9 @@ export interface PageContent {
         audioUrl?: string;
         // For type: 'flashcards' — each item is one card: title = front, content = back.
         // For type: 'checklist' — items = criteria the learner ticks; content = shown when all are ticked.
-        // For type: 'confidence' — content = the AI reply, answer = where the mistake is.
+        // For type: 'confidence' — content = the AI reply, answer = where the mistake is; sound = the reply is correct.
         answer?: string;
+        sound?: boolean;
         // For type: 'quiz' — tap-to-answer questions; the result message is block.content.
         quiz?: { question: string; options: string[]; answer: number; why: string }[];
         // For type: 'interactive' — an in-page React animation rendered by key

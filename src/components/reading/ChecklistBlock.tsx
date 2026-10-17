@@ -15,9 +15,8 @@ interface ChecklistBlockProps {
 
 export function checklistMessage(done: number, total: number): string {
     if (total === 0) return ''
-    if (done === total) return `كده شغلك عدّى ${total} من ${total}. ده شغل يتسلّم.`
-    if (done * 2 >= total) return `${done} من ${total}. فاضل ${total - done}، ارجع للي ماعلّمتش عليه وكمّله.`
-    return `${done} من ${total}. ده طبيعي في الأول: ابدأ باللي ماعلّمتش عليه واحدة واحدة.`
+    if (done === total) return `✅ ${total} من ${total}.`
+    return `${done} من ${total}. فاضل ${total - done}: ارجع للي ماعلّمتش عليه.`
 }
 
 /** «جدول المعايير»: the learner ticks each criterion their own work meets; the score shows as they go. */

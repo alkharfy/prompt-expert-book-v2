@@ -36,8 +36,8 @@ describe('Level 1 v2', () => {
   })
 
   it('reports checklist progress in plain Egyptian Arabic', () => {
-    expect(checklistMessage(6, 6)).toContain('يتسلّم')
+    expect(checklistMessage(6, 6)).toContain('6 من 6')
     expect(checklistMessage(4, 6)).toContain('فاضل 2')
-    expect(checklistMessage(1, 6)).toContain('طبيعي')
+    expect(checklistMessage(1, 6)).toContain('فاضل 5')
   })
 })
