@@ -62,7 +62,7 @@ export const AI_TOOL_TASKS: AiToolTask[] = [
     {
         icon: '🎬',
         task: 'فيديو',
-        tip: 'Flow بيدّيك رصيد مجاني كل يوم يكفي كام فيديو قصير. Kling فيه رصيد مجاني برضه، بس ممكن يتأخر.',
+        tip: 'Flow بيدّي الحسابات المجانية رصيد كل يوم يكفي كام فيديو قصير، بس ممكن يطلب اشتراك أو يتوقف وقت الزحمة. Kling فيه رصيد مجاني برضه، بس ممكن يتأخر.',
         tools: [
             { name: 'Flow', url: 'https://labs.google/flow', plan: 'limited' },
             { name: 'Kling', url: 'https://klingai.com', plan: 'limited' },

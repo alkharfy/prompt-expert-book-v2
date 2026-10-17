@@ -161,6 +161,8 @@ export function applyHighlights(
 
         // Skip overlapping highlights
         if (start < lastEnd) continue
+        // Skip highlights saved on text that has since been rewritten (offsets would now mark different words)
+        if (text.slice(start, end).trim() !== (note.highlighted_text || '').trim()) continue
 
         // Add non-highlighted text before this highlight
         if (start > lastEnd) {

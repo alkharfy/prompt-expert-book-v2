@@ -1025,13 +1025,13 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                             <FlashcardDeck title={block.title} cards={block.items} />
                                         )}
                                         {block.type === 'checklist' && block.items && (
-                                            <ChecklistBlock id={`${config.id}-${pageNum}-${index}`} title={block.title} items={block.items} outro={block.content} formatText={formatEnhancedText} />
+                                            <ChecklistBlock key={block.title} id={`${config.id}-${pageNum}-${index}`} title={block.title} items={block.items} outro={block.content} formatText={formatEnhancedText} />
                                         )}
                                         {block.type === 'confidence' && block.answer && (
-                                            <ConfidenceCheck id={`${config.id}-${pageNum}-${index}`} title={block.title} claim={block.content} answer={block.answer} sound={block.sound} formatText={formatEnhancedText} />
+                                            <ConfidenceCheck key={block.content} id={`${config.id}-${pageNum}-${index}`} title={block.title} claim={block.content} answer={block.answer} sound={block.sound} formatText={formatEnhancedText} />
                                         )}
                                         {block.type === 'quiz' && block.quiz && (
-                                            <QuizBlock id={`${config.id}-${pageNum}`} title={block.title} questions={block.quiz} outro={block.content} formatText={formatEnhancedText} />
+                                            <QuizBlock key={block.quiz[0]?.question} id={`${config.id}-${pageNum}`} title={block.title} questions={block.quiz} outro={block.content} formatText={formatEnhancedText} />
                                         )}
                                         {block.type === 'video' && block.videoUrl && !block.narrated && (
                                             <motion.div

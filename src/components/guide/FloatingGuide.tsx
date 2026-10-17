@@ -120,6 +120,8 @@ export default function FloatingGuide() {
     }, [])
 
     const play = useCallback((idx: number, withSound: boolean) => {
+        // Any play (auto or manual) cancels the pending first-visit start, so a dismissed guide stays dismissed.
+        pendingStartRef.current = false
         stopAudio()
         if (doneTimerRef.current) window.clearTimeout(doneTimerRef.current)
         const s = GUIDE_SCENARIOS[idx]
@@ -376,6 +378,7 @@ export default function FloatingGuide() {
     }
 
     const close = () => {
+        pendingStartRef.current = false
         stopAudio()
         if (phase === 'playing') markHeard(scenario.id)
         if (doneTimerRef.current) window.clearTimeout(doneTimerRef.current)

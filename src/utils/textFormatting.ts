@@ -100,7 +100,9 @@ export function formatInlineMarkdown(text: string): (string | React.ReactElement
         const link = part.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/)
         if (link) {
             const [, label, url] = link
-            const internal = url.startsWith('/')
+            const internal = url.startsWith('/') && !url.startsWith('//')
+            // Only site paths and https links; anything else (javascript:, data:, //host) stays plain text.
+            if (!internal && !url.startsWith('https://')) return label
             return React.createElement('a', {
                 key: nextKey('md-link'),
                 href: internal ? encodeURI(url) : url,

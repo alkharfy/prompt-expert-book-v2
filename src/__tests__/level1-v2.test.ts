@@ -41,3 +41,13 @@ describe('Level 1 v2', () => {
     expect(checklistMessage(1, 6)).toContain('فاضل 5')
   })
 })
+
+describe('markdown links stay safe', () => {
+  it('renders only site paths and https links as links', () => {
+    for (const bad of ['[x](javascript:alert(1))', '[x](data:text/html,hi)', '[x](//evil.example)', '[x](http://plain.example)']) {
+      const parts = formatInlineMarkdown(bad)
+      expect(parts.some(part => isValidElement(part) && part.type === 'a'), bad).toBe(false)
+    }
+    expect(formatInlineMarkdown('[x](https://chatgpt.com)').some(part => isValidElement(part) && part.type === 'a')).toBe(true)
+  })
+})
