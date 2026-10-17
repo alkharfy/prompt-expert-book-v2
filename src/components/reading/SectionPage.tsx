@@ -60,7 +60,11 @@ import {
 } from '@/utils/textFormatting'
 import { estimateReadingTime } from '@/utils/readingTime'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
-import KnowledgeCardView from '@/components/reading/KnowledgeCardView'
+import NarratedVideo from '@/components/reading/NarratedVideo'
+import AudioBlock from '@/components/reading/AudioBlock'
+import FlashcardDeck from '@/components/reading/FlashcardDeck'
+import QuizBlock from '@/components/reading/QuizBlock'
+import CourseMap from '@/components/reading/CourseMap'
 import { InteractiveWidget } from '@/components/reading/widgets'
 
 // Lazy imports for glossary (only used in sections 2-3)
@@ -127,21 +131,6 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
 
     const titleRef = useRef<HTMLHeadingElement>(null)
     const prefersReduced = useReducedMotion()
-
-    // Mobile Knowledge Cards mode
-    const [isMobile, setIsMobile] = useState(false)
-    const [isCardMode, setIsCardMode] = useState(false)
-
-    useEffect(() => {
-        const check = () => {
-            const mobile = window.innerWidth < 768
-            setIsMobile(mobile)
-            setIsCardMode(mobile)
-        }
-        check()
-        window.addEventListener('resize', check)
-        return () => window.removeEventListener('resize', check)
-    }, [])
 
     const currentPage = data[pageNum - 1]
     const totalPages = config.pageCount
@@ -597,6 +586,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
         return formatDialogue(text)
     }
 
+    const mapAtBottom = config.id === 'intro'
+    const courseMap = <CourseMap sectionId={config.id} chapterLabel={config.chapterLabel} pageNum={pageNum} pageCount={totalPages} pages={data} />
+
     const hasPageImage = currentPage.image || currentPage.contentBlocks.some((b) => b.type === 'image')
 
     return (
@@ -644,6 +636,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                         </button>
                     )}
 
+                    {/* The intro is a first-time visitor's first page: the map comes after the content there. */}
+                    {!mapAtBottom && courseMap}
+
                     {/* Header */}
                     <motion.div
                         style={{ textAlign: 'center', marginBottom: '48px' }}
@@ -684,7 +679,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                 <circle cx="12" cy="12" r="10" />
                                 <polyline points="12 6 12 12 16 14" />
                             </svg>
-                            <span>{estimateReadingTime(currentPage)} دقيقة قراءة</span>
+                            <span>{currentPage.minutes ? `حوالي ${currentPage.minutes} دقيقة مع التمرين` : `${estimateReadingTime(currentPage)} دقيقة قراءة`}</span>
                         </div>
                     </motion.div>
 
@@ -945,43 +940,10 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                 opacity: isCurrentPageLocked ? 0.3 : 1,
                             }}
                         >
-                            {/* Mobile Card Mode Toggle */}
-                            {isMobile && !isCurrentPageLocked && pageBlocks.length > 2 && (
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                    <button
-                                        onClick={() => setIsCardMode(!isCardMode)}
-                                        style={{
-                                            background: isCardMode ? 'rgba(255,107,53,0.15)' : 'rgba(255,255,255,0.05)',
-                                            border: `1px solid ${isCardMode ? 'rgba(255,107,53,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                                            color: isCardMode ? '#FF6B35' : '#999',
-                                            padding: '6px 16px',
-                                            borderRadius: '20px',
-                                            fontSize: '0.78rem',
-                                            cursor: 'pointer',
-                                            fontFamily: 'inherit',
-                                        }}
-                                    >
-                                        {isCardMode ? '📖 عرض عادي' : '🃏 عرض البطاقات'}
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Knowledge Card View (mobile only) */}
-                            {isMobile && isCardMode && !isCurrentPageLocked && pageBlocks.length > 2 ? (
-                                <KnowledgeCardView
-                                    blocks={pageBlocks.filter(
-                                        (block, idx) => !(block.type === 'image' && idx === pageBlocks.findIndex((b) => b.type === 'image'))
-                                    )}
-                                    formatText={formatText}
-                                    onExit={() => setIsCardMode(false)}
-                                    onTryCopy={onTryCopy}
-                                />
-                            ) : (
-                            /* Normal scroll view */
-                            pageBlocks
+                            {pageBlocks
                                 .filter((block, idx) => !(block.type === 'image' && idx === pageBlocks.findIndex((b) => b.type === 'image')))
                                 .map((block, index) => (
-                                    <div key={index} data-block-index={index}>
+                                    <div key={index} data-block-index={index} id={block.anchor} style={block.anchor ? { scrollMarginTop: '90px' } : undefined}>
                                         {/* Text Block */}
                                         {block.type === 'text' && (
                                             <div style={{
@@ -1051,7 +1013,19 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                         )}
 
                                         {/* Video Block (pre-rendered motion-graphics clip, e.g. Remotion mp4) */}
-                                        {block.type === 'video' && block.videoUrl && (
+                                        {block.type === 'video' && block.videoUrl && block.narrated && (
+                                            <NarratedVideo src={block.videoUrl} poster={block.poster} title={block.title} next={block.next} />
+                                        )}
+                                        {block.type === 'audio' && block.audioUrl && (
+                                            <AudioBlock src={block.audioUrl} title={block.title} note={block.content} />
+                                        )}
+                                        {block.type === 'flashcards' && block.items && (
+                                            <FlashcardDeck title={block.title} cards={block.items} />
+                                        )}
+                                        {block.type === 'quiz' && block.quiz && (
+                                            <QuizBlock id={`${config.id}-${pageNum}`} title={block.title} questions={block.quiz} outro={block.content} formatText={formatEnhancedText} />
+                                        )}
+                                        {block.type === 'video' && block.videoUrl && !block.narrated && (
                                             <motion.div
                                                 initial={prefersReduced ? false : { opacity: 0, scale: 0.95 }}
                                                 whileInView={{ opacity: 1, scale: 1 }}
@@ -1362,8 +1336,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                             </div>
                                         )}
                                     </div>
-                                ))
-                            )}
+                                ))}
                         </motion.div>
                     </div>
 
@@ -1415,6 +1388,8 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                         isNextBusy={isCompletingChapter}
                         onLockedClick={handleNext}
                     />
+
+                    {mapAtBottom && <div style={{ marginTop: '40px' }}>{courseMap}</div>}
 
                     <div style={{ textAlign: 'center', marginTop: '40px' }}>
                         <Link href="/toc" style={{ color: '#b0b0b0', textDecoration: 'none', fontSize: '0.9rem' }}>

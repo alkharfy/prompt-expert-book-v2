@@ -6,9 +6,13 @@ import CopyButton from '@/components/reading/CopyButton'
 import { InteractiveWidget } from '@/components/reading/widgets'
 import AdvancedCollapsedCard from '@/components/reading/AdvancedCollapsedCard'
 import RevealCard from '@/components/reading/RevealCard'
+import NarratedVideo from '@/components/reading/NarratedVideo'
+import AudioBlock from '@/components/reading/AudioBlock'
+import FlashcardDeck from '@/components/reading/FlashcardDeck'
+import QuizBlock from '@/components/reading/QuizBlock'
 
 interface ContentBlock {
-    type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive'
+    type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive' | 'audio' | 'flashcards' | 'quiz'
     title?: string
     content: string
     code?: string
@@ -18,6 +22,9 @@ interface ContentBlock {
     points?: number
     rewardId?: string
     videoUrl?: string
+    narrated?: boolean
+    audioUrl?: string
+    quiz?: { question: string; options: string[]; answer: number; why: string }[]
     poster?: string
     loop?: boolean
     autoplay?: boolean
@@ -166,7 +173,19 @@ export default function KnowledgeCardView({
                             </div>
                         )}
 
-                        {block.type === 'video' && block.videoUrl && (
+                        {block.type === 'video' && block.videoUrl && block.narrated && (
+                            <NarratedVideo src={block.videoUrl} poster={block.poster} title={block.title} />
+                        )}
+                        {block.type === 'audio' && block.audioUrl && (
+                            <AudioBlock src={block.audioUrl} title={block.title} note={block.content} />
+                        )}
+                        {block.type === 'flashcards' && block.items && (
+                            <FlashcardDeck title={block.title} cards={block.items} />
+                        )}
+                        {block.type === 'quiz' && block.quiz && (
+                            <QuizBlock id={block.title || 'quiz'} title={block.title} questions={block.quiz} outro={block.content} formatText={formatText} />
+                        )}
+                        {block.type === 'video' && block.videoUrl && !block.narrated && (
                             <div className="kc-image-block">
                                 <video
                                     src={block.videoUrl}

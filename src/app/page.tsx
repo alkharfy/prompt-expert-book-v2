@@ -3,6 +3,7 @@ import HeroSection from '@/components/landing/HeroSection'
 import FinalCTA from '@/components/landing/FinalCTA'
 import LeadMagnetModal from '@/components/landing/LeadMagnetModal'
 import MetaViewContent from '@/components/MetaViewContent'
+import FloatingGuide from '@/components/guide/FloatingGuide'
 import {
     PromoBanner,
     PainPointsSection,
@@ -53,6 +54,7 @@ export default function Home() {
             <PromoBanner />
             <LeadMagnetModal />
             <MobileStickyBuy />
+            <FloatingGuide />
         </>
     )
 }

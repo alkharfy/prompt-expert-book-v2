@@ -13,9 +13,11 @@ function countWords(text: string): number {
 
 /**
  * Estimates reading time for a single page's content blocks.
- * Returns the estimated minutes (minimum 1).
+ * Returns the estimated minutes (minimum 1). Pages with planned `minutes`
+ * (lessons with practice) use that instead of the word count.
  */
 export function estimateReadingTime(page: PageContent): number {
+    if (page.minutes) return page.minutes
     let totalWords = 0
 
     totalWords += countWords(page.title)

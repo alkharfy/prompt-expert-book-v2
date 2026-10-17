@@ -34,6 +34,7 @@ export const unit1Data: PageContent[] = [
         pageNumber: 1,
         title: "🚪 بوابة البداية",
         description: "3 دقايق قبل أول تمرين: أداتك + 3 حاجات متتحطش أبداً",
+        minutes: 3,
         contentBlocks: [
             {
                 type: 'text' as const,
@@ -86,6 +87,7 @@ export const unit1Data: PageContent[] = [
         pageNumber: 2,
         title: "أول شغلانة",
         description: "تكتب طلب واضح من الصفر لشغلك — وتعرف «الشغل المقبول شكله إيه» قبل ما تكتب",
+        minutes: 20,
         contentBlocks: [
             {
                 type: 'card' as const,
@@ -246,6 +248,7 @@ export const unit1Data: PageContent[] = [
         pageNumber: 3,
         title: "تراجع إجابته إزاي؟",
         description: "تحكم على الطلب والرد — سليم، غلط، ولا مش مثبت — ومع كل حكم دليل",
+        minutes: 25,
         contentBlocks: [
             {
                 type: 'card' as const,
@@ -424,6 +427,7 @@ export const unit1Data: PageContent[] = [
         pageNumber: 4,
         title: "إيه اللي محتاجه وإيه اللي متشاركوش",
         description: "محادثة جديدة بملخص، قائمة «متشاركش»، وإزاي تنضّف من غير ما تبوّظ المطلوب",
+        minutes: 20,
         contentBlocks: [
             {
                 type: 'card' as const,
@@ -604,6 +608,7 @@ export const unit1Data: PageContent[] = [
         pageNumber: 5,
         title: "🎓 اختبار المستوى ١",
         description: "4 بنود عن شغلك — والتصحيح بيعمله إنسان",
+        minutes: 20,
         contentBlocks: [
             {
                 type: 'card' as const,

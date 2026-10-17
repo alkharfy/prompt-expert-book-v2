@@ -4,6 +4,8 @@ export interface PageContent {
     pageNumber: number;
     title: string;
     description: string;
+    /** Planned minutes including the practice (Level 1 lessons); falls back to a word-count estimate. */
+    minutes?: number;
     image?: {
         src: string;
         alt: string;
@@ -11,7 +13,7 @@ export interface PageContent {
         placement?: 'hero' | 'inline';
     };
     contentBlocks: {
-        type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive';
+        type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive' | 'audio' | 'flashcards' | 'quiz';
         title?: string;
         content: string;
         code?: string;
@@ -26,6 +28,17 @@ export interface PageContent {
         poster?: string;          // still shown before the video plays / as fallback
         loop?: boolean;           // default true for short explainer loops
         autoplay?: boolean;       // default true (muted) — plays when scrolled into view
+        /** A talking video (المستر): vertical, plays with sound only when the reader taps play, never loops. */
+        narrated?: boolean;
+        /** Narrated video only: the `anchor` of the block the page scrolls to when the video ends. */
+        next?: string;
+        /** An id for this block, so a video or link can jump to it. */
+        anchor?: string;
+        // For type: 'audio' — a listen-on-the-go summary (e.g. a NotebookLM audio overview)
+        audioUrl?: string;
+        // For type: 'flashcards' — each item is one card: title = front, content = back.
+        // For type: 'quiz' — tap-to-answer questions; the result message is block.content.
+        quiz?: { question: string; options: string[]; answer: number; why: string }[];
         // For type: 'interactive' — an in-page React animation rendered by key
         widget?: string;          // widget id, e.g. 'next-token-prediction'
         // ── Personalisation (onboarding v2) ───────────────────────
