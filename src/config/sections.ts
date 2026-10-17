@@ -36,7 +36,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
     {
         id: 'section-1',
         sectionNumber: 1,
-        pageCount: 7,
+        pageCount: 9,
         slotSize: 17,
         chapterLabel: 'المستوى ١',
         progressOffset: 6, // Intro reserves 6 global slots (3 real pages).
@@ -58,7 +58,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         progressOffset: 23, // Reserved slots: Intro 6 + S1 17.
         freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 2,
-        prevSection: { path: '/read/section-1', lastPage: 7 },
+        prevSection: { path: '/read/section-1', lastPage: 9 },
         nextSection: { path: '/read/section-3/1' },
         robotSize: 350,
         hasGlossary: true,

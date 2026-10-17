@@ -91,26 +91,52 @@ function formatCharacterNames(parts: (string | React.ReactElement)[]): (string |
     return finalParts
 }
 
+const MARKDOWN_INLINE = /(\[[^\]]+\]\([^)\s]+\)|\*\*[^*]+\*\*)/g
+
+/** **bold** and [text](url) in lesson text; practice files under /assets/practice/ download. */
+export function formatInlineMarkdown(text: string): (string | React.ReactElement)[] {
+    if (!text) return [text]
+    return text.split(MARKDOWN_INLINE).filter(part => part !== '').map(part => {
+        const link = part.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/)
+        if (link) {
+            const [, label, url] = link
+            const internal = url.startsWith('/')
+            return React.createElement('a', {
+                key: nextKey('md-link'),
+                href: internal ? encodeURI(url) : url,
+                ...(internal ? {} : { target: '_blank', rel: 'noopener noreferrer' }),
+                ...(url.startsWith('/assets/practice/') ? { download: '' } : {}),
+                style: { color: '#FF6B35', textDecoration: 'underline', fontWeight: 600 },
+            }, label)
+        }
+        if (part.length > 4 && part.startsWith('**') && part.endsWith('**')) {
+            return React.createElement('strong', { key: nextKey('md-bold'), style: { color: '#fff' } }, part.slice(2, -2))
+        }
+        return part
+    })
+}
+
 export function formatDialogue(text: string): (string | React.ReactElement)[] {
     if (!text) return [text]
-    const linkedParts = formatLinks(text)
-    return formatCharacterNames(linkedParts)
+    return formatInlineMarkdown(text).flatMap(part =>
+        typeof part === 'string' ? formatCharacterNames(formatLinks(part)) : [part]
+    )
 }
 
 export function formatEnhancedText(text: string): (string | React.ReactElement)[] {
     if (!text) return [text]
 
-    let processedText = text.replace(/\*\*/g, '')
-    const parts = processedText.split(/(\d+|قول|الفرق)/g)
-
-    return parts.map((part, i) => {
-        if (/^\d+$/.test(part) || part === 'قول' || part === 'الفرق') {
-            return React.createElement('span', {
-                key: nextKey('enh'),
-                style: { color: '#FF6B35', fontWeight: 'bold' },
-            }, part)
-        }
-        return part
+    return formatInlineMarkdown(text).flatMap((chunk): (string | React.ReactElement)[] => {
+        if (typeof chunk !== 'string') return [chunk]
+        return chunk.split(/(\d+|قول|الفرق)/g).map(part => {
+            if (/^\d+$/.test(part) || part === 'قول' || part === 'الفرق') {
+                return React.createElement('span', {
+                    key: nextKey('enh'),
+                    style: { color: '#FF6B35', fontWeight: 'bold' },
+                }, part)
+            }
+            return part
+        })
     })
 }
 

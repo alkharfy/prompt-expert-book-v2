@@ -39,3 +39,7 @@ nul
 # Local Supabase CLI metadata and editor MCP settings
 /supabase/.temp/
 /.vscode/mcp.json
+
+# Answer keys stay out of the public repo
+docs/curriculum/level-1/test.md
+docs/curriculum/level-1-v2/practice-answers.md

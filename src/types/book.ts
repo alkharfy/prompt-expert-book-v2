@@ -13,7 +13,7 @@ export interface PageContent {
         placement?: 'hero' | 'inline';
     };
     contentBlocks: {
-        type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive' | 'audio' | 'flashcards' | 'quiz' | 'confidence';
+        type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive' | 'audio' | 'flashcards' | 'quiz' | 'confidence' | 'checklist';
         title?: string;
         content: string;
         code?: string;
@@ -37,6 +37,7 @@ export interface PageContent {
         // For type: 'audio' — a listen-on-the-go summary (e.g. a NotebookLM audio overview)
         audioUrl?: string;
         // For type: 'flashcards' — each item is one card: title = front, content = back.
+        // For type: 'checklist' — items = criteria the learner ticks; content = shown when all are ticked.
         // For type: 'confidence' — content = the AI reply, answer = where the mistake is.
         answer?: string;
         // For type: 'quiz' — tap-to-answer questions; the result message is block.content.

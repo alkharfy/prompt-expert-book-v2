@@ -30,7 +30,7 @@ describe('learning catalog matches the shipped data', () => {
         }
         const actualTotal = Object.values(actualPages).reduce((sum, pages) => sum + pages.length, 0)
         expect(LEARNING_SECTIONS.reduce((sum, section) => sum + section.pageCount, 0)).toBe(actualTotal)
-        expect(actualTotal).toBe(209)
+        expect(actualTotal).toBe(211)
     })
 
     it('has continuous reserved global slots, including the references', () => {
@@ -57,7 +57,7 @@ describe('learning catalog matches the shipped data', () => {
         expect(getLearningReadingUrl('library', 12)).toBe('/library/12')
         expect(getLearningReadingUrl('appendix', 20)).toBe('/read/appendix/20')
         expect(getLearningReadingUrl('glossary', 8)).toBe('/read/glossary/8')
-        expect(getLearningReadingUrl('section-1', 999)).toBe('/read/section-1/7')
+        expect(getLearningReadingUrl('section-1', 999)).toBe('/read/section-1/9')
         expect(getLearningReadingUrl('section-1', -1)).toBe('/read/section-1/1')
         expect(getLearningReadingUrl('section-1', 1.5)).toBe('/read/section-1/1')
         expect(getLearningReadingUrl('section-1', Number.NaN)).toBe('/read/section-1/1')
@@ -66,7 +66,7 @@ describe('learning catalog matches the shipped data', () => {
 
     it.each([
         [4, '/read/intro/3'], [6, '/read/intro/3'],
-        [17, '/read/section-1/7'], [23, '/read/section-1/7'],
+        [17, '/read/section-1/9'], [23, '/read/section-1/9'],
     ])('clamps saved global gap %s to %s', (globalPage, url) => {
         expect(getGlobalReadingUrl(globalPage)).toBe(url)
         expect(getGlobalReadingTarget(globalPage)?.url).toBe(url)
@@ -105,7 +105,7 @@ describe('learning path totals', () => {
 
     it('includes the whole catalog in the comprehensive path', () => {
         expect(LEARNING_PATHS.comprehensive.sections).toEqual(LEARNING_SECTIONS.map(section => section.id))
-        expect(LEARNING_PATHS.comprehensive.totalPages).toBe(209)
+        expect(LEARNING_PATHS.comprehensive.totalPages).toBe(211)
         expect(getPathCompletion(182, 'comprehensive')).toBeLessThan(100)
         expect(getPathCompletion(222, 'comprehensive')).toBe(100)
     })

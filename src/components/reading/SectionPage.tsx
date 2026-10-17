@@ -65,6 +65,7 @@ import AudioBlock from '@/components/reading/AudioBlock'
 import FlashcardDeck from '@/components/reading/FlashcardDeck'
 import QuizBlock from '@/components/reading/QuizBlock'
 import ConfidenceCheck from '@/components/reading/ConfidenceCheck'
+import ChecklistBlock from '@/components/reading/ChecklistBlock'
 import CourseMap from '@/components/reading/CourseMap'
 import { InteractiveWidget } from '@/components/reading/widgets'
 
@@ -1022,6 +1023,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                         )}
                                         {block.type === 'flashcards' && block.items && (
                                             <FlashcardDeck title={block.title} cards={block.items} />
+                                        )}
+                                        {block.type === 'checklist' && block.items && (
+                                            <ChecklistBlock id={`${config.id}-${pageNum}-${index}`} title={block.title} items={block.items} outro={block.content} formatText={formatEnhancedText} />
                                         )}
                                         {block.type === 'confidence' && block.answer && (
                                             <ConfidenceCheck id={`${config.id}-${pageNum}-${index}`} title={block.title} claim={block.content} answer={block.answer} formatText={formatEnhancedText} />

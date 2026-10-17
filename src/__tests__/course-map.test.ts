@@ -14,13 +14,13 @@ describe('«إنت هنا» course map', () => {
 
   it('counts Level 1 time from the planned lesson minutes, including the current page', () => {
     expect(unit1Data.every(page => page.minutes)).toBe(true)
-    expect(minutesLeft(unit1Data, 1)).toBe(133)
-    expect(minutesLeft(unit1Data, 7)).toBe(20)
+    expect(minutesLeft(unit1Data, 1)).toBe(180)
+    expect(minutesLeft(unit1Data, 9)).toBe(40)
   })
 
   it('keeps the planned minutes on locked pages, whose content is stripped', () => {
     const locked = unit1Data.map(page => ({ ...page, contentBlocks: [] }))
-    expect(minutesLeft(locked, 2)).toBe(123)
+    expect(minutesLeft(locked, 2)).toBe(170)
   })
 
   it('says time the Egyptian way', () => {
