@@ -128,7 +128,7 @@ describe('supplement reader oversized-page redirects', () => {
 describe('SectionPage completion uses the last real page', () => {
     it.each([
         { sectionId: 'intro', page: 3, globalPage: 3, chapter: null },
-        { sectionId: 'section-1', page: 5, globalPage: 11, chapter: 1 },
+        { sectionId: 'section-1', page: 7, globalPage: 13, chapter: 1 },
     ])('completes $sectionId at global page $globalPage', async ({ sectionId, page, globalPage, chapter }) => {
         const config = SECTION_REGISTRY.find(section => section.id === sectionId)!
         renderSection(config, page)

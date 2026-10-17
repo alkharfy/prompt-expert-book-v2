@@ -9,13 +9,15 @@ interface NarratedVideoProps {
     title?: string
     /** Id of the block that comes after what the video covers; the page scrolls there when it ends. */
     next?: string
+    /** Replaces the default line under the video (e.g. the AI-made disclosure). */
+    note?: string
 }
 
 /**
  * A talking «المستر» video: vertical, starts only when the reader taps play (so it
  * plays with sound), never loops. The same words are always written on the page.
  */
-export default function NarratedVideo({ src, poster, title, next }: NarratedVideoProps) {
+export default function NarratedVideo({ src, poster, title, next, note }: NarratedVideoProps) {
     const started = useRef(false)
 
     return (
@@ -51,7 +53,7 @@ export default function NarratedVideo({ src, poster, title, next }: NarratedVide
                 }}
             />
             <p style={{ color: '#9a9a9a', fontSize: '0.85rem', textAlign: 'center', margin: '8px 0 0' }}>
-                {next ? (
+                {note ? note : next ? (
                     <>🔊 بالصوت. شفته؟ <a href={`#${next}`} style={{ color: '#FF6B35' }}>انزل على «يلا نجرّب» على طول 👇</a></>
                 ) : (
                     '🔊 بالصوت. ومش عايز تتفرج؟ نفس الكلام مكتوب تحت.'

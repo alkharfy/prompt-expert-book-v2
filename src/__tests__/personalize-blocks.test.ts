@@ -83,7 +83,8 @@ describe('reading block personalization', () => {
   })
 
   it('gives both pilot tracks their own version of every lesson and answer key', () => {
-    for (const page of unit1Data.slice(1)) {
+    // «الـ AI بيفكّر إزاي؟» (1) and the gate (3) are the same for everyone.
+    for (const page of unit1Data.filter(page => page.pageNumber !== 1 && page.pageNumber !== 3)) {
       expect(page.contentBlocks.some(block => block.track === 'accounting'), page.title).toBe(true)
       expect(page.contentBlocks.some(block => block.track === 'service'), page.title).toBe(true)
     }

@@ -71,7 +71,7 @@ describe('validated self-reported reading', () => {
     })
     it.each([
         { chapter: 0, endpoint: 3, completed: ['0'], percentage: 0, allowed: false },
-        { chapter: 1, endpoint: 11, completed: ['1'], percentage: 10, allowed: true },
+        { chapter: 1, endpoint: 13, completed: ['1'], percentage: 10, allowed: true },
     ])('accepts chapter $chapter completion at its real endpoint $endpoint', async ({ chapter, endpoint, completed, percentage, allowed }) => {
         h.allowed = allowed; h.row.current_page = endpoint
         expect(getChapterEndPage(String(chapter))).toBe(endpoint)
@@ -87,12 +87,12 @@ describe('validated self-reported reading', () => {
         expect(h.writes).toHaveLength(0)
     })
     it('requires a subscription to complete Level 1 (paid since 2026-10-16)', async () => {
-        h.allowed = false; h.row = { current_page: 11, completed_chapters: ['0'] }
+        h.allowed = false; h.row = { current_page: 13, completed_chapters: ['0'] }
         expect((await POST(request({ completed_chapter: 1 }))).status).toBe(403)
         expect(h.writes).toHaveLength(0)
     })
     it('counts Level 1 once for a subscriber', async () => {
-        h.allowed = true; h.row = { current_page: 11, completed_chapters: ['0'] }
+        h.allowed = true; h.row = { current_page: 13, completed_chapters: ['0'] }
         expect((await POST(request({ completed_chapter: 1 }))).status).toBe(200)
         expect(h.writes[0]).toMatchObject({ completed_chapters: ['0', '1'], completion_percentage: 10 })
         expect(h.sync).toHaveBeenCalledWith('u1', 1, expect.anything())
@@ -103,7 +103,7 @@ describe('validated self-reported reading', () => {
         expect(h.writes).toHaveLength(0)
     })
     it('requires the end page to have been saved separately', async () => {
-        expect((await POST(request({ current_page: 11, completed_chapter: 1 }))).status).toBe(400)
+        expect((await POST(request({ current_page: 13, completed_chapter: 1 }))).status).toBe(400)
         expect(h.writes).toHaveLength(0)
     })
     it('merges a valid last-chapter marker and sanitizes legacy duplicates', async () => {

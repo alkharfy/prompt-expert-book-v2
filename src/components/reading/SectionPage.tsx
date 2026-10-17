@@ -64,6 +64,7 @@ import NarratedVideo from '@/components/reading/NarratedVideo'
 import AudioBlock from '@/components/reading/AudioBlock'
 import FlashcardDeck from '@/components/reading/FlashcardDeck'
 import QuizBlock from '@/components/reading/QuizBlock'
+import ConfidenceCheck from '@/components/reading/ConfidenceCheck'
 import CourseMap from '@/components/reading/CourseMap'
 import { InteractiveWidget } from '@/components/reading/widgets'
 
@@ -1014,13 +1015,16 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
 
                                         {/* Video Block (pre-rendered motion-graphics clip, e.g. Remotion mp4) */}
                                         {block.type === 'video' && block.videoUrl && block.narrated && (
-                                            <NarratedVideo src={block.videoUrl} poster={block.poster} title={block.title} next={block.next} />
+                                            <NarratedVideo src={block.videoUrl} poster={block.poster} title={block.title} next={block.next} note={block.content || undefined} />
                                         )}
                                         {block.type === 'audio' && block.audioUrl && (
                                             <AudioBlock src={block.audioUrl} title={block.title} note={block.content} />
                                         )}
                                         {block.type === 'flashcards' && block.items && (
                                             <FlashcardDeck title={block.title} cards={block.items} />
+                                        )}
+                                        {block.type === 'confidence' && block.answer && (
+                                            <ConfidenceCheck id={`${config.id}-${pageNum}-${index}`} title={block.title} claim={block.content} answer={block.answer} formatText={formatEnhancedText} />
                                         )}
                                         {block.type === 'quiz' && block.quiz && (
                                             <QuizBlock id={`${config.id}-${pageNum}`} title={block.title} questions={block.quiz} outro={block.content} formatText={formatEnhancedText} />

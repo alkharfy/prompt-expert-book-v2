@@ -16,7 +16,7 @@ describe('pricing constants (single source of truth)', () => {
   it('canonical product stats match the real data', () => {
     expect(PRODUCT_STATS.templates).toBe(95)
     expect(PRODUCT_STATS.exercises).toBe(45)
-    expect(PRODUCT_STATS.readingPages).toBe(207)
+    expect(PRODUCT_STATS.readingPages).toBe(209)
     expect(PRODUCT_STATS.freePages).toBe(3)
   })
 

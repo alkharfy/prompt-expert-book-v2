@@ -176,7 +176,7 @@ describe('legacy learning plan reading coverage', () => {
         expect(hasCompleteReadingCoverage(tasks, path)).toBe(true)
         expect(tasks).toEqual(savedTasks)
         expect(getLearningReadingUrl('intro', tasks[0].endPage)).toBe('/read/intro/3')
-        expect(getLearningReadingUrl('section-1', tasks[1].endPage)).toBe('/read/section-1/5')
+        expect(getLearningReadingUrl('section-1', tasks[1].endPage)).toBe('/read/section-1/7')
         expect(getGlobalReadingTarget(24)).toMatchObject({ section: { id: 'section-2' }, page: 1 })
         expect(getGlobalReadingTarget(41)).toMatchObject({ section: { id: 'section-2' }, page: 18 })
     })

@@ -15,9 +15,11 @@ import type { ComponentType } from 'react'
 // dynamic + ssr:false: الـ widgets تفاعلية وبتعتمد على IntersectionObserver،
 // فمفيش داعي نرسمها على السيرفر — وكمان ده بيخفّف الـ bundle الأولي.
 const NextTokenPrediction = dynamic(() => import('./NextTokenPrediction'), { ssr: false })
+const BestAiTools = dynamic(() => import('./BestAiTools'), { ssr: false })
 
 export const WIDGETS: Record<string, ComponentType> = {
     'next-token-prediction': NextTokenPrediction,
+    'best-ai-tools': BestAiTools,
 }
 
 export function InteractiveWidget({ widget }: { widget?: string }) {
