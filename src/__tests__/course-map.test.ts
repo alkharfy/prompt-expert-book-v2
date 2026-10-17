@@ -33,13 +33,17 @@ describe('«إنت هنا» course map', () => {
   })
 })
 
-describe('«هتتعلم إيه» video', () => {
-  it('opens the last free page with the narrated Level 1 video, and its files exist', () => {
-    const page = introData[introData.length - 1]
-    const video = page.contentBlocks[0]
-    expect(video).toMatchObject({ type: 'video', narrated: true })
-    for (const file of [video.videoUrl!, video.poster!]) {
-      expect(existsSync(join(process.cwd(), 'public', file))).toBe(true)
-    }
+describe('last free page', () => {
+  it('lets the reader try the confidence check before any video, and every video file exists', () => {
+    const blocks = introData[introData.length - 1].contentBlocks
+    const check = blocks.findIndex(block => block.type === 'confidence')
+    expect(check).toBeGreaterThan(-1)
+    blocks.forEach((block, index) => {
+      if (block.type !== 'video') return
+      expect(index).toBeGreaterThan(check)
+      for (const file of [block.videoUrl!, block.poster!]) {
+        expect(existsSync(join(process.cwd(), 'public', file))).toBe(true)
+      }
+    })
   })
 })

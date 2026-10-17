@@ -12,13 +12,13 @@ describe('free intro: something to do on every page', () => {
     expect(decks[0].block.items!.every(card => card.title && card.content)).toBe(true)
   })
 
-  it('ends page 3 with a five-question quiz whose answers are all valid, before the completion reward', () => {
+  it('asks three recall questions on page 3 before the offer, with the completion reward after', () => {
     const page3 = introData[2].contentBlocks
     const quizIndex = page3.findIndex(block => block.type === 'quiz')
     expect(quizIndex).toBeGreaterThan(-1)
-    expect(page3.findIndex(block => block.rewardId === 'intro_complete')).toBe(quizIndex + 1)
+    expect(page3.findIndex(block => block.rewardId === 'intro_complete')).toBeGreaterThan(quizIndex)
     const quiz = page3[quizIndex].quiz!
-    expect(quiz).toHaveLength(5)
+    expect(quiz).toHaveLength(3)
     for (const q of quiz) {
       expect(q.options).toHaveLength(3)
       expect(q.answer).toBeGreaterThanOrEqual(0)
