@@ -44,7 +44,6 @@ import type { PageContent } from '@/data/bookData'
 
 // Running Project banner mapping: sectionNumber → phase info
 const RUNNING_PROJECT_PHASES: Record<number, { phase: number; label: string }> = {
-    2: { phase: 1, label: 'المرحلة 1: فهم المشروع وتحديد النطاق' },
     3: { phase: 2, label: 'المرحلة 2: كتابة وثيقة متطلبات المنتج (PRD)' },
     4: { phase: 3, label: 'المرحلة 3: تصميم تدفقات المستخدم' },
     5: { phase: 4, label: 'المرحلة 4: هيكل الصفحات والـ Wireframe' },
@@ -67,6 +66,8 @@ import QuizBlock from '@/components/reading/QuizBlock'
 import ConfidenceCheck from '@/components/reading/ConfidenceCheck'
 import ChecklistBlock from '@/components/reading/ChecklistBlock'
 import AnswerCheck from '@/components/reading/AnswerCheck'
+import GradeCheck from '@/components/reading/GradeCheck'
+import { SaveToBagBlock, BagList } from '@/components/reading/BagBlocks'
 import CourseMap from '@/components/reading/CourseMap'
 import { InteractiveWidget } from '@/components/reading/widgets'
 
@@ -1027,6 +1028,15 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                         )}
                                         {block.type === 'answer' && block.accept && block.title && (
                                             <AnswerCheck key={block.title} id={`${config.id}-${pageNum}-${index}`} question={block.title} accept={block.accept} hint={block.hint} explanation={block.content} formatText={formatText} />
+                                        )}
+                                        {block.type === 'grade' && block.rubric && (
+                                            <GradeCheck key={block.rubric} rubricId={block.rubric} title={block.title} intro={block.content || undefined} bagLabel={block.bag} sectionId={config.id} pageNumber={pageNum} formatText={formatText} />
+                                        )}
+                                        {block.type === 'save' && block.bag && (
+                                            <SaveToBagBlock key={block.bag} label={block.bag} intro={block.content || undefined} placeholder={block.placeholder} sectionId={config.id} pageNumber={pageNum} formatText={formatText} />
+                                        )}
+                                        {block.type === 'bag' && (
+                                            <BagList sectionId={config.id} title={block.title} />
                                         )}
                                         {block.type === 'checklist' && block.items && (
                                             <ChecklistBlock key={block.title} id={`${config.id}-${pageNum}-${index}`} title={block.title} items={block.items} outro={block.content} formatText={formatEnhancedText} />

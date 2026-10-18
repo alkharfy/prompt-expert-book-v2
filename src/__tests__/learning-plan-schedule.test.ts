@@ -178,7 +178,7 @@ describe('legacy learning plan reading coverage', () => {
         expect(getLearningReadingUrl('intro', tasks[0].endPage)).toBe('/read/intro/3')
         expect(getLearningReadingUrl('section-1', tasks[1].endPage)).toBe('/read/section-1/9')
         expect(getGlobalReadingTarget(24)).toMatchObject({ section: { id: 'section-2' }, page: 1 })
-        expect(getGlobalReadingTarget(41)).toMatchObject({ section: { id: 'section-2' }, page: 18 })
+        expect(getGlobalReadingTarget(41)).toMatchObject({ section: { id: 'section-2' }, page: 9 })
     })
 
     it('maps gap-only saved reading tasks to the last real page without covering earlier pages', () => {

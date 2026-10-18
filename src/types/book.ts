@@ -13,7 +13,7 @@ export interface PageContent {
         placement?: 'hero' | 'inline';
     };
     contentBlocks: {
-        type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive' | 'audio' | 'flashcards' | 'quiz' | 'confidence' | 'checklist' | 'answer';
+        type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive' | 'audio' | 'flashcards' | 'quiz' | 'confidence' | 'checklist' | 'answer' | 'grade' | 'save' | 'bag';
         title?: string;
         content: string;
         code?: string;
@@ -44,6 +44,12 @@ export interface PageContent {
         // For type: 'confidence' — content = the AI reply, answer = where the mistake is; sound = the reply is correct.
         answer?: string;
         sound?: boolean;
+        // For type: 'grade' — «المستر بيصحّح»: rubric = id in src/data/gradeRubrics.ts, content = what to paste, bag = save label.
+        rubric?: string;
+        // For type: 'save' — bag = the label it is saved under in «شنطتك», content = intro, placeholder = textarea hint.
+        // For type: 'bag' — lists what this section saved in «شنطتك».
+        bag?: string;
+        placeholder?: string;
         // For type: 'quiz' — tap-to-answer questions; the result message is block.content.
         quiz?: { question: string; options: string[]; answer: number; why: string }[];
         // For type: 'interactive' — an in-page React animation rendered by key

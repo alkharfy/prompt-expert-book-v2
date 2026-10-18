@@ -23,8 +23,11 @@ export function normalizeAnswer(value: string): string {
     return value
         .trim()
         .replace(/[٠-٩]/g, d => String(ARABIC_DIGITS.indexOf(d)))
+        .replace(/٫/g, '.')
         .replace(/[,،٬\s%٪]/g, '')
         .replace(/[أإآ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي')
         .toLowerCase()
 }
 

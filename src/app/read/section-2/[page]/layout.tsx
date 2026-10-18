@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: 'الفصل 02: تقنيات البرومبت المتقدمة',
-    description: 'اكتشف التقنيات المتقدمة لصياغة أوامر ذكية أكثر فعالية ودقة.',
+    title: 'المستوى ٢: بتطلب زي المحترف',
+    description: 'طلبات جاهزة لأكتر الشغلانات اللي بتعملها: بأمثلة، وبجداول تتلزق في الشيت، وبنبرتك، ومن الصور والفويسات والملفات.',
 }
 
 export default function Section2Layout({ children }: { children: React.ReactNode }) {

@@ -1,22 +1,25 @@
 import type { PageContent } from '@/types/book'
 import { estimateReadingTime } from '@/utils/readingTime'
 
-type StationId = 'intro' | 'level-1' | 'book'
+type StationId = 'intro' | 'level-1' | 'level-2' | 'book'
 
 /**
  * «إنت هنا»: where the reader is in the course, how much is left of this stop and
- * what comes next. Levels 2–5 are still being written, so chapters 2–10 of the
+ * what comes next. Levels 3–5 are still being written, so chapters 3–10 of the
  * current book stand in for them as one honest stop.
  */
 const STATIONS: { id: StationId; label: string; note: string }[] = [
     { id: 'intro', label: 'التمهيد', note: 'مجاني' },
     { id: 'level-1', label: 'المستوى 1', note: 'بتستخدمه صح' },
-    { id: 'book', label: 'المستويات 2–5', note: 'بتنزل تباعاً' },
+    { id: 'level-2', label: 'المستوى 2', note: 'بتطلب زي المحترف' },
+    { id: 'book', label: 'المستويات 3–5', note: 'بتنزل تباعاً' },
 ]
 
 export function stationFor(sectionId: string): StationId {
     if (sectionId === 'intro') return 'intro'
     if (sectionId === 'section-1') return 'level-1'
+    if (sectionId === 'section-2') return 'level-2'
+    if (sectionId === 'section-2') return 'level-2'
     return 'book'
 }
 
@@ -48,7 +51,7 @@ export default function CourseMap({ sectionId, chapterLabel, pageNum, pageCount,
     const currentIndex = STATIONS.findIndex(station => station.id === current)
     const next = STATIONS[currentIndex + 1]
     const progress = Math.min(1, pageNum / pageCount)
-    // Locked chapters arrive without their content, so only the intro and Level 1 get a time estimate.
+    // Locked chapters arrive without their content, so only the intro and the levels get a time estimate.
     const left = current === 'book' ? null : minutesLeft(pages, pageNum)
     const where = current === 'book' ? `${chapterLabel} من الكتاب` : STATIONS[currentIndex].label
 

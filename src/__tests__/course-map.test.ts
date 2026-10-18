@@ -6,10 +6,11 @@ import { unit1Data } from '@/data/unit1Data'
 import { introData } from '@/data/introData'
 
 describe('«إنت هنا» course map', () => {
-  it('puts the intro, Level 1 and the rest of the book on their own stops', () => {
+  it('puts the intro, Level 1, Level 2 and the rest of the book on their own stops', () => {
     expect(stationFor('intro')).toBe('intro')
     expect(stationFor('section-1')).toBe('level-1')
-    for (const id of ['section-2', 'section-6', 'section-10']) expect(stationFor(id)).toBe('book')
+    expect(stationFor('section-2')).toBe('level-2')
+    for (const id of ['section-3', 'section-6', 'section-10']) expect(stationFor(id)).toBe('book')
   })
 
   it('counts Level 1 time from the planned lesson minutes, including the current page', () => {

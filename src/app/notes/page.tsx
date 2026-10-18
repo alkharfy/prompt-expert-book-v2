@@ -36,8 +36,8 @@ const COLOR_HEX: Record<string, string> = {
 
 const SECTION_NAMES: Record<string, string> = {
     'intro': 'المقدمة',
-    'section-1': 'الفصل 1: الـ AI بيفكر إزاي؟',
-    'section-2': 'الفصل 2: من الفكرة للمواصفات',
+    'section-1': 'المستوى ١: بتستخدمه صح',
+    'section-2': 'المستوى ٢: بتطلب زي المحترف',
     'section-3': 'الفصل 3: تصميم التجربة',
     'section-4': 'الفصل 4: كتابة المحتوى',
     'section-5': 'الفصل 5: الجودة والتحسين',

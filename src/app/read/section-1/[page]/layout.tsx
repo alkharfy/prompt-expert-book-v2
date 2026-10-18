@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-    title: 'الفصل 01: الـ AI بيفكر إزاي؟',
+    title: 'المستوى ١: بتستخدمه صح',
     description: 'المستوى ١: اطلب شغلك بالذكاء الاصطناعي صح، وراجع الرد قبل ما تسلّمه، واعرف إيه اللي متحطوش أبداً.',
 }
 

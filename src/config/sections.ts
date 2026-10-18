@@ -52,11 +52,11 @@ export const SECTION_REGISTRY: SectionConfig[] = [
     {
         id: 'section-2',
         sectionNumber: 2,
-        pageCount: 18,
+        pageCount: 9,
         slotSize: 18,
-        chapterLabel: 'الفصل 02',
+        chapterLabel: 'المستوى ٢',
         progressOffset: 23, // Reserved slots: Intro 6 + S1 17.
-        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
+        freePageLimit: 0, // المستوى ٢ مدفوع (18 أكتوبر 2026: بدل الفصل 02 القديم)
         chapterIndex: 2,
         prevSection: { path: '/read/section-1', lastPage: 9 },
         nextSection: { path: '/read/section-3/1' },
@@ -74,7 +74,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         progressOffset: 41, // Reserved slots: Intro 6 + S1 17 + S2 18.
         freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 3,
-        prevSection: { path: '/read/section-2', lastPage: 18 },
+        prevSection: { path: '/read/section-2', lastPage: 9 },
         nextSection: { path: '/read/section-4/1' },
         robotSize: 320,
         hasGlossary: true,
