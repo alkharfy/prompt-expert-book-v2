@@ -82,6 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const navItems = [
         { href: '/billing/admin/dashboard', label: 'لوحة التحكم', icon: '📊' },
+        { href: '/billing/admin/funnel', label: 'الناس بتقف فين؟', icon: '📉' },
         { href: '/billing/admin/plans', label: 'إدارة الباقات', icon: '📦' },
         { href: '/billing/admin/promos', label: 'أكواد الخصم', icon: '🏷️' },
         { href: '/billing/admin/subscriptions', label: 'الاشتراكات', icon: '💳' },

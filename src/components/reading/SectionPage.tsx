@@ -66,6 +66,7 @@ import FlashcardDeck from '@/components/reading/FlashcardDeck'
 import QuizBlock from '@/components/reading/QuizBlock'
 import ConfidenceCheck from '@/components/reading/ConfidenceCheck'
 import ChecklistBlock from '@/components/reading/ChecklistBlock'
+import AnswerCheck from '@/components/reading/AnswerCheck'
 import CourseMap from '@/components/reading/CourseMap'
 import { InteractiveWidget } from '@/components/reading/widgets'
 
@@ -1024,6 +1025,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                         {block.type === 'flashcards' && block.items && (
                                             <FlashcardDeck title={block.title} cards={block.items} />
                                         )}
+                                        {block.type === 'answer' && block.accept && block.title && (
+                                            <AnswerCheck key={block.title} id={`${config.id}-${pageNum}-${index}`} question={block.title} accept={block.accept} hint={block.hint} explanation={block.content} formatText={formatText} />
+                                        )}
                                         {block.type === 'checklist' && block.items && (
                                             <ChecklistBlock key={block.title} id={`${config.id}-${pageNum}-${index}`} title={block.title} items={block.items} outro={block.content} formatText={formatEnhancedText} />
                                         )}
@@ -1281,39 +1285,26 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                     </div>
                                                 )}
 
-                                                {/* Card Items (Accordion) */}
+                                                {/* Card Items — always open: testers didn't realise collapsed rows had to be tapped */}
                                                 {block.items && (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                         {block.items.map((item, idx) => (
-                                                            <details
+                                                            <div
                                                                 key={idx}
                                                                 style={{
                                                                     background: 'rgba(255, 255, 255, 0.03)',
                                                                     borderRadius: '8px',
-                                                                    overflow: 'hidden',
                                                                     border: '1px solid rgba(255, 255, 255, 0.05)',
+                                                                    padding: '12px 16px',
                                                                 }}
                                                             >
-                                                                <summary style={{
-                                                                    padding: '12px 16px',
-                                                                    cursor: 'pointer',
-                                                                    fontWeight: 'bold',
-                                                                    color: '#e0e0e0',
-                                                                    fontSize: '0.95rem',
-                                                                    userSelect: 'none',
-                                                                    outline: 'none',
-                                                                }}>
+                                                                <p style={{ margin: '0 0 4px', fontWeight: 'bold', color: '#e0e0e0', fontSize: '0.95rem' }}>
                                                                     {item.title}
-                                                                </summary>
-                                                                <div style={{
-                                                                    padding: '0 16px 16px 16px',
-                                                                    fontSize: '0.9rem',
-                                                                    color: '#b0b0b0',
-                                                                    lineHeight: '1.5',
-                                                                }}>
+                                                                </p>
+                                                                <div style={{ fontSize: '0.92rem', color: '#b8b8b8', lineHeight: 1.7 }}>
                                                                     {formatText(item.content)}
                                                                 </div>
-                                                            </details>
+                                                            </div>
                                                         ))}
                                                     </div>
                                                 )}
