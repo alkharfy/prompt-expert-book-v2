@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────
 
 /** معرّف الباقة — يطابق قيود CHECK في قاعدة البيانات */
-export type PlanId = 'basic' | 'pro' | 'vip'
+export type PlanId = 'monthly' | 'basic' | 'pro' | 'vip'
 
 /** حالة الاشتراك — يطابق قيود CHECK في جدول subscriptions */
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'upgraded'
@@ -37,7 +37,7 @@ export type FeatureKey =
 // ─────────────────────────────────────────────
 
 /** قائمة معرّفات الباقات المتاحة */
-export const PLAN_IDS = ['basic', 'pro', 'vip'] as const
+export const PLAN_IDS = ['monthly', 'basic', 'pro', 'vip'] as const
 
 /** قائمة جميع مفاتيح الميزات */
 export const FEATURE_KEYS = [
@@ -57,6 +57,9 @@ export const FEATURE_KEYS = [
 
 /** مدة الاشتراك بالأيام */
 export const SUBSCRIPTION_DURATION_DAYS = 365
+
+/** How long one payment opens each plan. 'monthly' = 100 EGP for 30 days (owner decision 2026-10-18). */
+export const PLAN_DURATION_DAYS: Record<PlanId, number> = { monthly: 30, basic: 365, pro: 365, vip: 365 }
 
 // ─────────────────────────────────────────────
 // Interfaces

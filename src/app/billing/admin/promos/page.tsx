@@ -591,11 +591,11 @@ export default function AdminPromosPage() {
 
                             {/* Allowed Plans */}
                             <div>
-                                <label style={labelStyle}>📦 الباقات المسموح بها (اتركها فارغة لكل الباقات)</label>
+                                <label style={labelStyle}>📦 الباقات المسموح بها (فاضية = كل الباقات السنوية؛ الشهري لازم تختاره بنفسك)</label>
                                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                                    {['basic', 'pro', 'vip'].map((planId) => {
+                                    {['monthly', 'basic', 'pro', 'vip'].map((planId) => {
                                         const isSelected = editingPromo.allowed_plans?.includes(planId)
-                                        const planNames: Record<string, string> = { basic: 'الأساسية', pro: 'المتقدمة', vip: 'VIP' }
+                                        const planNames: Record<string, string> = { monthly: 'الشهري', basic: 'الأساسية', pro: 'المتقدمة', vip: 'VIP' }
                                         return (
                                             <label key={planId} style={{
                                                 display: 'flex', alignItems: 'center', gap: '0.5rem',

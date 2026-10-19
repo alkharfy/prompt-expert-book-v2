@@ -273,7 +273,7 @@ export default function LibraryReader({ data, initialHasAccess = false, initialA
 
                     <div style={{ textAlign: 'center', marginTop: '40px' }}>
                         <Link href="/toc" style={{ color: '#b0b0b0', textDecoration: 'none' }}>
-                            العودة إلى الفهرس
+                            ارجع للفهرس
                         </Link>
                     </div>
                 </div>

@@ -226,7 +226,7 @@ export default function GlossaryReader({ data, initialHasAccess = false, initial
 
                     <div style={{ textAlign: 'center', marginTop: '40px' }}>
                         <Link href="/toc" style={{ color: '#666', textDecoration: 'none', fontSize: '0.9rem' }}>
-                            العودة إلى الفهرس
+                            ارجع للفهرس
                         </Link>
                     </div>
                 </div>

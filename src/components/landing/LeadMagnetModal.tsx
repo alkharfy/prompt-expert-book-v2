@@ -35,16 +35,33 @@ export default function LeadMagnetModal() {
         }
 
         if (isOnCooldown()) return
+        // Someone with an account already gave us their email
+        if (document.cookie.split(';').some(c => c.trim().startsWith('ebook_user_id='))) return
 
         function showOnce() {
             if (shownThisSessionRef.current) return
             if (isOnCooldown()) return
+        // Someone with an account already gave us their email
+        if (document.cookie.split(';').some(c => c.trim().startsWith('ebook_user_id='))) return
             shownThisSessionRef.current = true
             setIsOpen(true)
         }
 
+        // Never cover the prices or the FAQ while someone is reading them; try again a bit later
+        let timer: ReturnType<typeof setTimeout>
+        function readingPrices() {
+            return ['pricing', 'faq'].some(id => {
+                const r = document.getElementById(id)?.getBoundingClientRect()
+                // a real part of it on screen, not a leftover strip at the edge
+                return !!r && r.top < window.innerHeight - 120 && r.bottom > 120
+            })
+        }
+        function tryShow() {
+            if (readingPrices()) timer = setTimeout(tryShow, 15000)
+            else showOnce()
+        }
         // Timer trigger: show after 30s on page
-        const timer = setTimeout(showOnce, SHOW_DELAY_MS)
+        timer = setTimeout(tryShow, SHOW_DELAY_MS)
 
         // Exit intent trigger (desktop only)
         function handleMouseLeave(e: MouseEvent) {
@@ -75,7 +92,7 @@ export default function LeadMagnetModal() {
 
             const data = await res.json().catch(() => ({}))
             if (!res.ok) {
-                throw new Error(data.error || 'حدث خطأ')
+                throw new Error(data.error || 'حصلت مشكلة. جرّب تاني.')
             }
 
             // Browser Pixel Lead with the server's shared event_id → CAPI dedup.
@@ -87,7 +104,7 @@ export default function LeadMagnetModal() {
             } catch { /* SSR-safe */ }
         } catch (err) {
             setStatus('error')
-            setErrorMsg(err instanceof Error ? err.message : 'حدث خطأ')
+            setErrorMsg(err instanceof Error ? err.message : 'حصلت مشكلة. جرّب تاني.')
         }
     }
 
@@ -110,15 +127,15 @@ export default function LeadMagnetModal() {
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                         className="lead-magnet-modal"
                     >
-                        <button className="close-btn" onClick={dismiss} aria-label="إغلاق">✕</button>
+                        <button className="close-btn" onClick={dismiss} aria-label="اقفل">✕</button>
 
                         {status === 'success' ? (
                             <div className="success-content">
                                 <span className="success-emoji">🎉</span>
-                                <h3>تم بنجاح!</h3>
-                                <p>تحقق من بريدك الإلكتروني — الدليل في طريقه إليك</p>
+                                <h3>وصلنا إيميلك!</h3>
+                                <p>بص على إيميلك، الدليل في الطريق ليك</p>
                                 <button className="cta-btn" onClick={dismiss}>
-                                    تمام، أكمل تصفح
+                                    تمام، كمّل
                                 </button>
                             </div>
                         ) : (
@@ -141,7 +158,7 @@ export default function LeadMagnetModal() {
                                     <input
                                         type="email"
                                         required
-                                        placeholder="أدخل بريدك الإلكتروني"
+                                        placeholder="اكتب إيميلك"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         className="email-input"
@@ -153,7 +170,7 @@ export default function LeadMagnetModal() {
                                         className="cta-btn"
                                         disabled={status === 'loading'}
                                     >
-                                        {status === 'loading' ? 'جاري الإرسال...' : 'حمّل الدليل المجاني'}
+                                        {status === 'loading' ? 'بنبعت…' : 'حمّل الدليل المجاني'}
                                     </button>
                                 </form>
 
@@ -162,7 +179,7 @@ export default function LeadMagnetModal() {
                                 )}
 
                                 <p className="privacy-note">
-                                    لن نرسل لك سبام — إيميل واحد مفيد في الأسبوع على الأكثر
+                                    مش هنزعجك: إيميل واحد مفيد في الأسبوع بالكتير
                                 </p>
                             </>
                         )}

@@ -94,10 +94,10 @@ export default function TargetAudience() {
                     transition={{ duration: 0.6 }}
                     className="ta-header"
                 >
-                    <span className="ta-badge">🎯 الكتاب ده لمين؟</span>
+                    <span className="ta-badge">🎯 الكورس ده لمين؟</span>
                     <h2 className="ta-title">هيفيدك في شغلك لو انت…</h2>
                     <p className="ta-subtitle">
-                        اختار شغلك وشوف هتعمل إيه بالظبط
+                        اختار شغلك وشوف هتعمل إيه بالظبط. تمارين المستويات على شغل محاسب وموظف خدمة عملاء، وإنت بتطبّق نفس الطريقة على شغلك.
                     </p>
                 </motion.div>
 
@@ -160,7 +160,7 @@ export default function TargetAudience() {
                                         </div>
 
                                         <div className="ta-flip-hint">
-                                            <span>اضغط لرؤية الحلول</span>
+                                            <span>اضغط وشوف هتعمل إيه</span>
                                             <span className="ta-flip-arrow">←</span>
                                         </div>
                                     </motion.div>
@@ -176,7 +176,7 @@ export default function TargetAudience() {
                                         <div className="ta-card-accent ta-card-accent-green" />
 
                                         <div className="ta-back-emoji">{audience.emoji}</div>
-                                        <h3 className="ta-card-title ta-card-title-green">بعد الكتاب ✨</h3>
+                                        <h3 className="ta-card-title ta-card-title-green">بعد الكورس ✨</h3>
                                         <p className="ta-back-subtitle">إزاي هيفرق في شغلك</p>
 
                                         <div className="ta-gains-section">
@@ -195,7 +195,7 @@ export default function TargetAudience() {
                                         </div>
 
                                         <div className="ta-flip-hint ta-flip-hint-back">
-                                            <span>اضغط للرجوع</span>
+                                            <span>اضغط وارجع</span>
                                             <span className="ta-flip-arrow">→</span>
                                         </div>
                                     </motion.div>

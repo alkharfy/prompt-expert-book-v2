@@ -7,9 +7,9 @@ type FontSize = 'small' | 'medium' | 'large'
 const STORAGE_KEY = 'reading_font_size'
 
 const sizes: { key: FontSize; label: string; title: string; fontSize: string }[] = [
-    { key: 'small', label: 'ص', title: 'خط صغير', fontSize: '0.75rem' },
-    { key: 'medium', label: 'م', title: 'خط متوسط', fontSize: '0.9rem' },
-    { key: 'large', label: 'ك', title: 'خط كبير', fontSize: '1.1rem' },
+    { key: 'small', label: 'أ', title: 'حجم الخط: صغير', fontSize: '0.8rem' },
+    { key: 'medium', label: 'أ', title: 'حجم الخط: متوسط', fontSize: '1rem' },
+    { key: 'large', label: 'أ', title: 'حجم الخط: كبير', fontSize: '1.3rem' },
 ]
 
 interface FontSizeControlProps {
@@ -42,6 +42,7 @@ export default function FontSizeControl({ onChange }: FontSizeControlProps) {
                     className={`font-size-btn ${fontSize === s.key ? 'active' : ''}`}
                     onClick={() => handleChange(s.key)}
                     title={s.title}
+                    aria-label={s.title}
                     aria-pressed={fontSize === s.key}
                     style={{ fontSize: s.fontSize }}
                 >

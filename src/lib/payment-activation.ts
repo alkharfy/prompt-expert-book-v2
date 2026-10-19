@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from '@/lib/logger'
 import { alertMoneyPath } from '@/lib/alert'
 import { PLAN_ORDER } from '@/lib/pricing'
+import { PLAN_DURATION_DAYS, type PlanId } from '@/types/subscription'
 
 // EGP tolerance for the amount guard (rounding / currency-minor differences).
 const AMOUNT_TOLERANCE = 0.01
@@ -44,7 +45,8 @@ export interface ActivateResult {
 export async function activatePaidSubscription(input: ActivateInput): Promise<ActivateResult> {
   const supabase = getSupabaseAdmin()
   const { userId, paymentId, planId, source } = input
-  if (!['basic', 'pro', 'vip'].includes(planId)) return { ok: false, error: 'invalid_plan' }
+  if (!Object.hasOwn(PLAN_DURATION_DAYS, planId)) return { ok: false, error: 'invalid_plan' }
+  const durationDays = PLAN_DURATION_DAYS[planId as PlanId]
 
   // ── Amount guard (explicit parseFloat for Kashier string amounts) ──────────
   const paid = Number(input.paidAmount)
@@ -58,7 +60,7 @@ export async function activatePaidSubscription(input: ActivateInput): Promise<Ac
   const startsAt = new Date(paidAt)
   if (!Number.isFinite(startsAt.getTime())) return { ok: false, error: 'invalid_paid_at' }
   let expiresAt = new Date(startsAt)
-  expiresAt.setDate(expiresAt.getDate() + 365)
+  expiresAt.setUTCDate(expiresAt.getUTCDate() + durationDays)
 
   // ── Idempotency on payment_id ──────────────────────────────────────────────
   const { data: existingSub, error: existingError } = await (supabase.from('subscriptions') as any)
@@ -81,26 +83,57 @@ export async function activatePaidSubscription(input: ActivateInput): Promise<Ac
   if (currentUserError || !currentUser) return { ok: false, error: 'user_lookup_failed' }
   const currentExpiry = currentUser?.plan_expires_at ? new Date(currentUser.plan_expires_at) : null
   const currentActive = currentExpiry && Number.isFinite(currentExpiry.getTime()) && currentExpiry.getTime() > Date.now()
-  if (currentActive && PLAN_ORDER[currentUser.current_plan] > PLAN_ORDER[planId]) {
+  // A replayed payment must never shorten a term that a later purchase already extended.
+  if (existingSub && currentActive && currentExpiry!.getTime() > expiresAt.getTime()) {
     return { ok: true, alreadyActive: true }
+  }
+  if (currentActive && PLAN_ORDER[currentUser.current_plan] > PLAN_ORDER[planId]) {
+    // Money for something the running (higher) term already covers, e.g. a monthly checkout left
+    // open and paid after buying a year. Nothing to grant: flag it so the owner refunds it.
+    if (!existingSub) alertMoneyPath('paid_order_not_applied', { source, userId, paymentId, planId, currentPlan: currentUser.current_plan })
+    return { ok: true, alreadyActive: true }
+  }
+  if (!existingSub && input.isUpgrade && currentUser.current_plan === 'monthly') {
+    // Checkout never prices monthly → yearly as an upgrade; a stale or forged one must not keep the month's end date.
+    alertMoneyPath('upgrade_from_monthly', { source, userId, paymentId, planId })
+    return { ok: false, blocked: true, error: 'upgrade_from_monthly' }
   }
   if (!existingSub && input.isUpgrade) {
     if (input.upgradeExpiresAt) expiresAt = new Date(input.upgradeExpiresAt)
     else if (currentActive) expiresAt = currentExpiry
     else return { ok: false, blocked: true, error: 'upgrade_subscription_expired' }
+  } else if (!existingSub && currentActive && currentExpiry) {
+    // Bought while a term is still running (another month, a month → a year, or a second checkout for
+    // the same plan): the new term is added after the running one, so no paid day is lost.
+    expiresAt = new Date(currentExpiry)
+    expiresAt.setUTCDate(expiresAt.getUTCDate() + durationDays)
   }
   if (!Number.isFinite(expiresAt.getTime())) return { ok: false, error: 'invalid_expires_at' }
   if (expiresAt.getTime() <= Date.now()) return { ok: false, blocked: true, error: 'subscription_expired' }
 
   if (!existingSub) {
-    const { error: subError } = await (supabase.from('subscriptions') as any).insert({
+    const row = {
       user_id: userId,
       plan_id: planId,
       payment_id: paymentId,
       status: 'active',
       starts_at: startsAt.toISOString(),
       expires_at: expiresAt.toISOString(),
-    })
+    }
+    // One active subscription per user: the running one is retired as 'upgraded' (its days are
+    // already inside this row's end date). Replays of a retired row are then refused above.
+    const retireOthers = () => (supabase.from('subscriptions') as any)
+      .update({ status: 'upgraded' })
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .or(`payment_id.is.null,payment_id.neq.${paymentId}`)
+    let { error: subError } = await (supabase.from('subscriptions') as any).insert(row)
+    if (subError?.code === '23505') {
+      await retireOthers()
+      ;({ error: subError } = await (supabase.from('subscriptions') as any).insert(row))
+    } else if (!subError) {
+      await retireOthers()
+    }
     if (subError) {
       alertMoneyPath('subscription_insert_failed', { source, userId, paymentId, error: subError.message })
       dbLogger.error(`[activate:${source}] subscription insert error:`, subError)

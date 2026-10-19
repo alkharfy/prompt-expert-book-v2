@@ -18,7 +18,7 @@ export default function BlogCTA() {
         <span>🏆 شهادة إتمام</span>
       </div>
       <Link href="/#pricing" className="blog-cta-button">
-        اشترك الآن — افتح الكتاب كامل ←
+        اشترك دلوقتي — افتح الكورس كله ←
       </Link>
       <div style={{ marginTop: '12px' }}>
         <Link href="/read/intro/1" className="blog-cta-secondary">

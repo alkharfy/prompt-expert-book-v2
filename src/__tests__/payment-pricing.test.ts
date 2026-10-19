@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getCheckoutBasePrice } from '@/lib/payment-pricing'
 
-const prices = { basic: 299, pro: 499, vip: 999 }
+const prices = { monthly: 100, basic: 299, pro: 499, vip: 999 }
 const now = Date.parse('2026-09-26T00:00:00Z')
 const active = { plan_id: 'basic', status: 'active', expires_at: '2027-01-01T00:00:00Z' }
 
@@ -26,5 +26,15 @@ describe('server-authoritative checkout price', () => {
     expect(getCheckoutBasePrice(prices, 'basic', false, { ...active, expires_at: '2026-01-01' }, now)).toBe(299)
     expect(() => getCheckoutBasePrice({ basic: NaN }, 'basic', false, null, now)).toThrow()
     expect(() => getCheckoutBasePrice(prices, 'toString', false, null, now)).toThrow()
+  })
+  it('renews a running month and switches a month to a year at full price, never as an upgrade', () => {
+    const month = { plan_id: 'monthly', status: 'active', expires_at: '2026-10-10T00:00:00Z' }
+    expect(getCheckoutBasePrice(prices, 'monthly', false, month, now)).toBe(100)
+    expect(getCheckoutBasePrice(prices, 'pro', false, month, now)).toBe(499)
+    expect(() => getCheckoutBasePrice(prices, 'pro', true, month, now)).toThrow()
+  })
+  it('does not sell the monthly plan on top of a running year', () => {
+    expect(() => getCheckoutBasePrice(prices, 'monthly', false, active, now)).toThrow()
+    expect(() => getCheckoutBasePrice(prices, 'monthly', true, active, now)).toThrow()
   })
 })

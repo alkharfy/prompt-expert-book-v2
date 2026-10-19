@@ -50,6 +50,7 @@ body { margin:0; padding:0; background:#050505; color:#e0e0e0; font-family:'Taja
 }
 
 const planNames: Record<string, string> = {
+    monthly: 'Monthly — الشهري',
     basic: 'Basic — الأساسية',
     pro: 'Pro — المتقدمة',
     vip: 'VIP',

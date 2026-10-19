@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { Cairo, Tajawal } from 'next/font/google'
 import BackgroundParticles from '@/components/BackgroundParticles'
+import FabsAutoHide from '@/components/FabsAutoHide'
 import { ClientErrorBoundary } from '@/components/ClientErrorBoundary'
 import ChatWindow from '@/components/chat/ChatWindow'
 import StreakNotification from '@/components/gamification/StreakNotification'
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
     default: 'PromptMaster | استخدم الذكاء الاصطناعي في العمل والدراسة بالعربي',
     template: '%s | PromptMaster',
   },
-  description: 'اتعلم تستخدم الذكاء الاصطناعي صح بالعربي • 10 فصول + 45 تمرين تفاعلي + تحدي 7 أيام • أمثلة عملية للإيميلات والتقارير والمذاكرة مع معاينة مجانية قبل الاشتراك.',
+  description: 'كورس تفاعلي بالمصري تخلّي بيه الـ AI يخلّص شغلك وتعرف إمتى يغلط • مستويات بتمارين على ملفات شغل مصرية • التمهيد ببلاش والاشتراك من 100 جنيه في الشهر.',
   keywords: ['PromptMaster', 'تعلم الذكاء الاصطناعي', 'استخدام ChatGPT', 'AI للعمل والدراسة', 'ذكاء اصطناعي', 'ChatGPT', 'AI', 'تعلم AI', 'فريلانس AI', 'بناء مشاريع بال AI'],
   authors: [{ name: 'PromptMaster' }],
   alternates: { canonical: '/' },
@@ -49,13 +50,13 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: 'PromptMaster',
     title: 'PromptMaster | استخدم الذكاء الاصطناعي في العمل والدراسة بالعربي',
-    description: 'اتعلم تستخدم الذكاء الاصطناعي صح بالعربي • 10 فصول + 45 تمرين تفاعلي + تحدي 7 أيام • جرّب التمهيد مجانًا.',
+    description: 'كورس تفاعلي بالمصري تخلّي بيه الـ AI يخلّص شغلك • تمارين على ملفات شغل مصرية • التمهيد ببلاش والاشتراك من 100 جنيه في الشهر.',
     images: [{ url: '/assets/card.png', width: 1200, height: 630, alt: 'PromptMaster' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PromptMaster | استخدم الذكاء الاصطناعي في العمل والدراسة بالعربي',
-    description: 'اتعلم تستخدم الذكاء الاصطناعي صح بالعربي • 10 فصول + 45 تمرين تفاعلي + تحدي 7 أيام • جرّب التمهيد مجانًا.',
+    description: 'كورس تفاعلي بالمصري تخلّي بيه الـ AI يخلّص شغلك • تمارين على ملفات شغل مصرية • التمهيد ببلاش والاشتراك من 100 جنيه في الشهر.',
     images: ['/assets/card.png'],
   },
   robots: {
@@ -149,6 +150,7 @@ export default function RootLayout({
           تخطي إلى المحتوى
         </a>
         <BackgroundParticles />
+        <FabsAutoHide />
 
         <SubscriptionProvider>
           <LearningProvider>

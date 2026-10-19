@@ -26,93 +26,92 @@ const chapters: Chapter[] = [
     {
         number: 'المقدمة',
         title: 'التمهيد',
-        description: 'مرحباً بك في رحلة بناء المشاريع',
+        description: '3 صفحات ببلاش: تعرف الـ AI هيفيدك في إيه، وتجرّب أول طلب',
         href: '/read/intro/1',
         icon: '🚀',
         isFree: true
     },
     {
-        number: '01',
-        title: 'كيف يفكر AI؟',
-        description: 'كيف يفكر الذكاء الاصطناعي فعلاً (GPT-6, Claude, Gemini)',
+        number: '1',
+        title: 'المستوى 1: بتستخدمه صح',
+        description: 'تطلب شغل يتسلّم، وتعرف إمتى بيألّف، وتراجع النتيجة قبل ما تسلّمها',
         href: '/read/section-1/1',
         icon: '🧠',
-        isFree: true
     },
     {
-        number: '02',
-        title: 'أول برومبت احترافي',
-        description: 'من برومبت عشوائي إلى برومبت منظم',
+        number: '2',
+        title: 'المستوى 2: بتطلب زي المحترف',
+        description: 'طلبات جاهزة لشغلك، وتشتغل بالصور والفويس والملفات',
         href: '/read/section-2/1',
         icon: '💡'
     },
     {
         number: '03',
-        title: 'إطار GOLDS',
-        description: 'تنظيم الطلب: Goal, Output, Length, Details, Style',
+        title: 'الفصل 3: إطار GOLDS',
+        description: 'من الكتاب: طريقة تنظّم بيها أي طلب',
         href: '/read/section-3/1',
         icon: '🎯'
     },
     {
         number: '04',
-        title: 'Prompt Chaining',
-        description: 'برومبتات متسلسلة لبناء مشروع كامل',
+        title: 'الفصل 4: الطلبات المتسلسلة',
+        description: 'من الكتاب: شغلانة كبيرة على كذا خطوة',
         href: '/read/section-4/1',
         icon: '🔗'
     },
     {
         number: '05',
-        title: 'جودة وتصحيح',
-        description: 'جودة المخرجات وتصحيح البرومبت (Debug & Refinement)',
+        title: 'الفصل 5: الجودة والتصحيح',
+        description: 'من الكتاب: تراجع النتيجة وتصلّح الطلب',
         href: '/read/section-5/1',
         icon: '✅'
     },
     {
         number: '06',
-        title: 'Multimodal AI',
-        description: 'التعامل مع الصور والصوت والفيديو',
+        title: 'الفصل 6: صور وصوت وفيديو',
+        description: 'من الكتاب: تشتغل بأكتر من نوع ملف',
         href: '/read/section-6/1',
         icon: '🎨'
     },
     {
         number: '07',
-        title: 'وكلاء AI',
-        description: 'بناء وكلاء AI يعملون نيابةً عنك',
+        title: 'الفصل 7: وكلاء AI',
+        description: 'من الكتاب: أدوات بتنفّذ مهام عنك تحت عينك',
         href: '/read/section-7/1',
         icon: '🤖'
     },
     {
         number: '08',
-        title: 'RAG والبيانات الخاصة',
-        description: 'استخدام مصادر بياناتك والتحقق من الإجابات',
+        title: 'الفصل 8: AI على ملفاتك',
+        description: 'من الكتاب: يرد من مصادرك، وتتأكد من إجابته',
         href: '/read/section-8/1',
         icon: '🔎'
     },
     {
         number: '09',
-        title: 'تطبيقات عملية',
-        description: 'تطبيق AI على مهام العمل والتعلم حسب مجالك',
+        title: 'الفصل 9: تطبيقات عملية',
+        description: 'من الكتاب: أمثلة حسب مجالك',
         href: '/read/section-9/1',
         icon: '💼'
     },
     {
         number: '10',
-        title: 'متابعة التطور وتقديم خدمة',
-        description: 'تطوير مهاراتك وتحديد نطاق خدمة قابلة للفحص',
+        title: 'الفصل 10: تكمّل تتطور',
+        description: 'من الكتاب: تتابع الجديد وتقدّم خدمة',
         href: '/read/section-10/1',
         icon: '🌱'
     },
     {
         number: 'المكتبة',
         title: 'مكتبة القوالب',
-        description: '95 قالب برومبت جاهز للنسخ',
+        description: '95 قالب جاهز تنسخه وتعدّله',
         href: '/library/1',
         icon: '📚'
     },
     {
         number: 'الملحق',
         title: 'الملحق',
-        description: 'تمارين وإجابات نموذجية',
+        description: 'تمارين وإجابات',
         href: '/read/appendix/1',
         icon: '📝'
     },
@@ -362,8 +361,8 @@ export default function RoadmapPath() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
             >
-                <h1>رحلة تحويل فكرتك إلى مشروع</h1>
-                <p>ابدأ رحلتك في تعلم البرومبتات خطوة بخطوة</p>
+                <h1>فهرس الكورس</h1>
+                <p>ابدأ بالتمهيد ببلاش، وبعده المستوى 1 والمستوى 2. ولحد ما المستويات 3–5 تنزل، فصول الكتاب مفتوحة للمشتركين.</p>
             </motion.div>
 
             {/* Roadmap Content */}
@@ -563,7 +562,7 @@ export default function RoadmapPath() {
                 transition={{ delay: 2.5 }}
             >
                 <Link href="/" className="btn btn-secondary">
-                    العودة إلى الصفحة الرئيسية
+                    ارجع للرئيسية
                 </Link>
             </motion.div>
         </div>

@@ -7,10 +7,16 @@ import { authSystem } from '@/lib/auth_system'
 import { trackCtaClick } from '@/lib/analytics'
 import { dbLogger } from '@/lib/logger'
 import { getGlobalReadingUrl } from '@/config/learningCatalog'
+import { MONTHLY_PRICE_EGP, hasActivePlan } from '@/lib/pricing'
+import { useSubscription } from '@/context/SubscriptionContext'
 
 export default function HeroSection() {
     const [progress, setProgress] = useState<{ currentPage: number, percentage: number } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    // A member came to study, not to be sold the course again
+    const { currentPlan, expiresAt, status } = useSubscription()
+    const member = hasActivePlan({ plan_id: currentPlan, expires_at: expiresAt, status })
+    const continueUrl = progress ? getGlobalReadingUrl(progress.currentPage) : null
 
     useEffect(() => {
         async function fetchProgress() {
@@ -48,35 +54,38 @@ export default function HeroSection() {
                             </h1>
 
                             <p className="hero-description">
-                                دليل تفاعلي بالمصري للمحاسب والموظف والمدرس والمسوّق وأي حد عايز يبدأ: إزاي تطلب من ChatGPT وGemini شغل حقيقي — شيت إكسل، تقرير، إيميل، خطة — وتراجعه قبل ما تسلّمه. من غير مصطلحات، وحتى لو أول مرة تستخدمه.
+                                كورس تفاعلي بالمصري للمحاسب والموظف والمدرس والمسوّق وأي حد عايز يبدأ: إزاي تطلب من ChatGPT أو Gemini شغل حقيقي — شيت إكسل، تقرير، إيميل، خطة — وتراجعه قبل ما تسلّمه. من غير مصطلحات، وحتى لو أول مرة تستخدمه.
                             </p>
 
                             <div className="hero-benefits hero-fade">
                                 <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> أول نتيجة في دقيقة: تجربة عملية في أول صفحة</div>
-                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> أمثلة مصرية حسب شغلك + 45 تمرين و95 قالب جاهز</div>
-                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> التمهيد مجاناً — من غير تسجيل</div>
+                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> تمارين على ملفات شغل مصرية، و«المستر» بيصحّحلك</div>
+                                <div className="hero-benefit-row"><span className="hero-benefit-check">✓</span> التمهيد ببلاش، والاشتراك من {MONTHLY_PRICE_EGP} جنيه في الشهر</div>
                             </div>
 
                             <div className="hero-actions hero-fade" style={{ marginTop: '20px' }}>
-                                {progress ? (
-                                    <Link href={getGlobalReadingUrl(progress.currentPage)} className="btn btn-primary btn-pulse">
-                                        <span>أكمل من حيث توقفت</span>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M15 18l-6-6 6-6" />
-                                        </svg>
+                                {member ? (
+                                    <Link href={continueUrl || '/toc'} className="btn btn-primary btn-pulse">
+                                        <span>{continueUrl ? 'كمّل من مكانك ←' : 'ادخل الكورس ←'}</span>
                                     </Link>
                                 ) : (
                                     <>
                                         <Link href="#pricing" className="btn btn-primary btn-pulse" onClick={() => trackCtaClick('اشترك الآن', 'hero_section')}>
-                                            <span>شاهد الباقات والأسعار ←</span>
+                                            <span>شوف الباقات — من {MONTHLY_PRICE_EGP} جنيه ←</span>
                                         </Link>
-                                        <Link href="/read/intro/1" className="btn btn-secondary" onClick={() => trackCtaClick('جرّب التمهيد مجاناً', 'hero_section_secondary')}>
-                                            <span>ابدأ مجاناً — أول تجربة في دقيقة</span>
-                                        </Link>
+                                        {continueUrl ? (
+                                            <Link href={continueUrl} className="btn btn-secondary" onClick={() => trackCtaClick('كمّل من مكانك', 'hero_section_secondary')}>
+                                                <span>كمّل من مكانك</span>
+                                            </Link>
+                                        ) : (
+                                            <Link href="/read/intro/1" className="btn btn-secondary" onClick={() => trackCtaClick('جرّب التمهيد مجاناً', 'hero_section_secondary')}>
+                                                <span>ابدأ مجاناً — أول تجربة في دقيقة</span>
+                                            </Link>
+                                        )}
                                     </>
                                 )}
 
-                                {progress && (
+                                {member && continueUrl && (
                                     <Link href="/toc" className="btn btn-secondary">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <line x1="8" y1="6" x2="21" y2="6"></line>
@@ -92,11 +101,11 @@ export default function HeroSection() {
                             </div>
 
                             <div className="hero-trust-row hero-fade">
-                                <span><Link href="/refund-policy">🛡️ ضمان استرداد 30 يوم</Link></span>
+                                <span><Link href="/refund-policy">🛡️ ضمان استرداد فلوسك</Link></span>
                                 <span className="hero-trust-divider">|</span>
-                                <span>🆓 المعاينة المجانية بدون تسجيل</span>
+                                <span>🆓 التمهيد ببلاش ومن غير تسجيل</span>
                                 <span className="hero-trust-divider">|</span>
-                                <span>📱 دفع ببطاقات ومحافظ إلكترونية</span>
+                                <span>📱 كريدت كارد أو محفظة موبايل</span>
                             </div>
                         </div>
                     </div>

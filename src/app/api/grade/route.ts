@@ -7,6 +7,7 @@ import { apiLogger } from '@/lib/logger'
 import { GRADE_RUBRICS } from '@/data/gradeRubrics'
 import { buildGraderPrompt, findSensitiveData, parseGraderResult, placeholderCriterion } from '@/lib/grader'
 import { gradeWithModel } from '@/lib/grader-model'
+import { GRADER_DAILY_LIMIT } from '@/lib/pricing'
 
 /**
  * «المستر بيصحّح» — POST { rubric, text } → per-criterion feedback.
@@ -17,7 +18,7 @@ import { gradeWithModel } from '@/lib/grader-model'
 export const dynamic = 'force-dynamic'
 
 const DAY = 24 * 60 * 60
-const PER_DAY = 10
+const PER_DAY = GRADER_DAILY_LIMIT
 const DEMO_PER_DAY = 2
 /** Site-wide ceiling per 30 days, so a bug or abuse can't run up the bill. */
 const MONTHLY_CAP = Number(process.env.GRADER_MONTHLY_CAP) || 5000

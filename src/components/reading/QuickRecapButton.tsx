@@ -20,7 +20,7 @@ export default function QuickRecapButton({ recap }: QuickRecapButtonProps) {
                 onClick={() => setIsOpen(true)}
                 title={`ملخص ${recap.chapterLabel}`}
             >
-                📋 ملخص الفصل السابق
+                📋 ملخص {recap.chapterLabel}
             </button>
 
             <AnimatePresence>
@@ -79,7 +79,7 @@ export default function QuickRecapButton({ recap }: QuickRecapButtonProps) {
                                 className="quick-recap-dismiss"
                                 onClick={() => setIsOpen(false)}
                             >
-                                حسناً، فاكر ← أكمل القراءة
+                                تمام، فاكر ← كمّل
                             </button>
                         </motion.div>
                     </>

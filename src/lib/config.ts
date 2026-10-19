@@ -39,6 +39,27 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://www.prompt
 export const SITE_DOMAIN = SITE_URL.replace(/^https?:\/\//, '')
 /** Single support/legal contact address. */
 export const SUPPORT_EMAIL = 'support@prompt-mr.com'
+
+/** Customer service on WhatsApp (owner, 2026-10-18). Used everywhere a learner can ask for help. */
+export const SUPPORT_WHATSAPP = '201030181695'
+export const SUPPORT_WHATSAPP_DISPLAY = '0103 018 1695'
+export function supportWhatsAppUrl(message = 'السلام عليكم، محتاج مساعدة في PromptMaster'): string {
+    return `https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(message)}`
+}
+
+/** What the Kashier checkout takes (owner, 2026-10-18). */
+export const PAYMENT_METHODS_TEXT = 'بالفيزا أو الكريدت كارد، أو بمحفظة الموبايل'
+
+/** Refund guarantee (owner, 2026-10-19): 7 days on the monthly plan, 30 on the yearly ones, counted from payment. */
+export const REFUND_DAYS = { monthly: 7, yearly: 30 } as const
+export function refundDaysFor(planId: string): number {
+    return planId === 'monthly' ? REFUND_DAYS.monthly : REFUND_DAYS.yearly
+}
+/** "7 أيام" / "30 يوم" — Arabic counts 3–10 take the plural. */
+export function refundDaysLabel(days: number): string {
+    return days >= 3 && days <= 10 ? `${days} أيام` : `${days} يوم`
+}
+export const REFUND_GUARANTEE_TEXT = `ضمان استرداد: ${refundDaysLabel(REFUND_DAYS.monthly)} للشهري و${refundDaysLabel(REFUND_DAYS.yearly)} للسنوي`
 /** Default email "From" — overridden by the verified EMAIL_FROM env in production. */
 export const EMAIL_FROM_DEFAULT = process.env.EMAIL_FROM || `PromptMaster <noreply@${SITE_DOMAIN.replace(/^www\./, '')}>`
 

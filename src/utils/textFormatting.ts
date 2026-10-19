@@ -158,8 +158,10 @@ export function formatTextWithGlossary(
 ): (string | React.ReactElement)[] {
     if (!text) return [text]
 
-    // First apply links
-    let parts = formatLinks(text)
+    // First **bold** and [links](url) (Level 2 is written with them), then bare site names
+    let parts: (string | React.ReactElement)[] = formatInlineMarkdown(text).flatMap(part =>
+        typeof part === 'string' ? formatLinks(part) : [part]
+    )
 
     // Then apply glossary terms
     for (const { termId, patterns } of glossaryPatterns) {

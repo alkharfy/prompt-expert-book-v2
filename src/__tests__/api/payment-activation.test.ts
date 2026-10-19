@@ -6,15 +6,20 @@ vi.mock('@/lib/logger', () => ({ dbLogger: { info: vi.fn(), error: vi.fn(), warn
 import { activatePaidSubscription, activateStoredPayment, paymentAmountMatches } from '@/lib/payment-activation'
 
 function makeSupabase(opts: { existingSub?: any; user?: any; payment?: any; insertError?: any; updateError?: any; lookupError?: any } = {}) {
-  const captured: { subInsert?: any; userUpdate?: any; filters: any[] } = { filters: [] }
+  const captured: { subInsert?: any; userUpdate?: any; filters: any[]; inserts: number; otherUpdates: any[] } = { filters: [], inserts: 0, otherUpdates: [] }
   return { captured, from(table: string) {
     const chain: any = {
       select: () => chain,
       eq: (...args: any[]) => { captured.filters.push([table, ...args]); return chain },
       maybeSingle: async () => ({ data: table === 'subscriptions' ? opts.existingSub ?? null : opts.user ?? { current_plan: null, plan_expires_at: null }, error: opts.lookupError ?? null }),
       single: async () => ({ data: opts.payment ?? null, error: null }),
-      insert: async (row: any) => { captured.subInsert = row; return { error: opts.insertError ?? null } },
-      update: (row: any) => { captured.userUpdate = row; return chain },
+      neq: () => chain,
+      or: () => chain,
+      insert: async (row: any) => {
+        captured.subInsert = row; captured.inserts++
+        return { error: (typeof opts.insertError === 'function' ? opts.insertError(captured.inserts) : opts.insertError) ?? null }
+      },
+      update: (row: any) => { if (table === 'users') captured.userUpdate = row; else captured.otherUpdates.push([table, row]); return chain },
       then: (resolve: any) => Promise.resolve({ error: opts.updateError ?? null }).then(resolve),
     }
     return chain
@@ -63,6 +68,46 @@ describe('verified activation and payment replay', () => {
     const db = makeSupabase(); h.supabase = db
     expect((await activatePaidSubscription({ ...input, isUpgrade: true, upgradeExpiresAt: expiry })).ok).toBe(true)
     expect(db.captured.subInsert.expires_at).toBe(expiry)
+  })
+  it('opens 30 days for the monthly plan', async () => {
+    const db = makeSupabase(); h.supabase = db
+    expect((await activatePaidSubscription({ ...input, planId: 'monthly', owedAmount: 100, paidAmount: '100.00' })).ok).toBe(true)
+    expect(db.captured.subInsert).toMatchObject({ plan_id: 'monthly', expires_at: '2026-10-26T00:00:00.000Z' })
+  })
+  it('adds a renewed month (or a year) after the month already paid, not from today', async () => {
+    const monthEnd = '2026-10-10T00:00:00.000Z'
+    let db = makeSupabase({ user: { current_plan: 'monthly', plan_expires_at: monthEnd } }); h.supabase = db
+    expect((await activatePaidSubscription({ ...input, planId: 'monthly', owedAmount: 100, paidAmount: 100 })).ok).toBe(true)
+    expect(db.captured.subInsert.expires_at).toBe('2026-11-09T00:00:00.000Z')
+    db = makeSupabase({ user: { current_plan: 'monthly', plan_expires_at: monthEnd } }); h.supabase = db
+    expect((await activatePaidSubscription(input)).ok).toBe(true)
+    expect(db.captured.subInsert.expires_at).toBe('2027-10-10T00:00:00.000Z')
+  })
+  it('keeps one active subscription: the running one is retired when a new term is recorded', async () => {
+    const db = makeSupabase({ user: { current_plan: 'monthly', plan_expires_at: '2026-10-10T00:00:00.000Z' } }); h.supabase = db
+    expect((await activatePaidSubscription({ ...input, planId: 'monthly', owedAmount: 100, paidAmount: 100 })).ok).toBe(true)
+    expect(db.captured.otherUpdates).toContainEqual(['subscriptions', { status: 'upgraded' }])
+  })
+  it('records the purchase after a one-active-subscription conflict', async () => {
+    const db = makeSupabase({ insertError: (n: number) => n === 1 ? { code: '23505', message: 'duplicate' } : null }); h.supabase = db
+    expect((await activatePaidSubscription(input)).ok).toBe(true)
+    expect(db.captured.inserts).toBe(2)
+  })
+  it('flags a paid month that a running year already covers, and grants nothing', async () => {
+    const db = makeSupabase({ user: { current_plan: 'basic', plan_expires_at: expiry } }); h.supabase = db
+    expect((await activatePaidSubscription({ ...input, planId: 'monthly', owedAmount: 100, paidAmount: 100 })).alreadyActive).toBe(true)
+    expect(alertSpy).toHaveBeenCalledWith('paid_order_not_applied', expect.objectContaining({ planId: 'monthly' }))
+    expect(db.captured.userUpdate).toBeUndefined()
+  })
+  it('refuses an upgrade priced from a monthly term', async () => {
+    const db = makeSupabase({ user: { current_plan: 'monthly', plan_expires_at: '2026-10-10T00:00:00.000Z' } }); h.supabase = db
+    expect(await activatePaidSubscription({ ...input, isUpgrade: true })).toMatchObject({ ok: false, blocked: true })
+    expect(db.captured.userUpdate).toBeUndefined()
+  })
+  it('never shortens a later extension when an older payment is replayed', async () => {
+    const db = makeSupabase({ existingSub: { id: 's1', user_id: 'u1', plan_id: 'pro', status: 'active', expires_at: expiry }, user: { current_plan: 'pro', plan_expires_at: '2028-01-01T00:00:00.000Z' } }); h.supabase = db
+    expect((await activatePaidSubscription(input)).alreadyActive).toBe(true)
+    expect(db.captured.userUpdate).toBeUndefined()
   })
   it('reports a failed insert without granting access', async () => {
     const db = makeSupabase({ insertError: { message: 'DB down' } }); h.supabase = db

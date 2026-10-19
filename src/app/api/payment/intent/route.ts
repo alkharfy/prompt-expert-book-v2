@@ -1,8 +1,9 @@
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { PLAN_IDS } from '@/types/subscription'
 
-const VALID_PLANS = ['basic', 'pro', 'vip']
+const VALID_PLANS: readonly string[] = PLAN_IDS
 
 export async function POST(request: NextRequest) {
     try {

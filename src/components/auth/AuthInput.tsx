@@ -2,6 +2,15 @@
 
 import { useState } from 'react'
 
+/** The browser's own "Please fill out this field" follows the phone's language; say it in Egyptian instead. */
+function arabicValidity(e: React.FormEvent<HTMLInputElement>) {
+    const input = e.currentTarget
+    if (input.validity.valueMissing) input.setCustomValidity('املا الخانة دي الأول')
+    else if (input.validity.typeMismatch && input.type === 'email') input.setCustomValidity('الإيميل ده مش مكتوب صح، لازم يبقى فيه @ زي name@gmail.com')
+    else if (input.validity.tooShort) input.setCustomValidity(`لازم ${input.minLength} حروف على الأقل`)
+    else input.setCustomValidity('')
+}
+
 interface AuthInputProps {
     id?: string
     label: string
@@ -52,13 +61,15 @@ export default function AuthInput({
                     maxLength={maxLength}
                     style={style}
                     className={`auth-input ${error ? 'error' : ''}`}
+                    onInvalid={arabicValidity}
+                    onInput={e => e.currentTarget.setCustomValidity('')}
                 />
                 {isPassword && (
                     <button
                         type="button"
                         className="auth-password-toggle"
                         onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                        aria-label={showPassword ? "اخفي الباسورد" : "اظهر الباسورد"}
                     >
                         {showPassword ? (
                             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">

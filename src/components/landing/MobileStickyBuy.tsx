@@ -3,11 +3,16 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { trackCtaClick } from '@/lib/analytics'
+import { MONTHLY_PRICE_EGP, hasActivePlan } from '@/lib/pricing'
 import { useBottomBarOffset } from '@/hooks/useBottomBarOffset'
+import { useSubscription } from '@/context/SubscriptionContext'
 
 export default function MobileStickyBuy() {
-    const [visible, setVisible] = useState(false)
+    const [scrolledPast, setVisible] = useState(false)
     const pricingVisible = useRef(false)
+    // Members already paid: no buy bar for them
+    const { currentPlan, expiresAt, status } = useSubscription()
+    const visible = scrolledPast && !hasActivePlan({ plan_id: currentPlan, expires_at: expiresAt, status })
     const barRef = useBottomBarOffset(visible)
 
     useEffect(() => {
@@ -48,7 +53,7 @@ export default function MobileStickyBuy() {
     return (
         <div ref={barRef} className="mobile-sticky-buy">
             <Link href="#pricing" className="mobile-sticky-btn" onClick={() => trackCtaClick('اشترك الآن', 'mobile_sticky_bar')}>
-                اشترك الآن — حسب الباقة المختارة 🚀
+                ابدأ بـ{MONTHLY_PRICE_EGP} جنيه في الشهر 🚀
             </Link>
 
             <style jsx>{`

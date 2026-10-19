@@ -703,12 +703,8 @@ class AuthSystem {
                 return { valid: false, error: result.error || 'الجلسة غير صالحة' }
             }
 
-            // 3. Update device fingerprint in background (client-side has hardware info)
-            const { deviceId } = getAuthCookies()
-            if (deviceId) {
-                this.updateDeviceFingerprintInBackground(deviceId, userId)
-            }
-
+            // The browser used to rewrite the device fingerprint here on every check, but
+            // /api/auth/db-operation refuses device updates (403 on every page), so it never saved.
             const successResult = { valid: true as const, userId, hasPaid: result.hasPaid ?? false }
             // Cache the successful result for debouncing
             this._lastVerifyResult = successResult
@@ -717,42 +713,6 @@ class AuthSystem {
         } catch (err) {
             authLogger.error('Error', err)
             return { valid: false, error: 'خطأ في التحقق من الجلسة' }
-        }
-    }
-
-    /**
-     * Update device fingerprint from client-side (has access to hardware info)
-     * Runs in background, doesn't block session verification
-     */
-    private async updateDeviceFingerprintInBackground(deviceId: string, userId: string): Promise<void> {
-        try {
-            const currentFingerprint = await deviceFingerprint.generate()
-
-            const { data: device } = await supabase
-                .from('devices')
-                .select('id, device_fingerprint, device_info')
-                .eq('device_id', deviceId)
-                .eq('user_id', userId)
-                .single() as { data: { id: string; device_fingerprint: string; device_info: any } | null }
-
-            if (!device) return
-
-            // Update fingerprint if device has no info (server-registered) or hash changed
-            const hasDeviceInfo = device.device_info && typeof device.device_info === 'object' && Object.keys(device.device_info).length > 0
-            const needsUpdate = !hasDeviceInfo || device.device_fingerprint !== currentFingerprint.hash
-
-            if (needsUpdate) {
-                await (supabase
-                    .from('devices') as any)
-                    .update({
-                        device_fingerprint: currentFingerprint.hash,
-                        device_info: currentFingerprint.info,
-                        last_used: new Date().toISOString(),
-                    })
-                    .eq('id', device.id)
-            }
-        } catch (err) {
-            authLogger.error('Error updating device fingerprint', err)
         }
     }
 

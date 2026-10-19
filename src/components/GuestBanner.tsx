@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useBottomBarOffset } from '@/hooks/useBottomBarOffset'
+import { PRODUCT_STATS } from '@/lib/pricing'
 
 /**
  * GuestBanner — sticky banner at the bottom for unauthenticated readers.
@@ -19,14 +20,14 @@ export default function GuestBanner() {
       <div className="guest-banner-content">
         <span className="guest-banner-icon">📚</span>
         <p className="guest-banner-text">
-          افتح الكتاب كامل + 95 قالب جاهز — شاهد الباقات والأسعار
+          افتح المستويات وباقي الكورس + {PRODUCT_STATS.templates} قالب جاهز
         </p>
         <div className="guest-banner-actions">
           <Link href="/#pricing" className="guest-banner-cta">
-            شاهد الباقات
+            شوف الباقات
           </Link>
           <Link href="/register" className="guest-banner-secondary">
-            سجّل مجاناً
+            سجّل ببلاش
           </Link>
           <button
             onClick={() => setDismissed(true)}

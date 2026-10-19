@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { existsSync } from 'fs'
 import { join } from 'path'
-import { formatMinutes, minutesLeft, stationFor } from '@/components/reading/CourseMap'
+import { formatMinutes, minutesLeft, stationFor, stationState } from '@/components/reading/CourseMap'
 import { unit1Data } from '@/data/unit1Data'
 import { introData } from '@/data/introData'
 
@@ -11,6 +11,16 @@ describe('«إنت هنا» course map', () => {
     expect(stationFor('section-1')).toBe('level-1')
     expect(stationFor('section-2')).toBe('level-2')
     for (const id of ['section-3', 'section-6', 'section-10']) expect(stationFor(id)).toBe('book')
+  })
+
+  it('ticks only the stops the reader finished, not every stop behind them', () => {
+    // On Level 2 (index 2) after finishing only the intro (the intro itself is never recorded)
+    expect(stationState(0, 2, [])).toBe('done')
+    expect(stationState(1, 2, [0])).toBe('skipped')
+    expect(stationState(2, 2, [0])).toBe('here')
+    expect(stationState(3, 2, [0])).toBe('ahead')
+    expect(stationState(1, 2, [0, 1])).toBe('done')
+    expect(stationState(1, 3, [2])).toBe('skipped')
   })
 
   it('counts Level 1 time from the planned lesson minutes, including the current page', () => {

@@ -183,7 +183,7 @@ export default function BookmarksPage() {
 
                     <div style={{ textAlign: 'center', marginTop: '60px' }}>
                         <Link href="/toc" style={{ color: '#b0b0b0', textDecoration: 'none', fontSize: '0.95rem' }}>
-                            ← العودة إلى الفهرس
+                            ← ارجع للفهرس
                         </Link>
                     </div>
                 </div>

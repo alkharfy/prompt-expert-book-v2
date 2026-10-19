@@ -100,18 +100,18 @@ function RegisterContent() {
             return result
         } catch (firebaseError: any) {
             if (firebaseError.code === 'auth/email-already-in-use') {
-                return { ok: false, error: 'البريد الإلكتروني مسجل بالفعل' }
+                return { ok: false, error: 'الإيميل ده عليه حساب قبل كده. سجّل دخول بيه' }
             }
             if (firebaseError.code === 'auth/weak-password') {
-                return { ok: false, error: 'كلمة المرور ضعيفة جداً (يجب أن تكون 6 أحرف على الأقل)' }
+                return { ok: false, error: 'الباسورد ضعيف: خليه 6 حروف أو أكتر' }
             }
             if (firebaseError.code === 'auth/invalid-email') {
-                return { ok: false, error: 'البريد الإلكتروني غير صالح' }
+                return { ok: false, error: 'الإيميل ده مش مكتوب صح' }
             }
             if (firebaseError.code === 'auth/too-many-requests') {
-                return { ok: false, error: 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً ثم المحاولة مجدداً' }
+                return { ok: false, error: 'محاولات كتير. استنى شوية وجرّب تاني' }
             }
-            return { ok: false, error: 'حدث خطأ أثناء التسجيل' }
+            return { ok: false, error: 'حصلت مشكلة وإحنا بنعمل الحساب. جرّب تاني' }
         }
     }
 
@@ -127,15 +127,15 @@ function RegisterContent() {
 
         // Validation
         if (!sanitizedName || !sanitizedEmail || !sanitizedPassword) {
-            setError('يرجى ملء الحقول المطلوبة')
+            setError('اكتب اسمك والإيميل والباسورد')
             return
         }
         if (!isValidEmail(sanitizedEmail)) {
-            setError('بريد إلكتروني غير صالح')
+            setError('الإيميل ده مش مكتوب صح')
             return
         }
         if (sanitizedPassword.length < 6) {
-            setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل')
+            setError('الباسورد لازم يبقى 6 حروف أو أكتر')
             return
         }
 
@@ -159,7 +159,7 @@ function RegisterContent() {
             window.location.href = redirect.href
             return
         } else {
-            setError(result.error || 'حدث خطأ غير متوقع')
+            setError(result.error || 'حصلت مشكلة. جرّب تاني')
         }
     }
 
@@ -168,8 +168,10 @@ function RegisterContent() {
             <Navigation />
 
             <AuthCard
-                title="إنشاء حساب"
-                subtitle="ابدأ رحلتك في تعلم توجيهات الذكاء الاصطناعي"
+                title="اعمل حساب ببلاش"
+                subtitle={nextPath.startsWith('/payment')
+                    ? 'خطوة واحدة قبل الدفع: اعمل حسابك عشان الاشتراك يتسجّل باسمك، وبعدها هنوديك لصفحة الدفع على طول.'
+                    : 'عشان نحفظ مكانك في الكورس، وتقدر تشترك وقت ما تحب'}
             >
                 {error && <div id="register-error" className="auth-global-error" role="alert">{error}</div>}
 
@@ -205,7 +207,7 @@ function RegisterContent() {
                             }
                         } catch {
                             setIsGoogleLoading(false)
-                            setError('حدث خطأ أثناء التسجيل بـ Google')
+                            setError('حصلت مشكلة في الدخول بـ Google. جرّب تاني')
                         }
                     }}
                     disabled={isGoogleLoading || isLoading}
@@ -220,7 +222,7 @@ function RegisterContent() {
                                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                             </svg>
-                            <span>التسجيل بحساب Google</span>
+                            <span>كمّل بحساب Google (أسرع)</span>
                         </>
                     )}
                 </button>
@@ -232,7 +234,7 @@ function RegisterContent() {
                 <form id="register-form" className="auth-form" onSubmit={handleSubmit}>
                     <AuthInput
                         id="register-name"
-                        label="الاسم الكامل"
+                        label="اسمك"
                         name="fullName"
                         value={form.fullName}
                         onChange={handleChange}
@@ -242,7 +244,7 @@ function RegisterContent() {
 
                     <AuthInput
                         id="register-email"
-                        label="البريد الإلكتروني"
+                        label="الإيميل"
                         name="email"
                         type="email"
                         value={form.email}
@@ -253,17 +255,17 @@ function RegisterContent() {
 
                     <AuthInput
                         id="register-phone"
-                        label="رقم الهاتف (اختياري)"
+                        label="رقم الموبايل (مش لازم)"
                         name="phoneNumber"
                         type="tel"
                         value={form.phoneNumber}
                         onChange={handleChange}
-                        placeholder="05xxxxxxx"
+                        placeholder="01xxxxxxxxx"
                     />
 
                     <AuthInput
                         id="register-password"
-                        label="كلمة المرور"
+                        label="الباسورد (6 حروف أو أكتر)"
                         name="password"
                         type="password"
                         value={form.password}
@@ -275,7 +277,7 @@ function RegisterContent() {
                     <div style={{ position: 'relative' }}>
                         <AuthInput
                             id="register-referral"
-                            label="كود الإحالة (اختياري)"
+                            label="كود صاحبك (لو معاك)"
                             name="referralCode"
                             value={form.referralCode}
                             onChange={(e) => {
@@ -300,13 +302,13 @@ function RegisterContent() {
                                         const data = await res.json()
                                         setReferralValid(data.ok ? `✅ كود صالح — خصم ${data.discount} ج.م من ${data.referrerName}` : `❌ ${data.error}`)
                                     } catch {
-                                        setReferralValid('❌ فشل التحقق')
+                                        setReferralValid('❌ مقدرناش نتأكد من الكود')
                                     }
                                     setReferralChecking(false)
                                 }}
                                 disabled={referralChecking}
                             >
-                                {referralChecking ? '...' : 'تحقق'}
+                                {referralChecking ? '...' : 'اتأكد'}
                             </button>
                         )}
                         {referralValid && (
@@ -326,14 +328,14 @@ function RegisterContent() {
                         className="btn btn-primary mt-md"
                         disabled={isLoading || isGoogleLoading}
                     >
-                        {isLoading ? <div className="auth-loader"></div> : "إنشاء الحساب"}
+                        {isLoading ? <div className="auth-loader"></div> : "اعمل الحساب"}
                     </button>
                 </form>
 
                 <div className="auth-footer">
-                    <span>لديك حساب بالفعل؟ </span>
+                    <span>عندك حساب؟ </span>
                     <Link id="login-link" href={`/login${nextPath !== '/toc' ? `?next=${encodeURIComponent(nextPath)}` : ''}`}>
-                        تسجيل الدخول
+                        سجّل دخول
                     </Link>
                 </div>
             </AuthCard>

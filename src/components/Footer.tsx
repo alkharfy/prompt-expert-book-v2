@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { SUPPORT_EMAIL, SITE_DOMAIN } from '@/lib/config'
+import { SUPPORT_EMAIL, SITE_DOMAIN, SUPPORT_WHATSAPP_DISPLAY, supportWhatsAppUrl, PAYMENT_METHODS_TEXT } from '@/lib/config'
 
 type FooterProps = {
   variant?: 'full' | 'minimal'
@@ -10,13 +10,18 @@ const legalLinks = [
   { href: '/terms', label: 'الشروط والأحكام' },
   { href: '/privacy', label: 'سياسة الخصوصية' },
   { href: '/refund-policy', label: 'سياسة الاسترداد' },
-  { href: '/contact', label: 'تواصل معنا' },
+  { href: '/contact', label: 'كلّمنا' },
 ]
 
 const linkStyle: React.CSSProperties = {
-  color: 'rgba(255, 255, 255, 0.6)',
+  color: 'rgba(255, 255, 255, 0.7)',
   fontSize: '0.9rem',
   textDecoration: 'none',
+  // a finger-sized target on phones
+  display: 'inline-flex',
+  alignItems: 'center',
+  minHeight: '40px',
+  padding: '0 4px',
 }
 
 function LegalLinksRow() {
@@ -27,7 +32,7 @@ function LegalLinksRow() {
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        gap: '8px 20px',
+        gap: '0 16px',
       }}
     >
       {legalLinks.map(link => (
@@ -56,6 +61,7 @@ export default function Footer({ variant = 'full' }: FooterProps) {
 
   return (
     <footer
+      className="site-footer"
       style={{
         padding: '48px 16px 40px',
         textAlign: 'center',
@@ -92,7 +98,7 @@ export default function Footer({ variant = 'full' }: FooterProps) {
             margin: 0,
           }}
         >
-          الدفع عبر بوابة Kashier المؤمّنة
+          الدفع {PAYMENT_METHODS_TEXT}، من بوابة كاشير الآمنة
         </p>
 
         <p
@@ -102,6 +108,10 @@ export default function Footer({ variant = 'full' }: FooterProps) {
             margin: 0,
           }}
         >
+          <a href={supportWhatsAppUrl()} target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: '#4ade80' }}>
+            💬 واتساب خدمة العملاء: <span dir="ltr" style={{ unicodeBidi: 'isolate', marginRight: '6px' }}>{SUPPORT_WHATSAPP_DISPLAY}</span>
+          </a>
+          <br />
           <a href={`mailto:${SUPPORT_EMAIL}`} style={linkStyle}>
             {SUPPORT_EMAIL}
           </a>

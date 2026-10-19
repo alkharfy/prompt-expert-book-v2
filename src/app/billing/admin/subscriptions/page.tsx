@@ -124,6 +124,7 @@ export default function AdminSubscriptionsPage() {
 
     const getPlanLabel = (planId: string) => {
         const labels: Record<string, string> = {
+            monthly: 'شهري',
             basic: 'أساسية',
             pro: 'احترافية',
             vip: 'مميزة',

@@ -162,7 +162,7 @@ export default function BookContentsSection() {
                     className="contents-cta"
                 >
                     <Link href="#pricing" className="btn-contents-primary">
-                        💳 اشترك الآن — حسب الباقة المختارة
+                        💳 اشترك دلوقتي — اختار باقتك
                     </Link>
                     <Link href="/read/intro/1" className="btn-contents-secondary">
                         🆓 جرّب التمهيد المجاني

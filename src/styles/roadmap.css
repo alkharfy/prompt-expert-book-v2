@@ -338,96 +338,116 @@
 }
 
 /* =====================================================
-   ROADMAP RESPONSIVE - MOBILE
+   ROADMAP LAYOUT - one top-to-bottom list on every screen
+   (the old diagonal desktop path had fixed spots for 10 cards only;
+   the course has 14 and it read bottom-to-top)
    ===================================================== */
 
-@media (max-width: 768px) {
-  .roadmap-container {
-    padding: 20px 16px 60px;
-  }
+.roadmap-container {
+  padding: 20px 16px 60px;
+}
 
-  .roadmap-content {
-    min-height: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-  }
+.roadmap-content {
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
 
-  .roadmap-svg {
-    display: none;
-  }
+.roadmap-svg {
+  display: none;
+}
 
-  .roadmap-start {
-    position: relative;
-    bottom: auto;
-    left: auto;
-    order: 1;
-  }
+.roadmap-start {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  order: 1;
+}
 
+.roadmap-robot {
+  transform: scale(0.7);
+}
+
+@media (max-width: 360px) {
   .roadmap-robot {
-    transform: scale(0.7);
+    transform: scale(0.55);
   }
+}
 
-  @media (max-width: 360px) {
-    .roadmap-robot {
-      transform: scale(0.55);
-    }
-  }
+.roadmap-steps {
+  position: relative;
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  order: 2;
+}
 
-  .roadmap-steps {
-    position: relative;
-    width: 100%;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    order: 2;
-  }
+.roadmap-step {
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  top: auto !important;
+}
 
-  .roadmap-step {
-    position: relative !important;
-    bottom: auto !important;
-    left: auto !important;
-    right: auto !important;
-    top: auto !important;
-  }
+.step-card {
+  width: 280px;
+  max-width: 90vw;
+  /* opaque, so the timeline line doesn't run through the text */
+  background: rgba(18, 18, 18, 0.97);
+  /* grow with the text instead of letting it spill under the next number */
+  height: auto;
+  min-height: 100px;
+  padding: 16px 16px 22px;
+}
 
+.step-title {
+  font-size: 1rem;
+}
+
+.step-desc {
+  display: block;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 6px 0 0;
+}
+
+.roadmap-end {
+  position: relative;
+  top: auto;
+  right: auto;
+  order: 3;
+  margin-top: 20px;
+}
+
+.trophy-container img {
+  width: 120px !important;
+  height: 120px !important;
+}
+
+/* Vertical connecting line for mobile */
+.roadmap-steps::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  background: linear-gradient(180deg, var(--color-orange-primary), var(--color-orange-glow));
+  transform: translateX(-50%);
+  z-index: -1;
+  border-radius: 2px;
+}
+
+@media (min-width: 769px) {
   .step-card {
-    width: 280px;
-    max-width: 90vw;
-  }
-
-  .step-desc {
-    display: block;
-  }
-
-  .roadmap-end {
-    position: relative;
-    top: auto;
-    right: auto;
-    order: 3;
-    margin-top: 20px;
-  }
-
-  .trophy-container img {
-    width: 120px !important;
-    height: 120px !important;
-  }
-
-  /* Vertical connecting line for mobile */
-  .roadmap-steps::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 3px;
-    background: linear-gradient(180deg, var(--color-orange-primary), var(--color-orange-glow));
-    transform: translateX(-50%);
-    z-index: -1;
-    border-radius: 2px;
+    width: 440px;
   }
 }
 

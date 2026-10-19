@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { trackCtaClick } from '@/lib/analytics'
+import { MONTHLY_PRICE_EGP, hasActivePlan } from '@/lib/pricing'
+import { useSubscription } from '@/context/SubscriptionContext'
 
 const MotionDiv = dynamic(
     () => import('framer-motion').then(mod => mod.motion.div),
@@ -10,6 +12,8 @@ const MotionDiv = dynamic(
 ) as React.ComponentType<any>
 
 export default function FinalCTA() {
+    const { currentPlan, expiresAt, status } = useSubscription()
+    const member = hasActivePlan({ plan_id: currentPlan, expires_at: expiresAt, status })
     return (
         <section className="final-cta-section">
             <div className="container">
@@ -19,17 +23,29 @@ export default function FinalCTA() {
                     viewport={{ once: true }}
                     className="final-cta-content"
                 >
-                    <h2>جاهز تبدأ؟ افتح الكتاب كامل اليوم</h2>
-                    <p>10 فصول + 95 قالب جاهز + 45 تمرين عملي — مع ضمان استرداد 30 يوم</p>
-                    <Link href="#pricing" className="btn btn-primary btn-lg" onClick={() => trackCtaClick('اشترك الآن', 'final_cta')}>
-                        اشترك الآن — شاهد الباقات والأسعار ←
-                    </Link>
-                    <div style={{ marginTop: '16px' }}>
-                        <Link href="/read/intro/1" className="final-cta-secondary" onClick={() => trackCtaClick('جرّب مجاناً', 'final_cta_secondary')}>
-                            أو جرّب التمهيد مجاناً
-                        </Link>
-                    </div>
-                    <p className="guarantee-cta">🆓 المعاينة المجانية بدون تسجيل — <Link href="/refund-policy">🛡️ ضمان استرداد 30 يوم</Link></p>
+                    {member ? (
+                        <>
+                            <h2>اشتراكك شغال — كمّل الكورس</h2>
+                            <p>المستوى 1 و2 مفتوحين قدامك، والمستويات الجاية بتنزلك أول ما تجهز.</p>
+                            <Link href="/toc" className="btn btn-primary btn-lg">
+                                ادخل الكورس ←
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <h2>جاهز تبدأ؟ الاشتراك بـ{MONTHLY_PRICE_EGP} جنيه في الشهر</h2>
+                            <p>المستوى 1 و2 كاملين، وتمارين على ملفات شغل حقيقية، و«المستر» بيصحّحلك. ومن غير تجديد تلقائي.</p>
+                            <Link href="#pricing" className="btn btn-primary btn-lg" onClick={() => trackCtaClick('اشترك الآن', 'final_cta')}>
+                                اشترك دلوقتي — شوف الباقات ←
+                            </Link>
+                            <div style={{ marginTop: '16px' }}>
+                                <Link href="/read/intro/1" className="final-cta-secondary" onClick={() => trackCtaClick('جرّب مجاناً', 'final_cta_secondary')}>
+                                    أو جرّب التمهيد ببلاش
+                                </Link>
+                            </div>
+                            <p className="guarantee-cta">🆓 التمهيد ببلاش ومن غير تسجيل — <Link href="/refund-policy">🛡️ ضمان استرداد فلوسك</Link></p>
+                        </>
+                    )}
                 </MotionDiv>
             </div>
 

@@ -1,27 +1,33 @@
-import { PLAN_ORDER } from './pricing'
+import { checkoutKind, PLAN_ORDER } from './pricing'
 
-/** Upgrade credit must be based on a current subscription read by the server. */
+/**
+ * The amount to charge, from the server's own subscription read.
+ * - a new plan, a monthly renewal, or a monthly → yearly switch: the full price
+ * - a yearly → higher yearly upgrade: the price difference (the end date stays)
+ */
 export function getCheckoutBasePrice(
   prices: Record<string, number>, targetPlan: string,
   upgrade: boolean, subscription: { plan_id: string | null; expires_at: string | null; status: string | null } | null,
   now = Date.now(),
 ): number {
   const price = prices[targetPlan]
-  if (!['basic', 'pro', 'vip'].includes(targetPlan) || !Number.isFinite(price) || price < 1) throw new Error('باقة غير صالحة')
+  if (!Object.prototype.hasOwnProperty.call(PLAN_ORDER, targetPlan) || !Number.isFinite(price) || price < 1) throw new Error('باقة غير صالحة')
+  const kind = checkoutKind(subscription, targetPlan, now)
   if (!upgrade) {
-    if (subscription?.status === 'active' && subscription.expires_at && new Date(subscription.expires_at).getTime() > now) {
-      throw new Error('اشتراكك نشط بالفعل. اختر الترقية بدل شراء اشتراك مكرر.')
-    }
-    return price
+    if (kind === 'new' || kind === 'renew' || kind === 'switch') return price
+    throw new Error(kind === 'upgrade'
+      ? 'اشتراكك نشط بالفعل. اختار الترقية بدل اشتراك مكرر.'
+      : 'اشتراكك السنوي لسه شغال. تقدر ترقّي لباقة أعلى بس.')
   }
-  const current = subscription?.plan_id
-  if (!current || !['basic', 'pro', 'vip'].includes(current) || subscription?.status !== 'active' || !subscription.expires_at
-    || !(new Date(subscription.expires_at).getTime() > now)) {
-    throw new Error('الترقية تتطلب اشتراكًا نشطًا. اختر اشتراكًا جديدًا أو جدّد باقتك.')
+  if (kind !== 'upgrade') {
+    throw new Error(kind === 'new'
+      ? 'الترقية محتاجة اشتراك نشط. اختار اشتراك جديد أو جدّد باقتك.'
+      : kind === 'renew' || kind === 'switch' ? 'الاشتراك الشهري مبيترقّاش: اختار الباقة السنوية وادفعها كاملة، وهتبدأ بعد شهرك الحالي.'
+      : 'اختار باقة أعلى من باقتك الحالية للترقية')
   }
-  const credit = prices[current]
-  if (!Number.isFinite(credit) || credit <= 0 || PLAN_ORDER[targetPlan] <= PLAN_ORDER[current] || price <= credit) {
-    throw new Error('اختر باقة أعلى من باقتك الحالية للترقية')
+  const credit = prices[subscription!.plan_id!]
+  if (!Number.isFinite(credit) || credit <= 0 || price <= credit) {
+    throw new Error('اختار باقة أعلى من باقتك الحالية للترقية')
   }
   return Math.round((price - credit) * 100) / 100
 }

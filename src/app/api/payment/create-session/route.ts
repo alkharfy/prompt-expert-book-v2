@@ -4,12 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createPaymentSession } from '@/lib/kashier'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from '@/lib/logger'
-import type { PlanId } from '@/types/subscription'
+import { PLAN_IDS, type PlanId } from '@/types/subscription'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { checkRateLimitAsync, getClientIP, RATE_LIMITS } from '@/lib/rate-limit'
 import { sendCAPIInitiateCheckout } from '@/lib/meta-capi'
 import { checkoutEventId } from '@/lib/tracking-config'
-import { applyPromoDiscount } from '@/lib/pricing'
+import { applyPromoDiscount, promoAppliesToPlan } from '@/lib/pricing'
 import { SITE_URL } from '@/lib/config'
 
 export async function POST(request: NextRequest) {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Stage 3: التحقق من أن plan_id صحيح
-        const validPlans: PlanId[] = ['basic', 'pro', 'vip']
+        const validPlans: PlanId[] = [...PLAN_IDS]
         if (!validPlans.includes(planId as PlanId)) {
             return NextResponse.json(
                 { error: 'معرّف الباقة غير صحيح' },
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
             }
 
             // التحقق من الباقات المسموحة
-            if (promo.allowed_plans && promo.allowed_plans.length > 0 && !promo.allowed_plans.includes(planId)) {
+            if (!promoAppliesToPlan(promo.allowed_plans, planId)) {
                 return NextResponse.json({ error: 'كود الخصم لا ينطبق على هذه الباقة' }, { status: 400 })
             }
 

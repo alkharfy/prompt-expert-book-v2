@@ -3,47 +3,49 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BOOK_PAGES_DISPLAY } from '@/lib/config'
-import { PRODUCT_STATS } from '@/lib/pricing'
-
-const FAQ_ICONS: Record<number, string> = {
-    0: '💻',
-    1: '📦',
-    2: '💰',
-    3: '🔄',
-    4: '⏱️',
-    5: '🤝',
-    6: '🎯',
-}
+import { REFUND_DAYS, SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, refundDaysLabel, supportWhatsAppUrl } from '@/lib/config'
+import { MONTHLY_PRICE_EGP, PRODUCT_STATS } from '@/lib/pricing'
 
 const faqs = [
     {
-        question: 'هل أحتاج خبرة برمجية لاستخدام هذا الكتاب؟',
-        answer: 'تقدر تبدأ من غير خبرة برمجية. الدروس الأولى تشرح استخدام AI وكتابة تعليمات واضحة وتقييم الناتج. بعض التطبيقات المتقدمة تحتاج حسابات أو أدوات خارجية، وقد تستلزم معرفة برمجية إضافية.',
+        icon: '🤷',
+        question: 'أنا عمري ما استخدمت AI. هينفع معايا؟',
+        answer: 'أيوه. التمهيد والمستوى 1 معمولين للي بيبدأ من الصفر، من غير مصطلحات ولا برمجة. كل درس فيه خطوة بخطوة، وتمرين على ملف شبه شغلك، والنسخة المجانية من ChatGPT أو Gemini بتكفي لمعظم التمارين.',
     },
     {
-        question: 'ما الذي أحصل عليه بالضبط؟',
-        answer: 'الأساسية تشمل القراءة والقوالب والتمارين. المتقدمة تضيف أدوات البرومبت والإنجازات وشهادة إتمام قراءة من PromptMaster، وتشخيص AI حتى 10 مرات خلال 24 ساعة. VIP تضيف المحادثة الذكية حتى 30 رسالة خلال 24 ساعة. المصادر وأخبار AI مجانية للجميع. راجع مقارنة الباقات قبل الشراء.',
+        icon: '🪜',
+        question: 'الكورس فيه إيه بالظبط؟',
+        answer: '5 مستويات. المستوى 1 «بتستخدمه صح» والمستوى 2 «بتطلب زي المحترف» متاحين دلوقتي، كل واحد حوالي 3 ساعات و9 دروس. المستويات 3–5 بتنزل تباعاً، ولحد ما تنزل الفصول 3–10 من كتاب PromptMaster مفتوحة للمشتركين. ومعاهم ' + PRODUCT_STATS.exercises + ' تمرين و' + PRODUCT_STATS.templates + ' قالب جاهز.',
     },
     {
-        question: 'هل يمكنني استرداد أموالي إذا لم أكن راضياً؟',
-        answer: 'نعم! نقدم ضمان استرداد الأموال لمدة 30 يوماً. إذا لم تكن راضياً عن المحتوى لأي سبب، تواصل معنا وسنرد لك المبلغ كاملاً بدون أسئلة.',
+        icon: '🗓️',
+        question: 'إيه الفرق بين الشهري والسنوي؟',
+        answer: 'الشهري بـ' + MONTHLY_PRICE_EGP + ' جنيه فيه الكورس كله: المستويات والتمارين والقوالب و«المستر بيصحّح». السنوي فيه نفس الحاجات لمدة سنة، وزيادة عليها محاضرات أونلاين مباشرة كل شهر. والمتقدمة وVIP بيزوّدوا شهادة إتمام وأدوات ومساعد ذكي.',
     },
     {
-        question: 'هل المحتوى يُحدَّث؟',
-        answer: 'الاشتراك السنوي يشمل تحديثات الكتاب التي تُنشر خلال صلاحيته. انتهاء الاشتراك يتطلب التجديد لاستمرار الوصول. صفحة أخبار AI العامة تعرض تاريخ كل خبر ورابط مصدره.',
+        icon: '🔁',
+        question: 'الشهري بيتجدد لوحده؟',
+        answer: 'لأ. مفيش تجديد تلقائي ومحدش هيسحب من كارتك. لما شهرك يقرّب يخلص، تجدّده بنفسك لو حابب. ولو جدّدت أو حوّلت لسنوي قبل ما يخلص، المدة الجديدة بتبدأ بعد شهرك، فمش هتخسر أيام.',
     },
     {
-        question: 'كم من الوقت أحتاج لإنهاء الكتاب؟',
-        answer: 'ابدأ بجلسات قصيرة من 20 إلى 30 دقيقة، وطبّق مثالًا على مهمة تخصك بعد كل درس. الوقت الكلي يختلف حسب خبرتك والتطبيق؛ لا نضمن إتقان AI خلال مدة محددة. الاشتراك يتيح الوصول لمدة سنة.',
+        icon: '💳',
+        question: 'أدفع إزاي؟',
+        answer: 'بالفيزا أو الكريدت كارد، أو بمحفظة الموبايل، من صفحة دفع كاشير الآمنة. ولو وقفت معاك حاجة، كلّم خدمة العملاء على واتساب ' + SUPPORT_WHATSAPP_DISPLAY + '.',
     },
     {
-        question: 'هل يمكنني الوصول للمحتوى من الموبايل؟',
-        answer: 'تجربة القراءة مصممة للموبايل والتابلت والكمبيوتر. يمكن تنفيذ التمارين على الموبايل، وقد تساعد شاشة أكبر في التطبيقات التي تستخدم عدة أدوات أو مراجعة ملفات وكود.',
+        icon: '💰',
+        question: 'لو الكورس معجبنيش؟',
+        answer: 'عندك ضمان استرداد: خلال ' + refundDaysLabel(REFUND_DAYS.monthly) + ' من الدفع في الشهري، وخلال ' + refundDaysLabel(REFUND_DAYS.yearly) + ' في السنوي. كلّمنا على واتساب أو الإيميل، وبنرجّعلك فلوسك كاملة من غير أسئلة. التفاصيل في صفحة سياسة الاسترداد.',
     },
     {
-        question: 'هل إتمام الكتاب يكفي للوصول إلى الاحتراف؟',
-        answer: 'الكتاب يبني أساسًا عمليًا في استخدام AI وتصميم البرومبت ومراجعة النتائج. الاحتراف يحتاج تطبيقًا متكررًا ومشروعات وتغذية راجعة في مجال شغلك. ابدأ بالتمهيد المجاني لتقييم مستوى الشرح قبل اختيار اشتراك.',
+        icon: '📱',
+        question: 'ينفع أذاكر من الموبايل؟',
+        answer: 'أيوه، الكورس معمول للموبايل الأول. التمارين بتتعمل من الموبايل، ولو هتشتغل على ملف إكسل كبير، شاشة الكمبيوتر هتريّحك أكتر.',
+    },
+    {
+        icon: '🎯',
+        question: 'هطلع من الكورس محترف؟',
+        answer: 'هتطلع بحاجات في إيدك: طلبات جاهزة لشغلك، وطريقة تراجع بيها أي رد قبل ما تسلّمه. الاحتراف بييجي من إنك تستخدم ده كل يوم في شغلك. ابدأ بالتمهيد ببلاش وشوف الشرح يناسبك ولا لأ.',
     },
 ]
 
@@ -51,7 +53,7 @@ export default function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(0)
 
     return (
-        <section className="landing-section landing-section-darker">
+        <section id="faq" className="landing-section landing-section-darker">
             <div className="landing-glow" style={{ top: '30%', right: '10%' }} />
             <div className="container">
                 <motion.div
@@ -61,10 +63,10 @@ export default function FAQSection() {
                     transition={{ duration: 0.6 }}
                     className="fq-header"
                 >
-                    <span className="fq-badge">❓ أسئلة شائعة</span>
+                    <span className="fq-badge">❓ أسئلة بتتسأل كتير</span>
                     <h2 className="fq-title">الأسئلة المتكررة</h2>
                     <p className="fq-subtitle">
-                        كل ما تحتاج معرفته قبل البدء — إجابات واضحة ومباشرة
+                        اللي الناس بتسأل عنه قبل ما تشترك
                     </p>
                 </motion.div>
 
@@ -86,7 +88,7 @@ export default function FAQSection() {
                                         onClick={() => setOpenIndex(isOpen ? null : index)}
                                         aria-expanded={isOpen}
                                     >
-                                        <span className="fq-question-icon">{FAQ_ICONS[index]}</span>
+                                        <span className="fq-question-icon">{faq.icon}</span>
                                         <span className="fq-question-text">{faq.question}</span>
                                         <span className={`fq-chevron ${isOpen ? 'fq-chevron--open' : ''}`}>
                                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -119,9 +121,9 @@ export default function FAQSection() {
                     {/* Side decoration */}
                     <div className="fq-side-decor">
                         <div className="fq-side-card">
-                            <div className="fq-side-icon">📖</div>
-                            <div className="fq-side-stat">{BOOK_PAGES_DISPLAY}</div>
-                            <div className="fq-side-label">صفحة تفاعلية</div>
+                            <div className="fq-side-icon">🗓️</div>
+                            <div className="fq-side-stat">{MONTHLY_PRICE_EGP}</div>
+                            <div className="fq-side-label">جنيه في الشهر</div>
                         </div>
                         <div className="fq-side-card">
                             <div className="fq-side-icon">✏️</div>
@@ -130,8 +132,8 @@ export default function FAQSection() {
                         </div>
                         <Link href="/refund-policy" className="fq-side-card">
                             <div className="fq-side-icon">🛡️</div>
-                            <div className="fq-side-stat">30 يوم</div>
-                            <div className="fq-side-label">ضمان استرداد</div>
+                            <div className="fq-side-stat">{refundDaysLabel(REFUND_DAYS.monthly)}</div>
+                            <div className="fq-side-label">ضمان استرداد للشهري</div>
                         </Link>
                     </div>
                 </div>
@@ -152,16 +154,16 @@ export default function FAQSection() {
                             </svg>
                         </div>
                         <div className="fq-cta-text">
-                            <h3>لديك سؤال آخر؟</h3>
-                            <p>فريقنا مستعد للإجابة على جميع استفساراتك — متوسط وقت الرد أقل من 24 ساعة</p>
+                            <h3>عندك سؤال تاني؟</h3>
+                            <p>كلّم خدمة العملاء على واتساب: <span dir="ltr">{SUPPORT_WHATSAPP_DISPLAY}</span>، أو ابعت على {SUPPORT_EMAIL}</p>
                         </div>
                     </div>
-                    <a href="mailto:support@prompt-mr.com" className="fq-contact-btn">
+                    <a href={supportWhatsAppUrl('السلام عليكم، عندي سؤال عن PromptMaster')} target="_blank" rel="noopener noreferrer" className="fq-contact-btn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                             <polyline points="22,6 12,13 2,6" />
                         </svg>
-                        تواصل معنا الآن
+                        كلّمنا على واتساب
                     </a>
                 </motion.div>
             </div>

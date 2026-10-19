@@ -18,7 +18,7 @@ import { dbLogger } from '@/lib/logger'
  *
  * GET  — قائمة الاشتراكات المجانية (payment_id IS NULL)
  * POST — إنشاء حساب جديد (Firebase + users) أو تفعيل باقة مجانية لحساب موجود
- *        Body: { fullName, email, planId: 'basic'|'pro'|'vip', durationDays: 30|90|180|365 }
+ *        Body: { fullName, email, planId: 'monthly'|'basic'|'pro'|'vip', durationDays: 30|90|180|365 }
  *        كلمة المرور تُولَّد على الخادم وتُعاد مرة واحدة فقط في الاستجابة.
  *
  * @module api/admin/accounts
@@ -27,7 +27,7 @@ import { dbLogger } from '@/lib/logger'
 const CreateAccountSchema = z.object({
     fullName: z.string().trim().min(2).max(100),
     email: z.string().trim().toLowerCase().email().max(254),
-    planId: z.enum(['basic', 'pro', 'vip']),
+    planId: z.enum(['monthly', 'basic', 'pro', 'vip']),
     durationDays: z.union([z.literal(30), z.literal(90), z.literal(180), z.literal(365)]),
 })
 

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import { fetchPricingPlans } from '@/lib/pricing'
 import { useSubscription } from '@/context/SubscriptionContext'
+import { FEATURE_NAMES } from '@/lib/features'
 import '@/app/auth.css'
 
 interface PaymentRecord {
@@ -18,6 +19,7 @@ interface PaymentRecord {
 }
 
 const PLAN_NAMES: Record<string, string> = {
+    monthly: 'الشهري — Monthly',
     basic: 'الأساسية — Basic',
     pro: 'الاحترافية — Pro',
     vip: 'المميزة — VIP',
@@ -48,16 +50,16 @@ export default function SubscriptionPage() {
         loadPayments()
     }, [])
 
-    const planName = currentPlan ? (PLAN_NAMES[currentPlan] || currentPlan) : 'بدون اشتراك'
+    const planName = currentPlan ? (PLAN_NAMES[currentPlan] || currentPlan) : 'مفيش اشتراك'
     const planPrice = currentPlan ? (planPrices[currentPlan] || 0) : 0
-    const expiresDate = expiresAt ? new Date(expiresAt).toLocaleDateString('ar-EG', {
+    const expiresDate = expiresAt ? new Date(expiresAt).toLocaleDateString('ar-EG-u-nu-latn', {
         year: 'numeric', month: 'long', day: 'numeric'
     }) : '—'
 
-    const statusText = status === 'active' ? 'نشط ✅'
-        : status === 'expired' ? 'منتهي ❌'
+    const statusText = status === 'active' ? 'شغال ✅'
+        : status === 'expired' ? 'خلص ❌'
         : status === 'cancelled' ? 'ملغي'
-        : 'بدون اشتراك'
+        : 'مفيش اشتراك'
 
     return (
         <>
@@ -74,14 +76,14 @@ export default function SubscriptionPage() {
                     {/* Current Plan Card */}
                     <div className="plan-card glass-card">
                         {subLoading ? (
-                            <div className="loading-text">جاري التحميل...</div>
+                            <div className="loading-text">بنحمّل…</div>
                         ) : (
                             <>
                                 <div className="plan-info-grid">
                                     <div className="plan-info-item">
                                         <span className="plan-info-icon">📦</span>
                                         <div>
-                                            <span className="plan-info-label">الخطة</span>
+                                            <span className="plan-info-label">الباقة</span>
                                             <span className="plan-info-value">{planName}</span>
                                         </div>
                                     </div>
@@ -89,13 +91,13 @@ export default function SubscriptionPage() {
                                         <span className="plan-info-icon">💳</span>
                                         <div>
                                             <span className="plan-info-label">السعر</span>
-                                            <span className="plan-info-value">{planPrice > 0 ? `${planPrice || '—'} ج.م / سنة` : '—'}</span>
+                                            <span className="plan-info-value">{planPrice > 0 ? `${planPrice} ج.م / ${currentPlan === 'monthly' ? 'شهر' : 'سنة'}` : '—'}</span>
                                         </div>
                                     </div>
                                     <div className="plan-info-item">
                                         <span className="plan-info-icon">📅</span>
                                         <div>
-                                            <span className="plan-info-label">التجديد</span>
+                                            <span className="plan-info-label">بيخلص في</span>
                                             <span className="plan-info-value">{expiresDate}</span>
                                         </div>
                                     </div>
@@ -111,10 +113,10 @@ export default function SubscriptionPage() {
                                 {/* Features list */}
                                 {features.length > 0 && (
                                     <div className="plan-features">
-                                        <h3 className="features-title">الميزات المتاحة</h3>
+                                        <h3 className="features-title">المفتوح في باقتك</h3>
                                         <div className="features-chips">
                                             {features.map((f) => (
-                                                <span key={f} className="feature-chip">✓ {f}</span>
+                                                <span key={f} className="feature-chip">✓ {FEATURE_NAMES[f] || f}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -124,11 +126,15 @@ export default function SubscriptionPage() {
                                 <div className="plan-actions">
                                     {!currentPlan || status === 'expired' ? (
                                         <Link href="/payment" className="action-btn primary">
-                                            اشترك الآن
+                                            اشترك دلوقتي
+                                        </Link>
+                                    ) : currentPlan === 'monthly' ? (
+                                        <Link href="/payment" className="action-btn primary">
+                                            جدّد شهر أو حوّل لسنوي
                                         </Link>
                                     ) : currentPlan !== 'vip' ? (
-                                        <Link href={`/payment?upgrade=true&currentPlan=${currentPlan}`} className="action-btn primary">
-                                            ترقية الخطة
+                                        <Link href="/payment?upgrade=true" className="action-btn primary">
+                                            رقّي باقتك
                                         </Link>
                                     ) : null}
                                     <Link href="/profile" className="action-btn secondary">
@@ -143,15 +149,15 @@ export default function SubscriptionPage() {
                     <div className="history-section">
                         <h2 className="history-title">سجل المدفوعات</h2>
                         {paymentsLoading ? (
-                            <div className="loading-text">جاري التحميل...</div>
+                            <div className="loading-text">بنحمّل…</div>
                         ) : payments.length === 0 ? (
-                            <p className="no-payments">لا يوجد مدفوعات سابقة</p>
+                            <p className="no-payments">مفيش مدفوعات لسه</p>
                         ) : (
                             <div className="payments-list">
                                 {payments.map((p) => (
                                     <div key={p.id} className="payment-row glass-card">
                                         <div className="payment-date">
-                                            {new Date(p.created_at).toLocaleDateString('ar-EG', {
+                                            {new Date(p.created_at).toLocaleDateString('ar-EG-u-nu-latn', {
                                                 year: 'numeric', month: 'short', day: 'numeric'
                                             })}
                                         </div>

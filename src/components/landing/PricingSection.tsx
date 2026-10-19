@@ -3,27 +3,32 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { getPricingPlans, PricingPlan } from '@/lib/promo'
+import { fetchPricingPlans, hasActivePlan, planLabel, type PublicPricingPlan } from '@/lib/pricing'
+import { useSubscription } from '@/context/SubscriptionContext'
+import { PAYMENT_METHODS_TEXT, REFUND_DAYS, REFUND_GUARANTEE_TEXT, SUPPORT_WHATSAPP_DISPLAY, refundDaysLabel, supportWhatsAppUrl } from '@/lib/config'
 import { trackCtaClick } from '@/lib/analytics'
 
-const PLAN_ICONS: Record<string, string> = { basic: '📖', pro: '🚀', vip: '👑' }
+const PLAN_ICONS: Record<string, string> = { monthly: '🗓️', basic: '📖', pro: '🚀', vip: '👑' }
 const PLAN_COLORS: Record<string, [string, string]> = {
+    monthly: ['#22C55E', '#4ADE80'],
     basic: ['#3B82F6', '#60A5FA'],
     pro: ['#FF6B35', '#FF8C42'],
     vip: ['#A855F7', '#C084FC'],
 }
 
 export default function PricingSection() {
-    const [plans, setPlans] = useState<PricingPlan[]>([])
+    const [plans, setPlans] = useState<PublicPricingPlan[]>([])
     const [loadError, setLoadError] = useState('')
     const [isLoading, setIsLoading] = useState(true)
+    const { currentPlan, expiresAt, status } = useSubscription()
+    const member = hasActivePlan({ plan_id: currentPlan, expires_at: expiresAt, status })
 
     useEffect(() => {
         let cancelled = false
-        getPricingPlans().then(data => {
+        fetchPricingPlans().then(data => {
             if (!cancelled) setPlans(data)
         }).catch(() => {
-            if (!cancelled) setLoadError('تعذّر تحميل الأسعار الحالية. أعد تحميل الصفحة أو تواصل معنا قبل الدفع.')
+            if (!cancelled) setLoadError('مقدرناش نحمّل الأسعار. اعمل تحديث للصفحة، أو كلّمنا على واتساب قبل ما تدفع.')
         }).finally(() => { if (!cancelled) setIsLoading(false) })
         return () => { cancelled = true }
     }, [])
@@ -32,9 +37,10 @@ export default function PricingSection() {
 
     if (isLoading) {
         return (
-            <section id="pricing" className="landing-section landing-section-dark">
+            // Hold roughly the cards' height so the page doesn't jump when the prices arrive
+            <section id="pricing" className="landing-section landing-section-dark" style={{ minHeight: '900px' }}>
                 <div className="container">
-                    <div className="pr-loading">جاري التحميل...</div>
+                    <div className="pr-loading" role="status">بنحمّل الأسعار…</div>
                 </div>
             </section>
         )
@@ -48,18 +54,25 @@ export default function PricingSection() {
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="pr-header">
                     <span className="pr-badge">💰 باقات الاشتراك</span>
-                    <h2 className="pr-title">ابدأ بالكتاب والتمارين</h2>
-                    <p className="pr-subtitle">الأساسية تشمل القراءة والتمارين والقوالب. قارن المميزات ثم اختر ما تحتاجه.</p>
+                    <h2 className="pr-title">ابدأ بشهر، أو خد سنة بمحاضرات</h2>
+                    <p className="pr-subtitle">كل الباقات فيها الكورس كله. السنوي بيزوّد محاضرات أونلاين مباشرة، والمتقدمة وVIP بيزوّدوا شهادة وأدوات.</p>
                 </motion.div>
 
                 {/* Trust bar — only verifiable claims; no inflated user counts */}
                 <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="pr-social-bar">
-                    <span>🛡️ ضمان استرداد 30 يوم</span>
+                    <span>🛡️ {REFUND_GUARANTEE_TEXT}</span>
                     <span className="pr-social-sep" />
-                    <span>📱 بطاقات بنكية ومحافظ إلكترونية</span>
+                    <span>📱 {PAYMENT_METHODS_TEXT}</span>
                     <span className="pr-social-sep" />
-                    <span>⏳ وصول لمدة سنة كاملة</span>
+                    <a href={supportWhatsAppUrl('السلام عليكم، عندي سؤال قبل ما أشترك في PromptMaster')} target="_blank" rel="noopener noreferrer" className="pr-wa">💬 واتساب: <span dir="ltr">{SUPPORT_WHATSAPP_DISPLAY}</span></a>
                 </motion.div>
+
+                {member && expiresAt && (
+                    <div className="pr-member-note" role="status">
+                        ✅ اشتراكك ({planLabel(currentPlan || '')}) شغال لحد {new Date(expiresAt).toLocaleDateString('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' })}.{' '}
+                        <Link href="/toc">ادخل الكورس ←</Link>
+                    </div>
+                )}
 
                 {/* Plans grid */}
                 <div className="pr-grid">
@@ -82,7 +95,7 @@ export default function PricingSection() {
                                 {/* Popular badge */}
                                 {plan.is_popular && (
                                     <div className="pr-popular-badge">
-                                        <span>✨</span> مناسبة للبدء
+                                        <span>✨</span> الأنسب للبداية
                                     </div>
                                 )}
 
@@ -97,14 +110,14 @@ export default function PricingSection() {
 
                                     {/* Plan name */}
                                     <h3 className="pr-plan-name">{plan.name}</h3>
-                                    <span className="pr-plan-duration">اشتراك سنوي</span>
+                                    <span className="pr-plan-duration">{plan.period === 'شهر' ? 'اشتراك شهري' : 'اشتراك سنوي'}</span>
 
                                     {/* Price — single honest sticker price */}
                                     <div className="pr-price">
                                         <span className="pr-price-amount" style={{ color: plan.is_popular ? colors[0] : 'white' }}>{plan.price}</span>
                                         <div className="pr-price-suffix">
                                             <span className="pr-price-currency" style={{ color: colors[0] }}>ج.م</span>
-                                            <span className="pr-price-period">/ سنة</span>
+                                            <span className="pr-price-period">/ {plan.period}</span>
                                         </div>
                                     </div>
 
@@ -129,9 +142,9 @@ export default function PricingSection() {
                                         href={plan.cta_link || `/payment?plan=${plan.id}`}
                                         className={`pr-cta ${plan.is_popular ? 'pr-cta-primary' : 'pr-cta-secondary'}`}
                                         style={plan.is_popular ? { background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})` } : { borderColor: `${colors[0]}40` }}
-                                        onClick={() => trackCtaClick(plan.cta_text || 'ابدأ رحلتي الآن', 'pricing_section')}
+                                        onClick={() => trackCtaClick(plan.cta_text, 'pricing_section')}
                                     >
-                                        {plan.cta_text || 'ابدأ رحلتي الآن'}
+                                        {plan.cta_text}
                                     </Link>
                                 </div>
                             </motion.div>
@@ -146,8 +159,8 @@ export default function PricingSection() {
                         <div className="pr-guarantee-icon">🛡️</div>
                         <div className="pr-guarantee-content">
                             <Link href="/refund-policy">
-                                <h4>ضمان استرداد الأموال لمدة 30 يوماً</h4>
-                                <p>إذا لم تكن راضياً عن المحتوى، سنعيد لك مبلغك كاملاً بدون أسئلة.</p>
+                                <h4>ضمان استرداد فلوسك</h4>
+                                <p>لو المحتوى معجبكش، بنرجّعلك فلوسك كاملة من غير أسئلة: خلال {refundDaysLabel(REFUND_DAYS.monthly)} من الدفع في الشهري، وخلال {refundDaysLabel(REFUND_DAYS.yearly)} في السنوي. التفاصيل في سياسة الاسترداد.</p>
                             </Link>
                         </div>
                         <div className="pr-guarantee-stamps">
@@ -174,9 +187,12 @@ export default function PricingSection() {
                 /* Social bar */
                 .pr-social-bar { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 0 auto 48px; color: rgba(255,255,255,0.5); font-size: 0.9rem; flex-wrap: wrap; }
                 .pr-social-sep { width: 1px; height: 18px; background: rgba(255,255,255,0.1); }
+                .pr-wa { color: #4ade80; text-decoration: none; font-weight: 700; }
+                .pr-member-note { max-width: 640px; margin: -24px auto 32px; padding: 14px 18px; border-radius: 14px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.3); color: #d1fae5; text-align: center; font-size: 0.95rem; line-height: 1.7; }
+                .pr-member-note a { color: #4ade80; font-weight: 700; text-decoration: none; white-space: nowrap; }
 
                 /* Grid */
-                .pr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; align-items: stretch; margin-bottom: 60px; max-width: 1100px; margin-left: auto; margin-right: auto; }
+                .pr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; align-items: stretch; margin-bottom: 60px; max-width: 1240px; margin-left: auto; margin-right: auto; }
 
                 /* Card */
                 .pr-card { position: relative; border-radius: 24px; padding: 2px; transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
@@ -268,6 +284,8 @@ export default function PricingSection() {
                 }
                 @media (max-width: 576px) {
                     .pr-section { padding: 60px 0; }
+                    .pr-social-bar { gap: 10px; flex-direction: column; }
+                    .pr-social-sep { display: none; }
                     .pr-title { font-size: 1.7rem; }
                     .pr-price-amount { font-size: 2.5rem; }
                     .pr-plan-icon { width: 52px; height: 52px; font-size: 1.4rem; border-radius: 14px; }

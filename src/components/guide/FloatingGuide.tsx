@@ -132,6 +132,7 @@ export default function FloatingGuide() {
         setPhase('playing')
         writeStorage('session', SESSION_KEY, '1')
 
+        setSoundOn(withSound)
         const audio = new Audio(s.audio)
         audio.preload = 'auto'
         audio.muted = !withSound
@@ -157,10 +158,19 @@ export default function FloatingGuide() {
             setPhase('idle')
             return
         }
+        // Phones: no talking by itself. The speech bubble would cover the levels and the price cards,
+        // so the robot waits with its ▶ badge until someone taps it.
+        if (window.innerWidth < 1024) {
+            setScenarioIdx(idx)
+            setPhase('idle')
+            return
+        }
         pendingStartRef.current = true
+        // The visit-start talk is always silent (captions only). Sound only plays after a tap in
+        // this visit, even if the visitor turned it on last time: a page must not speak by itself.
         startRef.current = () => {
             pendingStartRef.current = false
-            play(idx, readStorage('local', SOUND_KEY) === 'on')
+            play(idx, false)
         }
         // Big screens have room for the bubble under the hero robot, so don't wait forever for a scroll
         const timer = window.setTimeout(() => {
@@ -266,6 +276,18 @@ export default function FloatingGuide() {
                 }
             }
 
+            // Phones: the hero robot is hidden, so the corner robot would sit on the headline,
+            // the benefits and the buttons. It waits (hidden, silent) until they scroll above its corner.
+            let waiting = false
+            if (vw < 768 && (phaseRef.current === 'waiting' || phaseRef.current === 'idle')) {
+                const heroText = document.querySelector<HTMLElement>('.hero-text-container')
+                if (heroText) {
+                    const t = heroText.getBoundingClientRect()
+                    waiting = t.bottom > dockY && t.top < vh
+                }
+            }
+            robotBoxRef.current?.classList.toggle('waiting', waiting)
+
             if (!start || scrollY > 40) pTarget = 1
             else if (scrollY < 12) pTarget = 0
             const sdt = Math.min(dt, 50) / 1000
@@ -299,8 +321,19 @@ export default function FloatingGuide() {
                 air = nowAir
                 setAirborne(air)
             }
-            if (pendingStartRef.current && pp > 0.95 && scrollY > 40) startRef.current()
+            if (pendingStartRef.current && pp > 0.95 && scrollY > 40 && !waiting) startRef.current()
             robotBoxRef.current?.classList.toggle('docked', pp > 0.5)
+
+            // Never sit on the plan cards or the FAQ answers: robot and bubble step aside while they pass under the corner
+            let overPrices = false
+            if (pp > 0.5) {
+                const zoneTop = dockY - (bubbleRef.current?.offsetHeight || 0) - 12
+                for (const el of document.querySelectorAll<HTMLElement>('#pricing .pr-grid, #faq .fq-list')) {
+                    const g = el.getBoundingClientRect()
+                    if (g.top < dockY + dockSize && g.bottom > zoneTop) overPrices = true
+                }
+            }
+            robotBoxRef.current?.classList.toggle('over-prices', overPrices)
 
             // --- body motion
             const velocity = (scrollY - lastY) / dt
@@ -350,7 +383,7 @@ export default function FloatingGuide() {
                 }
                 bubble.style.transform = `translate3d(${clamp(bx, 10, vw - bw - 10)}px, ${by}px, 0) translateY(${anchorBottom ? '-100%' : '0'})`
                 // Hide while flying, and above the fold on narrow screens where it would cover the headline
-                const hidden = (pp > 0.2 && pp < 0.8) || (mode === 'hero' && vw < 1024)
+                const hidden = (pp > 0.2 && pp < 0.8) || (mode === 'hero' && vw < 1024) || waiting || overPrices
                 bubble.style.opacity = hidden ? '0' : '1'
                 bubble.style.pointerEvents = hidden ? 'none' : ''
             }
@@ -470,6 +503,14 @@ export default function FloatingGuide() {
                     left: 0;
                     z-index: 60;
                     will-change: transform;
+                    transition: opacity 0.35s;
+                }
+                .pm-guide-robot.waiting,
+                .pm-guide-robot.over-prices {
+                    opacity: 0;
+                    visibility: hidden;
+                    pointer-events: none;
+                    transition: opacity 0.35s, visibility 0s linear 0.35s;
                 }
                 .pm-guide-hit {
                     all: unset;

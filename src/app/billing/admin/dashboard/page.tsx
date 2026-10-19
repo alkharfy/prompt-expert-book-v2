@@ -151,6 +151,7 @@ export default function BillingAdminDashboard() {
                     data: {
                         labels: Object.keys(stats.planDistribution).map((plan) => {
                             const labels: Record<string, string> = {
+                                monthly: 'شهري',
                                 basic: 'أساسية',
                                 pro: 'احترافية',
                                 vip: 'مميزة',

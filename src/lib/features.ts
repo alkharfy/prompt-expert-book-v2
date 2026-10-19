@@ -25,6 +25,14 @@ import type { PlanId, FeatureKey, UserPlan } from '@/types/subscription'
  * Resources and AI news are public, not subscription entitlements.
  */
 export const PLAN_FEATURES: Record<PlanId, readonly FeatureKey[]> = {
+    // The whole course, month by month: same content as basic; the yearly plans add the live lectures (and pro/vip the certificate).
+    monthly: [
+        'reading',
+        'bookmarks',
+        'library',
+        'progress_tracking',
+        'exercises',
+    ],
     basic: [
         'reading',
         'bookmarks',
@@ -70,6 +78,7 @@ export function isActivePlanSubscription(subscription: UserPlan | null): subscri
  * أسماء الباقات بالعربية
  */
 const PLAN_NAMES: Record<PlanId, string> = {
+    monthly: 'الاشتراك الشهري',
     basic: 'الباقة الأساسية',
     pro: 'الباقة المتقدمة',
     vip: 'باقة VIP',
@@ -79,16 +88,16 @@ const PLAN_NAMES: Record<PlanId, string> = {
  * أسماء الميزات بالعربية — للعرض في واجهة المستخدم
  */
 export const FEATURE_NAMES: Record<FeatureKey, string> = {
-    reading: 'قراءة الكتاب',
-    bookmarks: 'الإشارات المرجعية',
+    reading: 'دروس الكورس',
+    bookmarks: 'حفظ الصفحات',
     library: 'المكتبة',
-    progress_tracking: 'تتبع التقدم',
-    exercises: 'التمارين التفاعلية',
-    gamification: 'نظام الإنجازات',
-    leaderboard: 'لوحة المتصدرين',
-    certificate: 'الشهادة',
+    progress_tracking: 'متابعة تقدّمك',
+    exercises: 'التمارين',
+    gamification: 'الإنجازات والنقاط',
+    leaderboard: 'ترتيب المتعلمين',
+    certificate: 'شهادة الإتمام',
     tools: 'أدوات البرومبت',
-    chat: 'المحادثة الذكية',
+    chat: 'المساعد الذكي',
     resources: 'مكتبة المصادر',
     ai_updates: 'تحديثات AI',
 } as const
@@ -157,7 +166,7 @@ export function getPlanName(plan: PlanId): string {
  * 
  * @example
  * ```ts
- * getFeatureName('chat') // 'المحادثة الذكية'
+ * getFeatureName('chat') // 'المساعد الذكي'
  * ```
  */
 export function getFeatureName(feature: FeatureKey): string {

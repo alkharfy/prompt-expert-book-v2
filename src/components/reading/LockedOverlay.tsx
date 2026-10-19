@@ -21,6 +21,8 @@ import { authSystem } from '@/lib/auth_system'
 import { useSubscription } from '@/context/SubscriptionContext'
 import { trackPaywallHit } from '@/lib/analytics'
 import { SECTION_REGISTRY } from '@/config/sections'
+import { PRODUCT_STATS, planLabel } from '@/lib/pricing'
+import { REFUND_GUARANTEE_TEXT } from '@/lib/config'
 
 interface LockedOverlayProps {
     isOpen: boolean
@@ -48,17 +50,19 @@ function getSafeRedirectPath(path: string): string {
 /** فهرس فصول الكتاب للعرض في Paywall */
 const FIRST_CHAPTER = SECTION_REGISTRY.find(section => section.id === 'section-1')!
 const INTRO = SECTION_REGISTRY.find(section => section.id === 'intro')!
+const pagesOf = (id: string) => SECTION_REGISTRY.find(section => section.id === id)?.pageCount ?? 0
+// Levels 1–2 replaced book chapters 1–2 (2026-10-16/18); chapters 3–10 stay until levels 3–5 land.
 const BOOK_CHAPTERS: { num: number; title: string; pages: number; free: boolean; freeLabel?: string }[] = [
-    { num: 1, title: 'بتستخدمه صح (المستوى ١)', pages: FIRST_CHAPTER.pageCount, free: false },
-    { num: 2, title: 'تجربتك الأولى مع AI', pages: 18, free: false },
-    { num: 3, title: 'إطار GOLDS الاحترافي', pages: 18, free: false },
-    { num: 4, title: 'البرومبتات المتسلسلة', pages: 18, free: false },
-    { num: 5, title: 'الجودة والتصحيح', pages: 18, free: false },
-    { num: 6, title: 'AI متعدد الوسائط', pages: 18, free: false },
-    { num: 7, title: 'وكلاء AI والأتمتة', pages: 18, free: false },
-    { num: 8, title: 'RAG والبيانات', pages: 16, free: false },
-    { num: 9, title: 'تطبيقات عملية', pages: 16, free: false },
-    { num: 10, title: 'مستقبل AI', pages: 12, free: false },
+    { num: 1, title: 'المستوى 1: بتستخدمه صح', pages: FIRST_CHAPTER.pageCount, free: false },
+    { num: 2, title: 'المستوى 2: بتطلب زي المحترف', pages: pagesOf('section-2'), free: false },
+    { num: 3, title: 'الفصل 3: إطار GOLDS', pages: pagesOf('section-3'), free: false },
+    { num: 4, title: 'الفصل 4: الطلبات المتسلسلة', pages: pagesOf('section-4'), free: false },
+    { num: 5, title: 'الفصل 5: الجودة والتصحيح', pages: pagesOf('section-5'), free: false },
+    { num: 6, title: 'الفصل 6: صور وصوت وملفات', pages: pagesOf('section-6'), free: false },
+    { num: 7, title: 'الفصل 7: وكلاء AI والأتمتة', pages: pagesOf('section-7'), free: false },
+    { num: 8, title: 'الفصل 8: AI على ملفاتك وبياناتك', pages: pagesOf('section-8'), free: false },
+    { num: 9, title: 'الفصل 9: تطبيقات عملية', pages: pagesOf('section-9'), free: false },
+    { num: 10, title: 'الفصل 10: مستقبل AI', pages: pagesOf('section-10'), free: false },
 ]
 
 type UserStatus =
@@ -166,44 +170,44 @@ export default function LockedOverlay({
 
     switch (status) {
         case 'unauthenticated':
-            title = 'متابعة الكتاب تحتاج اشتراكًا'
+            title = 'عشان تكمّل، محتاج اشتراك'
             description = 'التمهيد مجاني. المستوى الأول وباقي الكورس والتمارين محتاجين اشتراك. سجّل دخولك لو مشترك، أو شوف الباقات قبل ما تشتري.'
-            actionLabel = 'تسجيل الدخول'
+            actionLabel = 'سجّل دخولك'
             showPaymentIcon = false
             showValueProps = true
             break
 
         case 'unpaid':
         case 'no_subscription':
-            title = 'أكملت المحتوى المجاني — جاهز تكمل؟'
-            description = 'التمهيد مجاني. اختار اشتراك عشان تبدأ المستوى الأول وتكمّل باقي الكورس والتمارين؛ المزايا الإضافية بتختلف حسب الباقة.'
-            actionLabel = 'اشترك الآن — حسب الباقة المختارة'
+            title = 'خلّصت الجزء المجاني. جاهز تكمّل؟'
+            description = 'اختار باقة عشان تبدأ المستوى الأول وتكمّل باقي الكورس والتمارين. المزايا الزيادة بتختلف من باقة للتانية.'
+            actionLabel = 'اشترك دلوقتي'
             showPaymentIcon = true
             showValueProps = true
             break
 
         case 'wrong_plan':
-            title = 'ترقِّ باقتك للوصول لهذه الميزة'
+            title = 'رقّي باقتك عشان تفتح الميزة دي'
             description = currentPlan
-                ? `باقتك الحالية لا تتضمن هذه الميزة. قم بالترقية للاستفادة الكاملة من جميع الأدوات والتمارين.`
-                : 'هذه الميزة متاحة في الباقات الأعلى فقط.'
-            actionLabel = 'ترقية الباقة'
+                ? 'باقتك الحالية مفيهاش الميزة دي. رقّيها وخد كل الأدوات والتمارين.'
+                : 'الميزة دي موجودة في الباقات الأعلى بس.'
+            actionLabel = 'رقّي الباقة'
             showPaymentIcon = true
             showValueProps = false
             break
 
         case 'expired':
-            title = 'جدّد اشتراكك للاستمرار'
-            description = 'اشتراكك قد انتهى. جدده الآن لمواصلة الوصول لجميع محتويات الكتاب والأدوات.'
-            actionLabel = 'تجديد الاشتراك'
+            title = 'جدّد اشتراكك عشان تكمّل'
+            description = 'اشتراكك خلص. جدّده دلوقتي وكمّل الكورس والأدوات من مكانك.'
+            actionLabel = 'جدّد الاشتراك'
             showPaymentIcon = true
             showValueProps = true
             break
 
         default:
-            title = 'أكمل القراءة'
-            description = 'يمكنك الآن الوصول لهذا المحتوى.'
-            actionLabel = 'متابعة'
+            title = 'كمّل'
+            description = 'المحتوى ده مفتوحلك دلوقتي.'
+            actionLabel = 'كمّل'
             showPaymentIcon = false
             showValueProps = false
     }
@@ -244,7 +248,46 @@ export default function LockedOverlay({
                         <h2 className="lock-title">{title}</h2>
                         <p className="lock-description">{description}</p>
 
-                        {/* إحصائيات المحتوى المتبقي */}
+                        {/* عرض الباقة الحالية إذا كان المستخدم لديه اشتراك */}
+                        {currentPlan && status === 'wrong_plan' && (
+                            <div style={{
+                                marginTop: '1rem',
+                                padding: '0.75rem',
+                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                                borderRadius: '8px',
+                                fontSize: '0.875rem'
+                            }}>
+                                <strong>باقتك الحالية:</strong>{' '}
+                                {planLabel(currentPlan)}
+                            </div>
+                        )}
+
+                        {/* أزرار الإجراء */}
+                        <div className="lock-actions">
+                            <button onClick={handleAction} className="lock-btn-primary">
+                                {actionLabel}
+                            </button>
+
+                            {status === 'unauthenticated' && (
+                                <Link href="/#pricing" className="lock-btn-secondary">
+                                    شوف الباقات والأسعار
+                                </Link>
+                            )}
+
+                            {/* ضمان الاسترداد */}
+                            {showValueProps && (
+                                <motion.div
+                                    className="lock-guarantee"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                >
+                                    <span>🛡️</span> {REFUND_GUARANTEE_TEXT}، من غير أسئلة
+                                </motion.div>
+                            )}
+                        </div>
+
+                        {/* What the subscription opens — under the buttons so they stay on the first screen of small phones */}
                         {showValueProps && (
                             <motion.div
                                 className="lock-value-stats"
@@ -254,11 +297,11 @@ export default function LockedOverlay({
                             >
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">📖</span>
-                                    <span>محتوى الكتاب والملاحق</span>
+                                    <span>المستوى 1 و2 وباقي الكورس</span>
                                 </div>
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">✏️</span>
-                                    <span>45 تمرين تفاعلي</span>
+                                    <span>{PRODUCT_STATS.exercises} تمرين تفاعلي</span>
                                 </div>
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">🛠️</span>
@@ -271,50 +314,9 @@ export default function LockedOverlay({
                             </motion.div>
                         )}
 
-                        {/* عرض الباقة الحالية إذا كان المستخدم لديه اشتراك */}
-                        {currentPlan && status === 'wrong_plan' && (
-                            <div style={{
-                                marginTop: '1rem',
-                                padding: '0.75rem',
-                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                                borderRadius: '8px',
-                                fontSize: '0.875rem'
-                            }}>
-                                <strong>باقتك الحالية:</strong>{' '}
-                                {currentPlan === 'basic' ? 'الباقة الأساسية' :
-                                 currentPlan === 'pro' ? 'الباقة الاحترافية' :
-                                 'الباقة المميزة'}
-                            </div>
-                        )}
-
-                        {/* أزرار الإجراء */}
-                        <div className="lock-actions">
-                            <button onClick={handleAction} className="lock-btn-primary">
-                                {actionLabel}
-                            </button>
-
-                            {status === 'unauthenticated' && (
-                                <Link href="/#pricing" className="lock-btn-secondary">
-                                    شاهد الباقات والأسعار
-                                </Link>
-                            )}
-
-                            {/* ضمان الاسترداد */}
-                            {showValueProps && (
-                                <motion.div
-                                    className="lock-guarantee"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.4 }}
-                                >
-                                    <span>🛡️</span> ضمان استرداد 30 يوم — بدون أسئلة
-                                </motion.div>
-                            )}
-
-                            <button onClick={handleBack} className="lock-btn-secondary">
-                                {isDirectAccess ? 'العودة للصفحات المجانية' : 'إلغاء'}
-                            </button>
-                        </div>
+                        <button onClick={handleBack} className="lock-btn-secondary lock-btn-back">
+                            {isDirectAccess ? 'ارجع للجزء المجاني' : 'رجوع'}
+                        </button>
 
                         {/* معاينة الفهرس — Section 1.3 */}
                         {showValueProps && (
@@ -330,7 +332,7 @@ export default function LockedOverlay({
                                     aria-expanded={showChapters}
                                 >
                                     <span>{showChapters ? '▼' : '◀'}</span>
-                                    <span>ماذا ستتعلم في باقي الكتاب؟</span>
+                                    <span>هتتعلّم إيه في باقي الكورس؟</span>
                                 </button>
 
                                 <AnimatePresence>
@@ -346,7 +348,7 @@ export default function LockedOverlay({
                                                 <li key={ch.num} className={`lock-chapter-item ${ch.free ? 'lock-chapter-free' : ''}`}>
                                                     <span className="lock-chapter-icon">{ch.free ? '🆓' : '📗'}</span>
                                                     <span className="lock-chapter-info">
-                                                        <span className="lock-chapter-title">الفصل {ch.num}: {ch.title}</span>
+                                                        <span className="lock-chapter-title">{ch.title}</span>
                                                         <span className="lock-chapter-meta">
                                                             {ch.pages} صفحة
                                                             {ch.freeLabel && <span className="lock-chapter-badge">{ch.freeLabel}</span>}

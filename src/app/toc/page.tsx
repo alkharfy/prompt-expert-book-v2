@@ -8,10 +8,15 @@ import { trackViewContent } from '@/lib/meta-pixel'
 import { trackViewItem, trackFunnelStep, trackCtaClick } from '@/lib/analytics'
 import Link from 'next/link'
 import { useBottomBarOffset } from '@/hooks/useBottomBarOffset'
+import { MONTHLY_PRICE_EGP, hasActivePlan } from '@/lib/pricing'
+import { useSubscription } from '@/context/SubscriptionContext'
 
 function StickyPurchaseBar() {
-    const [visible, setVisible] = useState(false)
+    const [scrolledPast, setVisible] = useState(false)
     const [dismissed, setDismissed] = useState(false)
+    // Members already paid: no buy bar for them
+    const { currentPlan, expiresAt, status } = useSubscription()
+    const visible = scrolledPast && !hasActivePlan({ plan_id: currentPlan, expires_at: expiresAt, status })
     const barRef = useBottomBarOffset(visible && !dismissed)
 
     useEffect(() => {
@@ -43,9 +48,9 @@ function StickyPurchaseBar() {
             zIndex: 100,
         }}>
             <span style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 600 }}>
-                تابع باقي الكتاب باشتراك سنوي
+                كمّل الكورس من {MONTHLY_PRICE_EGP} جنيه في الشهر
             </span>
-            <Link href="/#pricing" onClick={() => trackCtaClick('شاهد الباقات والأسعار', 'toc_sticky_bar')} style={{
+            <Link href="/#pricing" onClick={() => trackCtaClick('شوف الباقات', 'toc_sticky_bar')} style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -60,7 +65,7 @@ function StickyPurchaseBar() {
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
             }}>
-                شاهد الباقات والأسعار
+                شوف الباقات
             </Link>
             <button
                 onClick={() => setDismissed(true)}

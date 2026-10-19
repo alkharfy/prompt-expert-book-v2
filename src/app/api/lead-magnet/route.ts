@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     try {
         const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
         if (isRateLimited(ip)) {
-            return NextResponse.json({ error: 'حاول مرة أخرى لاحقاً' }, { status: 429 })
+            return NextResponse.json({ error: 'استنى شوية وجرّب تاني' }, { status: 429 })
         }
 
         const body = await request.json()
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
         // Basic email validation
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return NextResponse.json({ error: 'بريد إلكتروني غير صالح' }, { status: 400 })
+            return NextResponse.json({ error: 'الإيميل ده مش مكتوب صح' }, { status: 400 })
         }
 
         const supabase = getSupabaseAdmin()
@@ -107,6 +107,6 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ success: true, eventId })
     } catch {
-        return NextResponse.json({ error: 'حدث خطأ غير متوقع' }, { status: 500 })
+        return NextResponse.json({ error: 'حصلت مشكلة. جرّب تاني.' }, { status: 500 })
     }
 }

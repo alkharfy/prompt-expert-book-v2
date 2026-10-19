@@ -1,7 +1,8 @@
 export default function GlobalLoading() {
     return (
-        <div style={{
-            minHeight: '60vh',
+        // A full screen, so the footer doesn't flash in the middle and then jump away when the page arrives
+        <div role="status" aria-label="بنحمّل الصفحة" style={{
+            minHeight: 'calc(100vh - var(--header-h, 0px))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

@@ -2,16 +2,24 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BOOK_PAGES_DISPLAY } from '@/lib/config'
+import { SECTION_REGISTRY } from '@/config/sections'
+import { MONTHLY_PRICE_EGP, PRODUCT_STATS } from '@/lib/pricing'
 
-const techniques = [
-    '🎯 تكتب طلب واضح',
-    '🔍 تكشف الغلط وتراجع',
-    '📊 إكسل وتقارير',
-    '✉️ إيميلات ورسايل',
-    '🖼️ صور وفيديو',
-    '🧩 شغل كبير على مراحل',
-    '📋 95 قالب جاهز',
+const LIVE_LESSONS = SECTION_REGISTRY.filter(section => section.id === 'section-1' || section.id === 'section-2').reduce((total, section) => total + section.pageCount, 0)
+
+/** The public promise of each level (docs/curriculum/levels-2-5/map.md); only 1 and 2 are out. */
+const levels = [
+    { n: 1, name: 'بتستخدمه صح', open: true, result: 'تطلب شغل يتسلّم، وتعرف إمتى الـ AI بيألّف، وتراجع النتيجة بدليل قبل ما تسلّمها.' },
+    { n: 2, name: 'بتطلب زي المحترف', open: true, result: 'طلبات جاهزة لأكتر حاجات بتعملها، وتشتغل بالصور والفويس والملفات.' },
+    { n: 3, name: 'بتجهّزه لشغلك', open: false, result: 'تعلّمه طريقة شغلك مرة، فيعمل المهمة اللي بتتكرر من غير ما تشرح كل مرة.' },
+    { n: 4, name: 'بيشتغل معاك', open: false, result: 'تسلّمه مهمة فيها كذا خطوة، وتراقبه، وتوقّفه لو غلط.' },
+    { n: 5, name: 'نظام شغلك', open: false, result: 'طريقة شغل بالـ AI ليك أو لفريقك، وتقيس وفّرت قد إيه.' },
+]
+
+const tools = [
+    { icon: '📂', title: 'ملفات شغل مصرية', text: 'فواتير موردين، وكشف بنك، وشكاوى عملاء، وصور إيصالات. بتتمرّن على حاجة شبه شغلك، مش على أمثلة أجنبي.' },
+    { icon: '✅', title: '«المستر بيصحّح»', text: 'تلزق الطلب اللي كتبته، فيقولك إيه اللي ناقص فيه بالظبط، وتصلّحه قبل ما تستخدمه.' },
+    { icon: '🎒', title: '«شنطة طلباتك»', text: 'الطلب اللي يعجبك في الدروس تحفظه بضغطة في حسابك، وتنسخه في شغلك وقت ما تحتاجه.' },
 ]
 
 const industries = [
@@ -81,10 +89,10 @@ const industries = [
 ]
 
 const stats = [
-    { val: '10', label: 'فصول' },
-    { val: '95', label: 'قالب' },
-    { val: '45', label: 'تمرين' },
-    { val: String(BOOK_PAGES_DISPLAY), label: 'صفحة' },
+    { val: String(LIVE_LESSONS), label: 'درس متاح دلوقتي' },
+    { val: String(PRODUCT_STATS.exercises), label: 'تمرين' },
+    { val: String(PRODUCT_STATS.templates), label: 'قالب جاهز' },
+    { val: String(MONTHLY_PRICE_EGP), label: 'جنيه في الشهر' },
 ]
 
 /* Staggered children animation */
@@ -114,42 +122,43 @@ export default function WhatYouLearn() {
                     transition={{ duration: 0.6 }}
                     className="wyl-header"
                 >
-                    <span className="wyl-badge">📚 محتوى الكتاب</span>
-                    <h2 className="wyl-title">هتتعلم إيه؟</h2>
-                    <p className="wyl-sub">10 فصول للتعلّم والتطبيق، مع أمثلة للدراسة والعمل ومكتبة قوالب قابلة للتعديل.</p>
+                    <span className="wyl-badge">🪜 الكورس 5 مستويات</span>
+                    <h2 className="wyl-title">من كل مستوى بتطلع بحاجة في إيدك</h2>
+                    <p className="wyl-sub">كل درس فيه تمرين على ملف شغل حقيقي، وفي آخر كل مستوى مشروع صغير تقدر توريه لمديرك.</p>
                 </motion.div>
 
-                <div className="glass-card" style={{ padding: '24px', marginBottom: '28px', lineHeight: 1.9 }}>
-                    <h3>مثال من المحتوى: من ملاحظات اجتماع إلى خطوات واضحة</h3>
-                    <p><strong>الملاحظات:</strong> اتفق الفريق أن سارة تجهّز مسودة الإعلان يوم الثلاثاء، وأحمد يراجع الميزانية يوم الأربعاء.</p>
-                    <p><strong>البرومبت:</strong> حوّل هذه الملاحظات إلى جدول: المهمة، المسؤول، الموعد. استخدم المعلومات المذكورة فقط، وحدّد أي معلومة ناقصة.</p>
-                    <p><strong>مثال النتيجة:</strong> مسودة الإعلان — سارة — الثلاثاء. مراجعة الميزانية — أحمد — الأربعاء.</p>
-                    <p>تراجع النتيجة ثم تعدّل القالب ليناسب اجتماعك. النتائج تتغير حسب الأداة ودقة المعلومات.</p>
+                <ol className="wyl-levels" aria-label="مستويات الكورس">
+                    {levels.map(level => (
+                        <li key={level.n} className={`wyl-level${level.open ? ' wyl-level-open' : ''}`}>
+                            <span className="wyl-level-n" aria-hidden="true">{level.n}</span>
+                            <div>
+                                <p className="wyl-level-name">
+                                    المستوى {level.n}: {level.name}
+                                    <span className={`wyl-level-tag${level.open ? ' on' : ''}`}>{level.open ? 'متاح دلوقتي' : 'بينزل قريب'}</span>
+                                </p>
+                                <p className="wyl-level-result">{level.result}</p>
+                            </div>
+                        </li>
+                    ))}
+                </ol>
+                <p className="wyl-note">ولحد ما المستويات 3–5 تنزل، الفصول 3–10 من كتاب PromptMaster مفتوحة للمشتركين.</p>
+
+                <p className="wyl-section-label">حاجات مش هتلاقيها في فيديو على يوتيوب</p>
+                <div className="wyl-tools">
+                    {tools.map(tool => (
+                        <div key={tool.title} className="wyl-tool glass-card">
+                            <span className="wyl-tool-icon" aria-hidden="true">{tool.icon}</span>
+                            <p className="wyl-tool-title">{tool.title}</p>
+                            <p className="wyl-tool-text">{tool.text}</p>
+                        </div>
+                    ))}
                 </div>
 
-                {/* Section Label: Techniques */}
-                <motion.p
-                    className="wyl-section-label"
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                >
-                    هتقدر تعمل إيه
-                </motion.p>
-
-                {/* Core Techniques — staggered */}
-                <motion.div
-                    className="wyl-techs"
-                    variants={containerVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                >
-                    {techniques.map((t, i) => (
-                        <motion.span key={i} className="wyl-tech" variants={childVariants}>{t}</motion.span>
-                    ))}
-                </motion.div>
+                <div className="glass-card wyl-example">
+                    <p className="wyl-example-label">مثال من المستوى 2: صورة إيصالات</p>
+                    <p><strong>الطلب:</strong> «دي صورة 3 إيصالات مصروفات. طلّعلي جدول: التاريخ، المكان، المبلغ. لو رقم مش واضح اكتب [مش واضح] ومتخمّنش.»</p>
+                    <p><strong>اللي بتتعلّمه:</strong> إيصال البنزين رقمه باهت، والأداة ممكن تكتب رقم من عندها بثقة. الجملة الأخيرة بتطلب منها تقول «مش واضح» بدل ما تخمّن، وبرضه بتطابق كل رقم بالإيصال قبل ما تعتمده.</p>
+                </div>
 
                 {/* Divider */}
                 <div className="wyl-divider" />
@@ -279,10 +288,10 @@ export default function WhatYouLearn() {
                 /* Section Labels */
                 .wyl-section-label {
                     text-align: center;
-                    font-size: 0.75rem;
-                    font-weight: 600;
-                    letter-spacing: 0.06em;
-                    color: rgba(255, 255, 255, 0.35);
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    letter-spacing: 0;
+                    color: rgba(255, 255, 255, 0.6);
                     text-transform: uppercase;
                     margin-bottom: 14px;
                 }
@@ -511,7 +520,28 @@ export default function WhatYouLearn() {
                     .wyl-tabs { gap: 6px 5px; }
                     .wyl-tab { padding: 5px 10px; font-size: 0.72rem; }
                 }
-            `}</style>
+            
+                /* Levels ladder */
+                .wyl-levels { list-style: none; margin: 0 auto 10px; padding: 0; max-width: 720px; display: grid; gap: 10px; }
+                .wyl-level { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
+                .wyl-level-open { background: rgba(255,107,53,0.07); border-color: rgba(255,107,53,0.35); }
+                .wyl-level-n { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; background: #333; }
+                .wyl-level-open .wyl-level-n { background: linear-gradient(135deg, #FF6B35, #FF8C42); }
+                .wyl-level-name { margin: 0 0 4px; font-weight: 800; color: #fff; font-size: 1.02rem; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+                .wyl-level-tag { font-size: 0.8rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; color: #aaa; border: 1px solid rgba(255,255,255,0.15); }
+                .wyl-level-tag.on { color: #4ade80; border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.08); }
+                .wyl-level-result { margin: 0; color: rgba(255,255,255,0.72); line-height: 1.8; font-size: 0.95rem; }
+                .wyl-note { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.88rem; margin: 0 auto 30px; max-width: 560px; line-height: 1.8; }
+                .wyl-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 0 auto 24px; max-width: 900px; }
+                .wyl-tool { padding: 18px; text-align: center; }
+                .wyl-tool-icon { font-size: 1.8rem; }
+                .wyl-tool-title { margin: 8px 0 6px; font-weight: 800; color: #fff; }
+                .wyl-tool-text { margin: 0; color: rgba(255,255,255,0.65); line-height: 1.8; font-size: 0.92rem; }
+                .wyl-example { padding: 20px 22px; margin: 0 auto 28px; max-width: 720px; line-height: 1.9; }
+                .wyl-example p { margin: 0 0 8px; color: rgba(255,255,255,0.8); }
+                .wyl-example-label { color: #FFB800 !important; font-weight: 800; }
+                @media (max-width: 768px) { .wyl-tools { grid-template-columns: 1fr; } }
+`}</style>
         </section>
     )
 }

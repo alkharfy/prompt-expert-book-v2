@@ -64,12 +64,12 @@ function LoginContent() {
                     firebaseError.code === 'auth/user-not-found' ||
                     firebaseError.code === 'auth/invalid-credential'
                 ) {
-                    return { ok: false, reason: 'invalid' as const, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' }
+                    return { ok: false, reason: 'invalid' as const, error: 'الإيميل أو الباسورد مش صح' }
                 }
                 if (firebaseError.code === 'auth/too-many-requests') {
-                    return { ok: false, reason: 'invalid' as const, error: 'تم تجاوز عدد المحاولات. يرجى الانتظار قليلاً' }
+                    return { ok: false, reason: 'invalid' as const, error: 'محاولات كتير. استنى شوية وجرّب تاني' }
                 }
-                return { ok: false, reason: 'invalid' as const, error: 'حدث خطأ أثناء تسجيل الدخول' }
+                return { ok: false, reason: 'invalid' as const, error: 'حصلت مشكلة في الدخول. جرّب تاني' }
             }
 
             // Step 2: Call server-side login API (creates session + sets httpOnly cookies)
@@ -90,10 +90,10 @@ function LoginContent() {
             if (result.ok) {
                 return { ok: true }
             } else {
-                return { ok: false, reason: 'invalid' as const, error: result.error || 'فشل تسجيل الدخول' }
+                return { ok: false, reason: 'invalid' as const, error: result.error || 'مقدرناش ندخّلك. جرّب تاني' }
             }
         } catch (err: any) {
-            return { ok: false, reason: 'invalid' as const, error: 'حدث خطأ أثناء تسجيل الدخول' }
+            return { ok: false, reason: 'invalid' as const, error: 'حصلت مشكلة في الدخول. جرّب تاني' }
         }
     }
 
@@ -156,15 +156,15 @@ function LoginContent() {
 
         // Validation
         if (!sanitizedEmail || !sanitizedPassword) {
-            setError('يرجى ملء جميع الحقول')
+            setError('اكتب الإيميل والباسورد')
             return
         }
         if (!isValidEmail(sanitizedEmail)) {
-            setError('بريد إلكتروني غير صالح')
+            setError('الإيميل ده مش مكتوب صح')
             return
         }
         if (sanitizedPassword.length < 6) {
-            setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل')
+            setError('الباسورد لازم يبقى 6 حروف أو أكتر')
             return
         }
 
@@ -178,7 +178,7 @@ function LoginContent() {
             window.location.href = nextPath
             return
         } else {
-            setError(result.error || 'البريد الإلكتروني أو كلمة المرور غير صحيحة')
+            setError(result.error || 'الإيميل أو الباسورد مش صح')
         }
     }
 
@@ -187,8 +187,8 @@ function LoginContent() {
             <Navigation />
 
             <AuthCard
-                title="تسجيل الدخول"
-                subtitle="أهلاً بك مجدداً في رحلتك التعليمية"
+                title="سجّل دخول"
+                subtitle="أهلاً بيك تاني. كمّل من مكانك"
             >
                 {error && <div id="login-error" className="auth-global-error" role="alert">{error}</div>}
 
@@ -283,7 +283,7 @@ function LoginContent() {
                             }
                         } catch {
                             setIsGoogleLoading(false)
-                            setError('حدث خطأ أثناء تسجيل الدخول بـ Google')
+                            setError('حصلت مشكلة في الدخول بـ Google. جرّب تاني')
                         }
                     }}
                     disabled={isGoogleLoading || isLoading}
@@ -298,7 +298,7 @@ function LoginContent() {
                                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                             </svg>
-                            <span>الدخول بحساب Google</span>
+                            <span>ادخل بحساب Google</span>
                         </>
                     )}
                 </button>
@@ -310,7 +310,7 @@ function LoginContent() {
                 <form id="login-form" className="auth-form" onSubmit={handleSubmit}>
                     <AuthInput
                         id="login-email"
-                        label="البريد الإلكتروني"
+                        label="الإيميل"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -320,7 +320,7 @@ function LoginContent() {
 
                     <AuthInput
                         id="login-password"
-                        label="كلمة المرور"
+                        label="الباسورد"
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -329,7 +329,7 @@ function LoginContent() {
                     />
 
                     <div className="auth-forgot-password">
-                        <Link href="/forgot-password">هل نسيت كلمة السر؟</Link>
+                        <Link href="/forgot-password">نسيت الباسورد؟</Link>
                     </div>
 
                     <button
@@ -345,9 +345,9 @@ function LoginContent() {
                 )}
 
                 <div className="auth-footer">
-                    <span>ليس لديك حساب؟ </span>
+                    <span>معندكش حساب؟ </span>
                     <Link id="register-link" href={`/register${nextPath !== '/toc' ? `?next=${encodeURIComponent(nextPath)}` : ''}`}>
-                        إنشاء حساب جديد
+                        اعمل حساب ببلاش
                     </Link>
                 </div>
             </AuthCard>

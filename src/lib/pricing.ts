@@ -1,22 +1,27 @@
 /** Public prices come only from the admin-managed plans table. */
 
-import { PLAN_FEATURES, FEATURE_NAMES } from './features'
 import type { PlanId } from '@/types/subscription'
 import { SECTION_REGISTRY } from '@/config/sections'
 import { BOOK_PAGES_DISPLAY } from '@/lib/config'
 
 // Estimates for internal reports only. Public prices always come from the API.
-export const FALLBACK_PLAN_PRICES: Record<string, number> = { basic: 299, pro: 499, vip: 999 }
-export const PLAN_NAMES_AR: Record<string, string> = { basic: 'الأساسية', pro: 'المتقدمة', vip: 'VIP' }
-export const PLAN_ORDER: Record<string, number> = { basic: 1, pro: 2, vip: 3 }
+export const FALLBACK_PLAN_PRICES: Record<string, number> = { monthly: 100, basic: 299, pro: 499, vip: 999 }
+export const PLAN_NAMES_AR: Record<string, string> = { monthly: 'الشهري', basic: 'الأساسية', pro: 'المتقدمة', vip: 'VIP' }
+/** Rank for upgrades. The monthly plan sits under every yearly plan but is never "upgraded": moving to a yearly plan is a new purchase. */
+export const PLAN_ORDER: Record<string, number> = { monthly: 0, basic: 1, pro: 2, vip: 3 }
 
-/** Live online lectures per month, for the whole subscription year (owner decision 2026-10-16). */
-export const LIVE_LECTURES_PER_MONTH: Record<PlanId, number> = { basic: 1, pro: 2, vip: 4 }
+/** Name to show for any stored plan id (never guess «VIP» for an id we don't know). */
+export function planLabel(id: string | null | undefined): string {
+  return id && PLAN_NAMES_AR[id] ? PLAN_NAMES_AR[id] : 'باقتك'
+}
+
+/** Live online lectures per month (owner decisions 2026-10-16 and 2026-10-18: none in the monthly plan). */
+export const LIVE_LECTURES_PER_MONTH: Record<PlanId, number> = { monthly: 0, basic: 1, pro: 2, vip: 4 }
 
 export function liveLecturesLabel(id: PlanId): string {
   const count = LIVE_LECTURES_PER_MONTH[id]
-  const lectures = count === 1 ? 'محاضرة أونلاين مباشرة' : count === 2 ? 'محاضرتان أونلاين مباشرتان' : `${count} محاضرات أونلاين مباشرة`
-  return `${lectures} كل شهر طوال سنة الاشتراك`
+  const lectures = count === 1 ? 'محاضرة أونلاين مباشرة' : count === 2 ? 'محاضرتين أونلاين مباشرين' : `${count} محاضرات أونلاين مباشرة`
+  return `${lectures} كل شهر طول السنة`
 }
 
 /** The "full book for 5 EGP" intro offer (promo code AI56, discount_type 'fixed_final'). */
@@ -32,6 +37,14 @@ export const PRODUCT_STATS = {
     + (section.id === 'intro' ? section.pageCount : Math.min(section.freePageLimit, section.pageCount)), 0),
 } as const
 
+/** «المستر بيصحّح» checks per subscriber per 24 hours; src/app/api/grade enforces this same constant. */
+export const GRADER_DAILY_LIMIT = 10
+
+/** The monthly price said in copy (hero, FAQ, buttons). Change it together with the plans row (admin) and the migration. */
+export const MONTHLY_PRICE_EGP = 100
+
+const hasOwn = (object: object, key: string) => Object.prototype.hasOwnProperty.call(object, key)
+
 export interface PublicPricingPlan {
   id: PlanId
   name: string
@@ -40,42 +53,115 @@ export interface PublicPricingPlan {
   features: string[]
   features_ar: string[]
   duration: string
+  /** «شهر» or «سنة», for «/ شهر» next to the price */
+  period: 'شهر' | 'سنة'
   is_popular: boolean
   description: string
   cta_link: string
   cta_text: string
 }
 
+/** What every plan opens: the course itself, said as results, not page counts. */
+export const COURSE_OUTCOMES: string[] = [
+  'المستوى 1 والمستوى 2 كاملين دلوقتي، والمستويات 3–5 أول ما تنزل',
+  'تمارين على ملفات شغل مصرية: فواتير، كشف بنك، شكاوى عملاء',
+  `«المستر بيصحّح» طلباتك ويقولك تصلّح إيه: لحد ${GRADER_DAILY_LIMIT} مرات كل 24 ساعة`,
+  '«شنطة طلباتك»: تحفظ فيها الطلبات اللي كتبتها، وتنسخها في شغلك',
+  `${PRODUCT_STATS.exercises} تمرين و${PRODUCT_STATS.templates} قالب جاهز`,
+]
+
+const PLAN_COPY: Record<PlanId, { description: string; features: string[]; cta: string }> = {
+  monthly: {
+    description: 'الكورس كله بسعر شهر. ابدأ النهارده وكمّل على راحتك.',
+    features: [...COURSE_OUTCOMES, 'من غير تجديد تلقائي: بتدفع الشهر اللي عايزه بس'],
+    cta: `ابدأ بـ${MONTHLY_PRICE_EGP} جنيه`,
+  },
+  basic: {
+    description: 'الكورس كله سنة كاملة، ومعاه محاضرة مباشرة كل شهر.',
+    features: ['كل اللي في الشهري، لمدة سنة', liveLecturesLabel('basic')],
+    cta: 'اختار الأساسية',
+  },
+  pro: {
+    description: 'للي عايز متابعة أكتر وشهادة في الآخر.',
+    features: ['كل اللي في الأساسية', liveLecturesLabel('pro'), 'شهادة إتمام من PromptMaster', 'أدوات البرومبت: تشخيص طلبك لحد 10 مرات كل 24 ساعة', 'الإنجازات وترتيب المتعلمين'],
+    cta: 'اختار المتقدمة',
+  },
+  vip: {
+    description: 'للي عايز حد يسأله وهو شغال.',
+    features: ['كل اللي في المتقدمة', liveLecturesLabel('vip'), 'المساعد الذكي: لحد 30 رسالة في اليوم تسأله في شغلك'],
+    cta: 'اختار VIP',
+  },
+}
+
+/** The card bullets for one plan, for places that list plans outside the pricing cards. */
+export function planCopyFeatures(id: PlanId): string[] {
+  return [...PLAN_COPY[id].features]
+}
+
 export function normalizePricingPlans(rows: unknown): PublicPricingPlan[] {
   if (!Array.isArray(rows) || rows.length === 0) throw new Error('تعذّر تحميل الأسعار الحالية. حاول مرة أخرى.')
   const seen = new Set<string>()
-  return rows.map(row => {
-    if (!row || typeof row !== 'object' || !['basic', 'pro', 'vip'].includes(row.id)
-      || seen.has(row.id) || !['number', 'string'].includes(typeof row.price) || !Number.isFinite(Number(row.price)) || Number(row.price) <= 0) {
+  const plans: PublicPricingPlan[] = []
+  for (const row of rows) {
+    // A plan this code doesn't know (added to the table before a deploy) is skipped, never shown half-built.
+    if (!row || typeof row !== 'object' || typeof row.id !== 'string' || !hasOwn(PLAN_COPY, row.id)) continue
+    if (seen.has(row.id) || !['number', 'string'].includes(typeof row.price) || !Number.isFinite(Number(row.price)) || Number(row.price) <= 0) {
       throw new Error('تعذّر التحقق من أسعار الباقات. حاول مرة أخرى.')
     }
     seen.add(row.id)
     const id = row.id as PlanId
-    const features = PLAN_FEATURES[id].map(feature => {
-      if (feature === 'reading') return `${PRODUCT_STATS.readingPages} صفحة تعليمية تشمل الملاحق`
-      if (feature === 'library') return `${PRODUCT_STATS.templates} قالب برومبت جاهز للتعديل`
-      if (feature === 'exercises') return `${PRODUCT_STATS.exercises} تمرينًا تفاعليًا`
-      if (feature === 'certificate') return 'شهادة إتمام من PromptMaster'
-      if (feature === 'tools') return 'أدوات البرومبت؛ تشخيص AI حتى 10 مرات خلال 24 ساعة'
-      if (feature === 'chat') return 'المحادثة الذكية حتى 30 رسالة خلال 24 ساعة'
-      return FEATURE_NAMES[feature]
-    })
-    features.splice(1, 0, liveLecturesLabel(id))
-    features.push('وصول لمدة سنة؛ التحديثات المتاحة مشمولة خلال الاشتراك')
-    return {
+    const copy = PLAN_COPY[id]
+    const monthly = id === 'monthly'
+    // «كل اللي في الشهري» only makes sense next to a monthly card
+    const features = id === 'basic' && !rows.some(r => r && (r as { id?: unknown }).id === 'monthly')
+      ? [...COURSE_OUTCOMES, liveLecturesLabel('basic')]
+      : copy.features
+    plans.push({
       id, name: PLAN_NAMES_AR[id], name_ar: PLAN_NAMES_AR[id], price: Number(row.price),
-      features, features_ar: features, duration: 'سنة', is_popular: id === 'basic',
-      description: id === 'basic' ? 'الكتاب والتمارين والقوالب لتبدأ التطبيق على الدراسة والعمل.'
-        : id === 'pro' ? 'الأساسية مع أدوات البرومبت والإنجازات وشهادة الإتمام.'
-        : 'المتقدمة مع المحادثة الذكية للمساعدة في التعلّم والتطبيق.',
-      cta_link: `/payment?plan=${id}`, cta_text: id === 'basic' ? 'ابدأ بالأساسية' : `اختر ${PLAN_NAMES_AR[id]}`,
-    }
-  }).sort((a, b) => PLAN_ORDER[a.id] - PLAN_ORDER[b.id])
+      features, features_ar: features,
+      duration: monthly ? 'شهر' : 'سنة', period: monthly ? 'شهر' : 'سنة',
+      is_popular: monthly,
+      description: copy.description,
+      cta_link: `/payment?plan=${id}`, cta_text: copy.cta,
+    })
+  }
+  if (!plans.length) throw new Error('تعذّر التحقق من أسعار الباقات. حاول مرة أخرى.')
+  return plans.sort((a, b) => PLAN_ORDER[a.id] - PLAN_ORDER[b.id])
+}
+
+/** 100 EGP is already the entry price: a promo code works on the monthly plan only when the admin listed it for 'monthly'. */
+export function promoAppliesToPlan(allowedPlans: string[] | null | undefined, planId: string): boolean {
+  if (planId === 'monthly') return !!allowedPlans?.includes('monthly')
+  return !allowedPlans?.length || allowedPlans.includes(planId)
+}
+
+/**
+ * What buying `target` means for someone whose current term is `current`:
+ * - 'new'      no active plan
+ * - 'renew'    an active monthly plan, buying another month (the month is added after the current one)
+ * - 'switch'   an active monthly plan, buying a yearly plan at its full price (the year starts after the current month)
+ * - 'upgrade'  an active yearly plan, moving to a higher yearly plan (pays the difference, keeps the end date)
+ * - 'blocked'  an active yearly plan, buying the same/lower plan or the monthly one
+ */
+/** A paid term running right now, on any plan. */
+export function hasActivePlan(
+  current: { plan_id: string | null; expires_at: string | null; status: string | null } | null,
+  now = Date.now(),
+): boolean {
+  return !!current?.plan_id && current.status === 'active' && !!current.expires_at && new Date(current.expires_at).getTime() > now
+}
+
+export function checkoutKind(
+  current: { plan_id: string | null; expires_at: string | null; status: string | null } | null,
+  target: string,
+  now = Date.now(),
+): 'new' | 'renew' | 'switch' | 'upgrade' | 'blocked' {
+  const active = hasActivePlan(current, now)
+  // No running term, or one on a plan id this code doesn't know (sell normally; activation stacks it)
+  if (!active || !hasOwn(PLAN_ORDER, current!.plan_id!)) return 'new'
+  if (current!.plan_id === 'monthly') return target === 'monthly' ? 'renew' : 'switch'
+  if (target === 'monthly') return 'blocked'
+  return PLAN_ORDER[target] > PLAN_ORDER[current!.plan_id!] ? 'upgrade' : 'blocked'
 }
 
 export async function fetchPricingPlans(): Promise<PublicPricingPlan[]> {

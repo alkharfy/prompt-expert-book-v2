@@ -106,6 +106,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
 
     const [isAuthed, setIsAuthed] = useState(initialAuthed)
     const [hasPaid, setHasPaid] = useState(initialHasAccess) // server-resolved; fail-closed (no optimistic unlock)
+    const [completedChapters, setCompletedChapters] = useState<number[] | null>(null) // course map ✓ only for finished stops
     const [isLockOverlayOpen, setIsLockOverlayOpen] = useState(false)
     const [isDirectAccess, setIsDirectAccess] = useState(false)
     const [claimedRewards, setClaimedRewards] = useState<string[]>([])
@@ -203,6 +204,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                 if (result.valid) {
                     const paid = result.hasPaid ?? false
                     setHasPaid(paid)
+                    authSystem.getDetailedProgress()
+                        .then(progress => { if (progress) setCompletedChapters(progress.completedChapters) })
+                        .catch(() => {})
 
                     // If unpaid and on a non-free page, show lock overlay
                     if (!paid && !isIntro) {
@@ -591,7 +595,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
     }
 
     const mapAtBottom = config.id === 'intro'
-    const courseMap = <CourseMap sectionId={config.id} chapterLabel={config.chapterLabel} pageNum={pageNum} pageCount={totalPages} pages={data} />
+    const courseMap = <CourseMap sectionId={config.id} chapterLabel={config.chapterLabel} pageNum={pageNum} pageCount={totalPages} pages={data} completedChapters={completedChapters} />
 
     const hasPageImage = currentPage.image || currentPage.contentBlocks.some((b) => b.type === 'image')
 
@@ -1407,7 +1411,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
 
                     <div style={{ textAlign: 'center', marginTop: '40px' }}>
                         <Link href="/toc" style={{ color: '#b0b0b0', textDecoration: 'none', fontSize: '0.9rem' }}>
-                            العودة إلى الفهرس
+                            ارجع للفهرس
                         </Link>
                     </div>
                 </div>

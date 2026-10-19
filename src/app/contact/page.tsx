@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { SUPPORT_EMAIL } from '@/lib/config'
+import Navigation from '@/components/Navigation'
+import { SUPPORT_EMAIL, SUPPORT_WHATSAPP_DISPLAY, supportWhatsAppUrl } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'تواصل معنا',
-  description: 'تواصل مع فريق PromptMaster عبر البريد الإلكتروني للدعم والاستفسارات والفوترة.',
+  description: 'كلّم خدمة عملاء PromptMaster على واتساب أو الإيميل: الاشتراك، والدفع، والدروس.',
 }
 
 const page: React.CSSProperties = {
@@ -37,43 +38,43 @@ const emailLink: React.CSSProperties = {
 
 export default function ContactPage() {
   return (
-    <main style={page}>
-      <h1 style={h1}>تواصل معنا</h1>
-      <p style={lead}>نحن هنا لمساعدتك</p>
+    <>
+      <Navigation />
+      <main style={page}>
+        <h1 style={h1}>كلّمنا</h1>
+        <p style={lead}>خدمة العملاء موجودة تساعدك في الاشتراك والدفع والدروس.</p>
 
-      <p style={p}>
-        لأي استفسار حول المحتوى أو الاشتراك أو الفوترة أو الدعم الفني، أسهل طريقة للوصول
-        إلينا هي عبر البريد الإلكتروني. اكتب لنا بالتفصيل وسنردّ عليك في أقرب وقت.
-      </p>
+        <a href={supportWhatsAppUrl()} target="_blank" rel="noopener noreferrer" style={{ ...emailBox, borderColor: 'rgba(74,222,128,0.45)' }}>
+          <span style={{ display: 'block', color: '#888', fontSize: '13px', marginBottom: '8px' }}>
+            الأسرع: واتساب خدمة العملاء
+          </span>
+          <span style={{ ...emailLink, color: '#4ade80' }} dir="ltr">{SUPPORT_WHATSAPP_DISPLAY}</span>
+          <span style={{ display: 'block', color: '#aaa', fontSize: '14px', marginTop: '8px' }}>اضغط هنا ويفتحلك الواتساب على طول</span>
+        </a>
 
-      <a href={`mailto:${SUPPORT_EMAIL}`} style={emailBox}>
-        <span style={{ display: 'block', color: '#888', fontSize: '13px', marginBottom: '8px' }}>
-          البريد الإلكتروني للدعم
-        </span>
-        <span style={emailLink}>{SUPPORT_EMAIL}</span>
-      </a>
+        <a href={`mailto:${SUPPORT_EMAIL}`} style={emailBox}>
+          <span style={{ display: 'block', color: '#888', fontSize: '13px', marginBottom: '8px' }}>
+            أو ابعت إيميل
+          </span>
+          <span style={emailLink}>{SUPPORT_EMAIL}</span>
+        </a>
 
-      <h2 style={h2}>وقت الرد المتوقع</h2>
-      <p style={p}>
-        نسعى للرد على جميع الرسائل خلال <strong>24 إلى 48 ساعة</strong> في أيام العمل.
-        لتسريع المساعدة، يرجى تضمين بريدك المسجَّل ورقم الطلب إن وُجد، ووصفاً واضحاً
-        لاستفسارك.
-      </p>
+        <h2 style={h2}>عشان نساعدك أسرع</h2>
+        <p style={p}>
+          ابعت الإيميل اللي سجّلت بيه، ولو المشكلة في الدفع ابعت رقم العملية أو صورة من رسالة الدفع.
+          ومتبعتش الباسورد بتاعك أو بيانات الكارت لأي حد، حتى لو قال إنه من عندنا.
+        </p>
 
-      <h2 style={h2}>روابط قد تفيدك</h2>
-      <p style={p}>
-        قبل مراسلتنا، ربما تجد إجابتك في إحدى هاتين الصفحتين:
-      </p>
-      <ul style={{ ...p, paddingInlineStart: '22px' }}>
-        <li>
-          <a href="/refund-policy" style={link}>سياسة الاسترداد</a> — تفاصيل ضمان الاسترداد
-          خلال 30 يوماً وكيفية تقديم الطلب.
-        </li>
-        <li>
-          <a href="/terms" style={link}>الشروط والأحكام</a> — معلومات الاشتراك والأسعار
-          والترخيص وشروط الحساب.
-        </li>
-      </ul>
-    </main>
+        <h2 style={h2}>ممكن تلاقي إجابتك هنا</h2>
+        <ul style={{ ...p, paddingInlineStart: '22px' }}>
+          <li>
+            <a href="/refund-policy" style={link}>سياسة الاسترداد</a>: ترجّع فلوسك خلال 7 أيام في الشهري و30 يوم في السنوي، وإزاي تطلب ده.
+          </li>
+          <li>
+            <a href="/terms" style={link}>الشروط والأحكام</a>: الاشتراك والأسعار وشروط الحساب.
+          </li>
+        </ul>
+      </main>
+    </>
   )
 }

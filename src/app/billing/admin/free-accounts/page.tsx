@@ -12,7 +12,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 
-type PlanId = 'basic' | 'pro' | 'vip'
+type PlanId = 'monthly' | 'basic' | 'pro' | 'vip'
 
 interface FreeAccount {
     id: string
@@ -33,7 +33,7 @@ interface CreatedAccount {
     existingAccount: boolean
 }
 
-const PLAN_LABELS: Record<PlanId, string> = { basic: 'أساسية', pro: 'احترافية', vip: 'مميزة (VIP)' }
+const PLAN_LABELS: Record<PlanId, string> = { monthly: 'شهري', basic: 'أساسية', pro: 'احترافية', vip: 'مميزة (VIP)' }
 const DURATIONS = [
     { days: 30, label: '30 يوم' },
     { days: 90, label: '3 شهور' },

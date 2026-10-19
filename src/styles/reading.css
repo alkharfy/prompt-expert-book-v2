@@ -155,8 +155,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-bottom: 20px;
+  margin: 18px 0 14px;
   text-align: start;
+}
+
+.lock-btn-back {
+  display: block;
+  width: 100%;
 }
 
 .lock-stat-item {
@@ -967,5 +972,27 @@ kbd.search-shortcut {
   .reading-font-large p,
   .reading-font-large .option-text {
     font-size: 1.15rem !important;
+  }
+}
+
+/* Prompts the learner copies: readable size, the normal Arabic font, each line in its own direction,
+   and room above the text for the copy button (layout.css shrinks code to 0.7rem and drops the top padding on phones) */
+.code-block-wrapper .code-block {
+  padding-top: 52px !important;
+}
+.code-block-wrapper .code-block pre,
+.code-block-wrapper .code-block code {
+  font-family: var(--font-primary), 'Courier New', monospace;
+  font-size: 0.95rem !important;
+  line-height: 1.9 !important;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
+  text-align: start;
+  text-shadow: none;
+}
+@media (max-width: 768px) {
+  .code-block-wrapper .copy-button span {
+    display: inline;
   }
 }

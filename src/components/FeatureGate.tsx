@@ -93,6 +93,7 @@ export default function FeatureGate({
 
 function getPlanDisplayName(planId: string): string {
   const names: Record<string, string> = {
+    monthly: 'الاشتراك الشهري',
     basic: 'الباقة الأساسية',
     pro: 'الباقة الاحترافية',
     vip: 'الباقة المميزة',

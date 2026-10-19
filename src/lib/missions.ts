@@ -135,8 +135,10 @@ export async function generateDailyMissions(
         const filteredTemplates = allTemplates.filter(t => {
             if (!t.requires_plan) return true // مجاني
             if (!userPlan) return false // المستخدم بلا باقة
+            // The monthly plan opens the same content as basic
             const planOrder = ['basic', 'pro', 'vip']
-            return planOrder.indexOf(userPlan) >= planOrder.indexOf(t.requires_plan)
+            const rank = (plan: string) => planOrder.indexOf(plan === 'monthly' ? 'basic' : plan)
+            return rank(userPlan) >= rank(t.requires_plan)
         })
 
         if (filteredTemplates.length < 3) {

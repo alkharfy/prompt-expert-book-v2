@@ -5,7 +5,8 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { checkRateLimitAsync, getClientIP, RATE_LIMITS } from '@/lib/rate-limit'
 import { dbLogger } from '@/lib/logger'
-import { applyPromoDiscount } from '@/lib/pricing'
+import { applyPromoDiscount, promoAppliesToPlan } from '@/lib/pricing'
+import { PLAN_IDS } from '@/types/subscription'
 
 /**
  * POST /api/promo/validate - Validate a promo code and calculate discount
@@ -31,8 +32,8 @@ export async function POST(request: NextRequest) {
         // استخراج userId من cookies بدلاً من body لمنع الانتحال
         const userId = await getAuthenticatedUser({ skipActiveCheck: true })
 
-        if (typeof code !== 'string' || !code.trim() || typeof planId !== 'string' || !['basic', 'pro', 'vip'].includes(planId) || isUpgrade != null && typeof isUpgrade !== 'boolean') {
-            return NextResponse.json({ valid: false, error: 'بيانات ناقصة' }, { status: 400 })
+        if (typeof code !== 'string' || !code.trim() || typeof planId !== 'string' || !(PLAN_IDS as readonly string[]).includes(planId) || isUpgrade != null && typeof isUpgrade !== 'boolean') {
+            return NextResponse.json({ valid: false, error: 'اكتب الكود الأول' }, { status: 400 })
         }
 
         const cleanCode = code.trim().toUpperCase()
@@ -47,28 +48,26 @@ export async function POST(request: NextRequest) {
             .single()
 
         if (promoError || !promo) {
-            return NextResponse.json({ valid: false, error: 'كود الخصم غير صحيح أو غير نشط' })
+            return NextResponse.json({ valid: false, error: 'الكود ده مش صحيح أو مش شغال دلوقتي' })
         }
 
         // 2. التحقق من تاريخ الصلاحية
         const now = new Date()
         if (promo.starts_at && new Date(promo.starts_at) > now) {
-            return NextResponse.json({ valid: false, error: 'كود الخصم لم يبدأ بعد' })
+            return NextResponse.json({ valid: false, error: 'الكود ده لسه مبدأش' })
         }
         if (promo.expires_at && new Date(promo.expires_at) < now) {
-            return NextResponse.json({ valid: false, error: 'كود الخصم منتهي الصلاحية' })
+            return NextResponse.json({ valid: false, error: 'الكود ده خلص' })
         }
 
         // 3. التحقق من عدد الاستخدامات (فحص أولي — الإنفاذ الذري في create-session عبر try_use_promo_code)
         if (promo.max_uses !== null && promo.current_uses >= promo.max_uses) {
-            return NextResponse.json({ valid: false, error: 'تم استنفاذ عدد مرات استخدام هذا الكود' })
+            return NextResponse.json({ valid: false, error: 'الكود ده خلصت مرات استخدامه' })
         }
 
         // 4. التحقق من الباقات المسموح بها
-        if (promo.allowed_plans && promo.allowed_plans.length > 0) {
-            if (!promo.allowed_plans.includes(planId)) {
-                return NextResponse.json({ valid: false, error: 'كود الخصم غير صالح لهذه الباقة' })
-            }
+        if (!promoAppliesToPlan(promo.allowed_plans, planId)) {
+            return NextResponse.json({ valid: false, error: planId === 'monthly' ? 'أكواد الخصم مش بتشتغل على الاشتراك الشهري' : 'كود الخصم غير صالح لهذه الباقة' })
         }
 
         // 5. التحقق من أن المستخدم لم يستخدم الكود من قبل (فقط للمدفوعات المكتملة)
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
                             .single()
 
                         if (payment && (payment.status === 'paid' || payment.status === 'completed' || payment.status === 'success')) {
-                            return NextResponse.json({ valid: false, error: 'لقد استخدمت هذا الكود من قبل' })
+                            return NextResponse.json({ valid: false, error: 'إنت استخدمت الكود ده قبل كده' })
                         }
                     }
                 }
@@ -106,12 +105,12 @@ export async function POST(request: NextRequest) {
             .single()
 
         if (!plan) {
-            return NextResponse.json({ valid: false, error: 'الباقة غير موجودة' })
+            return NextResponse.json({ valid: false, error: 'الباقة دي مش موجودة' })
         }
 
         let originalAmount = Number(plan.price)
         if (isUpgrade) {
-            if (!userId) return NextResponse.json({ valid: false, error: 'يرجى تسجيل الدخول' }, { status: 401 })
+            if (!userId) return NextResponse.json({ valid: false, error: 'سجّل دخول الأول' }, { status: 401 })
             const subscription = await getUserSubscription(userId)
             const { data: activePlans } = await (supabase as any).from('plans').select('id, price').eq('is_active', true)
             try {
@@ -145,6 +144,6 @@ export async function POST(request: NextRequest) {
         })
     } catch (error) {
         dbLogger.error('Promo validate error:', error)
-        return NextResponse.json({ valid: false, error: 'حدث خطأ في التحقق من الكود' }, { status: 500 })
+        return NextResponse.json({ valid: false, error: 'حصلت مشكلة وإحنا بنراجع الكود. جرّب تاني.' }, { status: 500 })
     }
 }

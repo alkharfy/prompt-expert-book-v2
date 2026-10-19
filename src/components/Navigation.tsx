@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useRef, useEffect, useState, useCallback } from 'react'
+import { planLabel } from '@/lib/pricing'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { authSystem } from '@/lib/auth_system'
@@ -479,9 +480,7 @@ export default function Navigation() {
                                     {currentPlan && !subLoading && (
                                         <li style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', opacity: 0.7, borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '0.5rem' }}>
                                             <strong>باقتك:</strong>{' '}
-                                            {currentPlan === 'basic' ? 'أساسية' :
-                                             currentPlan === 'pro' ? 'احترافية' :
-                                             'مميزة'}
+                                            {planLabel(currentPlan)}
                                         </li>
                                     )}
                                 </ul>
@@ -493,9 +492,9 @@ export default function Navigation() {
                                 <Link
                                     href="/profile#referral"
                                     className="nav-link referral-nav-link"
-                                    title="ادعو صديقك واكسب خصم"
+                                    title="ادعي صاحبك وخد خصم"
                                 >
-                                    🎁
+                                    🎁 ادعي صاحبك
                                 </Link>
                             </li>
                         )}
@@ -517,21 +516,23 @@ export default function Navigation() {
                                     onClick={handleLogout}
                                     className="nav-link logout-btn"
                                     whileHover={{ color: 'var(--color-orange-glow)', scale: 1.1 }}
-                                    title="تسجيل الخروج"
-                                    aria-label="تسجيل الخروج"
+                                    title="سجّل خروج"
+                                    aria-label="سجّل خروج"
                                 >
                                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                                         <polyline points="16 17 21 12 16 7" />
                                         <line x1="21" y1="12" x2="9" y2="12" />
                                     </svg>
+                                    {/* A word next to the icon: a door-and-arrow alone means nothing to most people */}
+                                    <span className="logout-label">سجّل خروج</span>
                                 </motion.button>
                             ) : (
                                 <Link
                                     href="/login"
                                     className={`nav-link ${pathname === '/login' ? 'active' : ''}`}
                                 >
-                                    تسجيل الدخول
+                                    سجّل دخول
                                 </Link>
                             )}
                         </li>

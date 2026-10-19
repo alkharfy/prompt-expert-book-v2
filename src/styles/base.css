@@ -103,6 +103,41 @@ body {
   padding-bottom: var(--bottom-bar-height, 0px);
 }
 
+/* Phones: floating buttons step aside while the reader scrolls down (FabsAutoHide) */
+@media (max-width: 768px) {
+  .chat-fab,
+  .missions-widget-minimized,
+  .notes-toggle-btn,
+  .back-to-top-btn {
+    transition: opacity 0.25s, translate 0.25s, visibility 0s;
+  }
+
+  /* visibility (not just opacity) so a hidden button can't be reached with the keyboard either */
+  html.pm-fabs-away .chat-fab:not([aria-expanded="true"]):not(:focus-visible),
+  html.pm-fabs-away .missions-widget-minimized:not(:focus-within),
+  html.pm-fabs-away .notes-toggle-btn:not(:focus-visible),
+  html.pm-fabs-away .back-to-top-btn:not(:focus-visible) {
+    opacity: 0 !important;
+    translate: 0 16px;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s, translate 0.25s, visibility 0s linear 0.25s;
+  }
+
+  /* The resting homepage robot (▶ badge) sits on the start of the text lines: it steps aside too */
+  html.pm-fabs-away .pm-guide-robot.docked:has(.pm-guide-badge):not(:focus-within) {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s, visibility 0s linear 0.25s;
+  }
+
+  /* Room under the footer so the floating buttons at the bottom corner never sit on the WhatsApp number */
+  .site-footer {
+    padding-bottom: 150px !important;
+  }
+}
+
 /* Navigation links should not break words */
 .nav-link,
 .nav-logo,

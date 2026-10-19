@@ -11,7 +11,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import './SubscriptionGateModal.css'
-import { fetchPricingPlans } from '@/lib/pricing'
+import { fetchPricingPlans, planCopyFeatures, planLabel } from '@/lib/pricing'
+import { REFUND_GUARANTEE_TEXT } from '@/lib/config'
 
 // ─────────────────────────────────────────────
 // Types
@@ -38,45 +39,54 @@ interface SubscriptionGateModalProps {
 
 const FEATURE_INFO: Record<string, { name: string; icon: string; description: string }> = {
   exercises: {
-    name: 'التمارين التفاعلية',
+    name: 'التمارين',
     icon: '🧪',
-    description: 'تمارين عملية تفاعلية لتطبيق ما تعلمته مع تقييم فوري',
+    description: 'تمارين على ملفات شغل، و«المستر» بيقولك طلبك ناقصه إيه',
   },
   tools: {
-    name: 'صندوق الأدوات',
+    name: 'أدوات البرومبت',
     icon: '🛠️',
-    description: 'مجموعة أدوات ذكية لكتابة البرومبتات الاحترافية',
+    description: 'أدوات بتساعدك تكتب طلبك وتراجعه قبل ما تبعته',
   },
   chat: {
-    name: 'المحادثة الذكية',
+    name: 'المساعد الذكي',
     icon: '💬',
-    description: 'تواصل مع مدرب AI شخصي للإجابة على أسئلتك',
+    description: 'تسأل مساعد AI جوه الموقع في شغلك وفي الكورس',
   },
   gamification: {
-    name: 'الإنجازات والألعاب',
+    name: 'الإنجازات والنقاط',
     icon: '🏆',
-    description: 'نظام إنجازات ونقاط تفاعلي يحفزك على التعلم',
+    description: 'نقاط وإنجازات بتشجّعك تكمّل',
   },
   certificate: {
     name: 'شهادة الإتمام',
     icon: '📜',
-    description: 'احصل على شهادة إتمام من PromptMaster عند إتمام الكتاب',
+    description: 'شهادة من PromptMaster لما تخلّص الفصول الأساسية',
   },
   leaderboard: {
-    name: 'لوحة المتصدرين',
+    name: 'ترتيب المتعلمين',
     icon: '📊',
-    description: 'تنافس مع المتعلمين الآخرين وتصدّر القائمة',
+    description: 'تشوف ترتيبك وسط باقي المتعلمين',
   },
 }
 
 const PLANS = [
+  {
+    id: 'monthly',
+    name: 'الشهري',
+    color: '#22C55E',
+    gradient: 'linear-gradient(135deg, #22C55E, #15803D)',
+    icon: '🗓️',
+    features: ['الكورس كله: المستويات والتمارين والقوالب', '«المستر بيصحّح» طلباتك', 'من غير تجديد تلقائي'],
+    featureKeys: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises'],
+  },
   {
     id: 'basic',
     name: 'الأساسية',
     color: '#3B82F6',
     gradient: 'linear-gradient(135deg, #3B82F6, #1D4ED8)',
     icon: '📘',
-    features: ['قراءة الكتاب كاملاً', 'العلامات المرجعية', 'تتبع التقدم', 'التمارين التفاعلية'],
+    features: planCopyFeatures('basic'),
     featureKeys: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises'],
   },
   {
@@ -86,12 +96,7 @@ const PLANS = [
     gradient: 'linear-gradient(135deg, #FF6B35, #FF8C42)',
     icon: '🚀',
     popular: false,
-    features: [
-      'كل مميزات الأساسية',
-      'أدوات البرومبت؛ تشخيص AI حتى 10 مرات خلال 24 ساعة',
-      'الإنجازات والشهادات',
-      'لوحة المتصدرين',
-    ],
+    features: planCopyFeatures('pro'),
     featureKeys: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises', 'gamification', 'leaderboard', 'certificate', 'tools'],
   },
   {
@@ -100,15 +105,12 @@ const PLANS = [
     color: '#A855F7',
     gradient: 'linear-gradient(135deg, #A855F7, #7C3AED)',
     icon: '👑',
-    features: [
-      'كل مميزات المتقدمة',
-      'المحادثة الذكية حتى 30 رسالة خلال 24 ساعة',
-    ],
+    features: planCopyFeatures('vip'),
     featureKeys: ['reading', 'bookmarks', 'library', 'progress_tracking', 'exercises', 'gamification', 'leaderboard', 'certificate', 'tools', 'chat'],
   },
 ]
 
-const PLAN_ORDER: Record<string, number> = { basic: 1, pro: 2, vip: 3 }
+const PLAN_ORDER: Record<string, number> = { monthly: 0, basic: 1, pro: 2, vip: 3 }
 
 // ─────────────────────────────────────────────
 // Component
@@ -150,12 +152,12 @@ export default function SubscriptionGateModal({
       )
       setSelectedPlan(plan?.id || 'pro')
     } else if (feature) {
-      const plan = PLANS.find(p => p.featureKeys.includes(feature))
+      const plan = PLANS.find(p => p.featureKeys.includes(feature) && (p.id !== 'monthly' || prices.monthly))
       setSelectedPlan(plan?.id || 'basic')
     } else {
-      setSelectedPlan('basic')
+      setSelectedPlan(prices.monthly ? 'monthly' : 'basic')
     }
-  }, [feature, currentPlan, isUpgrade])
+  }, [feature, currentPlan, isUpgrade, prices.monthly])
 
   // Animate in
   useEffect(() => {
@@ -208,9 +210,11 @@ export default function SubscriptionGateModal({
   }
 
   // Filter plans for upgrade mode
-  const availablePlans = isUpgrade && currentPlan
+  // The monthly plan shows only when its price row is live; a yearly subscriber only sees higher plans.
+  const availablePlans = (isUpgrade && currentPlan
     ? PLANS.filter(p => PLAN_ORDER[p.id] > (PLAN_ORDER[currentPlan] || 0))
     : PLANS
+  ).filter(p => p.id !== 'monthly' || (prices.monthly && !(isUpgrade && currentPlan)))
 
   return (
     <div
@@ -250,10 +254,10 @@ export default function SubscriptionGateModal({
 
           <h2 id="sgm-title" className="sgm-title">
             {isUpgrade
-              ? 'ترقية باقتك'
+              ? 'رقّي باقتك'
               : featureInfo
                 ? `${featureInfo.name}`
-                : 'اشترك للوصول الكامل'}
+                : 'اشترك وافتح الكورس كله'}
           </h2>
 
           <p className="sgm-subtitle">
@@ -261,18 +265,18 @@ export default function SubscriptionGateModal({
               <>
                 باقتك الحالية{' '}
                 <span className="sgm-highlight">
-                  ({currentPlan === 'basic' ? 'الأساسية' : currentPlan === 'pro' ? 'المتقدمة' : 'VIP'})
+                  ({planLabel(currentPlan)})
                 </span>
-                {' '}لا تشمل هذه الميزة. قم بالترقية للوصول إليها.
+                {' '}مفيهاش الميزة دي. رقّي باقتك وتفتحلك.
               </>
             ) : featureInfo ? (
               <>
                 {featureInfo.description}
                 <br />
-                <span className="sgm-highlight-subtle">اشترك الآن للوصول لهذه الميزة وأكثر</span>
+                <span className="sgm-highlight-subtle">اشترك وتفتحلك الميزة دي وحاجات تانية</span>
               </>
             ) : (
-              'اختر الباقة المناسبة لك وابدأ رحلتك في عالم البرومبتات'
+              'اختار الباقة اللي تناسبك، وابدأ النهارده'
             )}
           </p>
         </div>
@@ -298,7 +302,7 @@ export default function SubscriptionGateModal({
                 } as React.CSSProperties}
               >
                 {plan.popular && (
-                  <span className="sgm-popular-tag">الأكثر شيوعاً</span>
+                  <span className="sgm-popular-tag">الأنسب للبداية</span>
                 )}
 
                 <div className="sgm-plan-icon">{plan.icon}</div>
@@ -318,6 +322,7 @@ export default function SubscriptionGateModal({
                       <>
                         <span className="sgm-price-value">{prices[plan.id] ?? "—"}</span>
                         <span className="sgm-price-unit">ج.م</span>
+                        <span className="sgm-price-label">/ {plan.id === 'monthly' ? 'شهر' : 'سنة'}</span>
                       </>
                     )}
                   </div>
@@ -357,11 +362,11 @@ export default function SubscriptionGateModal({
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
               <line x1="1" y1="10" x2="23" y2="10" />
             </svg>
-            {isUpgrade ? 'ادفع فرق الترقية الآن' : 'اشترك الآن'}
+            {isUpgrade ? 'ادفع فرق الترقية' : 'كمّل للدفع'}
           </button>
 
           <button className="sgm-back-button" onClick={handleClose}>
-            العودة للصفحة السابقة
+            ارجع للصفحة اللي كنت فيها
           </button>
         </div>
 
@@ -370,7 +375,7 @@ export default function SubscriptionGateModal({
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          دفع آمن ومشفر • ضمان استرداد خلال 7 أيام
+          دفع آمن • {REFUND_GUARANTEE_TEXT}
         </div>
       </div>
     </div>
