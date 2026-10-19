@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { userHasFeature } from '@/lib/subscription'
 import { dbLogger } from '@/lib/logger'
+import { liveStreak, previousDay, streakDay } from '@/lib/streak'
 
 const orderColumns = {
     points: 'total_points',
@@ -16,6 +17,7 @@ type LeaderboardRecord = {
     total_points: number | null
     current_level: number | null
     current_streak: number | null
+    last_activity_date: string | null
     exercises_completed: number | null
 }
 
@@ -46,8 +48,11 @@ export async function GET(request: NextRequest) {
         }
 
         const db = getSupabaseAdmin()
-        const { data, error } = await (db.from('user_gamification') as any)
-            .select('user_id, total_points, current_level, current_streak, exercises_completed')
+        let query = (db.from('user_gamification') as any)
+            .select('user_id, total_points, current_level, current_streak, last_activity_date, exercises_completed')
+        // Only streaks still alive (active today or yesterday) can rank; older rows keep a stale number.
+        if (tab === 'streak') query = query.gte('last_activity_date', previousDay(streakDay()))
+        const { data, error } = await query
             .order(orderColumns[tab as keyof typeof orderColumns], { ascending: false })
             .order('user_id', { ascending: true })
             .limit(50)
@@ -73,7 +78,7 @@ export async function GET(request: NextRequest) {
             displayName: displayName(names.get(record.user_id)),
             total_points: count(record.total_points),
             current_level: Math.min(count(record.current_level, 1) || 1, 10),
-            current_streak: count(record.current_streak),
+            current_streak: count(liveStreak(record).current),
             exercises_completed: count(record.exercises_completed),
             badges_count: badgeCounts.get(record.user_id) || 0,
             rank: index + 1,

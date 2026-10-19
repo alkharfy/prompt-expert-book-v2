@@ -5,6 +5,7 @@ vi.mock('server-only', () => ({}))
 const h = vi.hoisted(() => ({
     user: 'u1' as string | null, row: null as any, writes: [] as any[], allowed: true,
     sync: vi.fn(), from: vi.fn(), readError: null as any,
+    rpc: vi.fn(async () => ({ error: null })),
 }))
 vi.mock('@/lib/auth-middleware', () => ({ getAuthenticatedUser: async () => h.user }))
 vi.mock('@/lib/subscription', () => ({ userHasFeature: async () => h.allowed }))
@@ -12,7 +13,7 @@ vi.mock('@/lib/gamification', () => ({ syncReadingToGamification: h.sync }))
 vi.mock('@/lib/rate-limit', () => ({ checkRateLimit: () => ({ allowed: true }) }))
 vi.mock('@/lib/logger', () => ({ dbLogger: { error: vi.fn() } }))
 vi.mock('next/headers', () => ({ cookies: async () => ({ get: (key: string) => ({ value: key === 'ebook_user_id' ? 'u1' : 'verified-session' }) }) }))
-vi.mock('@/lib/supabase-admin', () => ({ getSupabaseAdmin: () => ({ from: h.from }) }))
+vi.mock('@/lib/supabase-admin', () => ({ getSupabaseAdmin: () => ({ from: h.from, rpc: h.rpc }) }))
 
 import { GET, POST } from '@/app/api/reading-progress/route'
 import { POST as proxy } from '@/app/api/auth/db-operation/route'
@@ -50,6 +51,13 @@ describe('validated self-reported reading', () => {
         expect(h.writes[0]).not.toHaveProperty('completed_chapters')
         expect(h.writes[0]).not.toHaveProperty('completion_percentage')
         expect(h.sync).not.toHaveBeenCalled()
+    })
+    it('counts opening a lesson for the reading streak, but not a bookmark-only save', async () => {
+        expect((await POST(request({ current_page: 2 }))).status).toBe(200)
+        expect(h.rpc).toHaveBeenCalledWith('update_user_streak', { p_user_id: 'u1' })
+        h.rpc.mockClear()
+        expect((await POST(request({ bookmarks: [4] }))).status).toBe(200)
+        expect(h.rpc).not.toHaveBeenCalled()
     })
     it('never overwrites chapter markers in a page or bookmark-only save', async () => {
         h.row.completed_chapters = ['1', '2']

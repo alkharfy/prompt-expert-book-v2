@@ -1086,7 +1086,7 @@ class AuthSystem {
      * Reads explicit, validated chapter markers. Jumping to a later page does
      * not mark the earlier chapters complete.
      */
-    async getDetailedProgress(): Promise<{ currentPage: number, totalPages: number, percentage: number, completedChapters: number[] } | null> {
+    async getDetailedProgress(): Promise<{ currentPage: number, totalPages: number, percentage: number, completedChapters: number[], completedLessons?: string[] } | null> {
         try {
             const userId = this.getCurrentUserId()
             if (!userId) return null
@@ -1102,7 +1102,11 @@ class AuthSystem {
                 currentPage,
                 totalPages: TOTAL_BOOK_PAGES,
                 percentage: getMainChapterCompletion(completedChapters).percentage,
-                completedChapters
+                completedChapters,
+                // Missing until supabase/migrations/20261019_completed_lessons.sql runs.
+                completedLessons: Array.isArray(data.completed_lessons)
+                    ? data.completed_lessons.filter((lesson: unknown): lesson is string => typeof lesson === 'string')
+                    : undefined,
             }
         } catch (err) {
             authLogger.error('Error', err)

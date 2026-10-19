@@ -73,6 +73,29 @@ describe('where the learner stands in the TOC', () => {
         expect(view.done).toBe(view.available)
     })
 
+    it('ticks exactly the lessons finished with «next» when there is a per-lesson record', () => {
+        const view = buildToc({
+            access: 'member', currentPage: globalPage('section-1', 5), completedChapters: [],
+            completedLessons: ['intro:1', 'intro:2', 'intro:3', 'section-1:1', 'section-1:3', 'section-2:2'],
+        })
+        expect([view.level, view.lesson]).toEqual([1, 4])
+        expect(view.levels.slice(0, 3)).toEqual(['done', 'here', 'todo'])
+        expect(view.lessons[1].slice(0, 6)).toEqual(['done', 'todo', 'done', 'todo', 'here', 'todo'])
+        expect(view.lessons[2].slice(0, 3)).toEqual(['todo', 'done', 'todo'])
+        expect(view.done).toBe(3 + 2 + 1)
+    })
+
+    it('leaves the intro unticked when it was skipped, once lessons are recorded', () => {
+        const view = buildToc({ access: 'member', currentPage: globalPage('section-1', 2), completedLessons: ['intro:1'] })
+        expect(view.levels[0]).toBe('todo')
+        expect(view.lessons[0]).toEqual(['done', 'todo', 'todo'])
+    })
+
+    it('opens the gate once every intro lesson is finished', () => {
+        const view = buildToc({ access: 'registered', currentPage: 3, completedLessons: ['intro:1', 'intro:2', 'intro:3'] })
+        expect([view.level, view.levels[0], view.levels[1]]).toEqual([1, 'done', 'gate'])
+    })
+
     it('sends a subscriber reading an old book chapter back to that page', () => {
         const view = buildToc({ access: 'member', currentPage: globalPage('section-4', 5), completedChapters: [0] })
         expect(view.level).toBe(3)

@@ -14,6 +14,7 @@ import GuestBanner from '@/components/GuestBanner'
 import ReadingPagination from '@/components/reading/ReadingPagination'
 import { completeChapterWithProgress } from '@/components/reading/completeChapterWithProgress'
 import { claimReadingReward } from '@/components/reading/claimReadingReward'
+import { markLessonDone } from '@/lib/lessonProgress'
 import { trackPaywallHit, trackGuestReading, trackTryCopy } from '@/lib/analytics'
 import CopyButton from '@/components/reading/CopyButton'
 import BookmarkButton from '@/components/reading/BookmarkButton'
@@ -410,6 +411,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
             return
         }
 
+        // «next» at the end of a lesson = this lesson is finished (the TOC ticks it).
+        if (isAuthed && !isCurrentPageLocked) markLessonDone(config.id, pageNum)
+
         if (!isLastPage) {
             router.push(`/read/${config.id}/${pageNum + 1}`)
         } else {
@@ -439,7 +443,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                 router.push('/toc')
             }
         }
-    }, [pageNum, isNextPageLocked, isLastPage, isAuthed, isIntro, hasFreePages, needsAccess, router, config])
+    }, [pageNum, isNextPageLocked, isLastPage, isAuthed, isCurrentPageLocked, isIntro, hasFreePages, needsAccess, router, config])
 
     const handlePrev = useCallback(() => {
         if (completionBusyRef.current) return

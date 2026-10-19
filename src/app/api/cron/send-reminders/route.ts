@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { apiLogger } from '@/lib/logger'
+import { liveStreak } from '@/lib/streak'
 import crypto from 'crypto'
 import {
     sendStreakReminder,
@@ -107,7 +108,8 @@ export async function GET(request: NextRequest) {
                     id: user.id,
                     email: user.email,
                     full_name: user.full_name || 'قارئ',
-                    current_streak: (gamData as Record<string, unknown>)?.current_streak as number || 0,
+                    // A streak older than yesterday already broke; the row still holds the old number.
+                    current_streak: liveStreak(gamData as { current_streak?: number; last_activity_date?: string } | null, todayStr).current,
                     total_points: (gamData as Record<string, unknown>)?.total_points as number || 0,
                     chapters_completed: (gamData as Record<string, unknown>)?.chapters_completed as number || 0,
                     last_activity_date: (gamData as Record<string, unknown>)?.last_activity_date as string || null,

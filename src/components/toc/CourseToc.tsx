@@ -81,7 +81,7 @@ export default function CourseToc() {
         } else {
             const signedIn = hasFeature('reading') ? 'member' : 'registered'
             authSystem.getDetailedProgress()
-                .then(progress => load({ access: signedIn, currentPage: progress?.currentPage ?? null, completedChapters: progress?.completedChapters ?? [] }))
+                .then(progress => load({ access: signedIn, currentPage: progress?.currentPage ?? null, completedChapters: progress?.completedChapters ?? [], completedLessons: progress?.completedLessons }))
                 .catch(() => load({ access: signedIn }))
         }
         return () => { cancelled = true }

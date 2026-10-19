@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { dbLogger } from '@/lib/logger'
+import { liveStreak, streakDay } from '@/lib/streak'
 
 interface GamificationRow {
     current_streak: number
@@ -34,25 +35,18 @@ export async function GET() {
             return NextResponse.json({ error: 'خطأ في جلب بيانات الـ streak' }, { status: 500 })
         }
 
-        const today = new Date().toISOString().split('T')[0]
-        const lastActivity = data?.last_activity_date
-        const isActiveToday = lastActivity === today
-
-        // Calculate if streak is at risk (active yesterday but not today)
-        let streakAtRisk = false
-        if (!isActiveToday && data?.current_streak && data.current_streak > 0) {
-            streakAtRisk = true
-        }
+        // A streak whose last day is older than yesterday already broke (the row keeps the old number).
+        const streak = liveStreak(data)
 
         return NextResponse.json({
             data: {
-                current_streak: data?.current_streak || 0,
+                current_streak: streak.current,
                 longest_streak: data?.longest_streak || 0,
-                last_activity_date: lastActivity || null,
+                last_activity_date: data?.last_activity_date || null,
                 current_level: data?.current_level || 1,
                 total_points: data?.total_points || 0,
-                is_active_today: isActiveToday,
-                streak_at_risk: streakAtRisk,
+                is_active_today: streak.activeToday,
+                streak_at_risk: streak.atRisk,
             }
         })
     } catch (err) {
@@ -103,7 +97,7 @@ export async function POST() {
             return NextResponse.json({ error: 'خطأ في جلب بيانات الـ streak' }, { status: 500 })
         }
 
-        const today = new Date().toISOString().split('T')[0]
+        const today = streakDay()
 
         return NextResponse.json({
             success: true,

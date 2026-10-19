@@ -2,7 +2,9 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { usePathname } from 'next/navigation'
 import ShareButton from '@/components/sharing/ShareButton'
+import { daysWord } from '@/lib/streak'
 
 interface StreakData {
     current_streak: number
@@ -23,15 +25,20 @@ interface Notification {
 
 const STREAK_MILESTONES = [3, 7, 14, 30, 50, 100]
 const MILESTONE_MESSAGES: Record<number, { title: string; icon: string }> = {
-    3: { title: '🔥 بداية الاشتعال!', icon: '🔥' },
+    3: { title: '🔥 3 أيام ورا بعض!', icon: '🔥' },
     7: { title: '🔥 أسبوع كامل!', icon: '🔥' },
-    14: { title: '🔥 أسبوعان من الالتزام!', icon: '🌟' },
-    30: { title: '🌟 شهر كامل! أنت أسطورة!', icon: '🏆' },
-    50: { title: '💎 50 يوم! إنجاز استثنائي!', icon: '💎' },
-    100: { title: '👑 100 يوم! أنت خارق!', icon: '👑' },
+    14: { title: '🌟 أسبوعين من غير ما تقطع!', icon: '🌟' },
+    30: { title: '🏆 شهر كامل!', icon: '🏆' },
+    50: { title: '💎 50 يوم ورا بعض!', icon: '💎' },
+    100: { title: '👑 100 يوم ورا بعض!', icon: '👑' },
 }
 
+// No streak pop-ups while someone is paying or signing in.
+const QUIET_PATHS = ['/payment', '/login', '/register', '/verify-code', '/forgot-password', '/reset-password']
+
 export default function StreakNotification() {
+    const pathname = usePathname()
+    const quiet = QUIET_PATHS.some(path => pathname?.startsWith(path))
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [dismissed, setDismissed] = useState<Set<string>>(new Set())
 
@@ -60,7 +67,7 @@ export default function StreakNotification() {
                         id: `milestone_${data.current_streak}`,
                         type: 'milestone',
                         title: milestone.title,
-                        message: `وصلت إلى ${data.current_streak} يوم متتالي! استمر في التعلم`,
+                        message: `وصلت ${daysWord(data.current_streak)} ورا بعض. كمّل كده!`,
                         icon: milestone.icon,
                     })
                 }
@@ -71,19 +78,19 @@ export default function StreakNotification() {
                 newNotifications.push({
                     id: 'first_today',
                     type: 'first_today',
-                    title: `🔥 ${data.current_streak} يوم متتالي!`,
-                    message: 'أحسنت! حافظت على سلسلتك اليوم',
+                    title: `🔥 ${daysWord(data.current_streak)} ورا بعض!`,
+                    message: 'برافو، كمّلت السلسلة النهارده.',
                     icon: '🔥',
                 })
             }
 
-            // Check for streak at risk
-            if (data.streak_at_risk && data.current_streak > 0) {
+            // A real streak (2+ days, last read yesterday) that ends tonight; the API decides.
+            if (data.streak_at_risk) {
                 newNotifications.push({
                     id: 'risk',
                     type: 'risk',
-                    title: '⚠️ سلسلتك في خطر!',
-                    message: `لديك ${data.current_streak} يوم متتالي. ابدأ القراءة الآن!`,
+                    title: '🔥 متقطعش السلسلة',
+                    message: `قريت ${daysWord(data.current_streak)} ورا بعض. افتح درس النهارده عشان تكمّلها.`,
                     icon: '⚠️',
                 })
             }
@@ -98,10 +105,11 @@ export default function StreakNotification() {
     }, [])
 
     useEffect(() => {
+        if (quiet) return
         // Slight delay to avoid blocking initial render
         const timer = setTimeout(checkStreak, 2000)
         return () => clearTimeout(timer)
-    }, [checkStreak])
+    }, [checkStreak, quiet])
 
     const dismiss = (id: string) => {
         setDismissed(prev => new Set(prev).add(id))

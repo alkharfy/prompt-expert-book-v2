@@ -6,6 +6,7 @@ import { Resend } from 'resend'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from './logger'
 import { SITE_URL, SITE_DOMAIN, EMAIL_FROM_DEFAULT } from '@/lib/config'
+import { liveStreak } from '@/lib/streak'
 
 let _resend: Resend | null = null
 function getResend(): Resend {
@@ -468,7 +469,7 @@ export async function getWeeklyStats(userId: string): Promise<{ pages: number; e
     // Get current streak
     const { data: gamData } = await supabase
         .from('user_gamification')
-        .select('current_streak')
+        .select('current_streak, last_activity_date')
         .eq('user_id', userId)
         .single()
 
@@ -478,6 +479,6 @@ export async function getWeeklyStats(userId: string): Promise<{ pages: number; e
         pages: readingData?.length || 0,
         exercises: exerciseData?.length || 0,
         points: totalPoints,
-        streak: (gamData as { current_streak: number } | null)?.current_streak || 0,
+        streak: liveStreak(gamData as { current_streak: number; last_activity_date: string | null } | null).current,
     }
 }

@@ -131,7 +131,7 @@ export default function StreakBanner({ variant = 'default', showDetails = true, 
                     </motion.span>
                 </AnimatePresence>
                 <span className="streak-label">
-                    {current_streak === 1 ? 'يوم متتالي' : 'أيام متتالية'}
+                    {current_streak >= 3 && current_streak <= 10 ? 'أيام ورا بعض' : 'يوم ورا بعض'}
                 </span>
             </div>
 
@@ -145,7 +145,7 @@ export default function StreakBanner({ variant = 'default', showDetails = true, 
             {showDetails && variant !== 'small' && (
                 <div className="streak-details">
                     <div className="streak-detail-item">
-                        <span>أطول سلسلة:</span>
+                        <span>أطول سلسلة ليك:</span>
                         <span className="detail-value">{longest_streak} يوم</span>
                     </div>
                 </div>
@@ -157,7 +157,7 @@ export default function StreakBanner({ variant = 'default', showDetails = true, 
                     animate={{ opacity: 1, height: 'auto' }}
                     className="streak-warning"
                 >
-                    ⚠️ سلسلتك في خطر! ابدأ القراءة اليوم للحفاظ عليها
+                    🔥 اقرا النهارده عشان السلسلة متتقطعش
                 </motion.div>
             )}
         </motion.div>

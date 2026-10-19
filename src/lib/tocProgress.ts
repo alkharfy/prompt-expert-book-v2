@@ -2,10 +2,11 @@ import { getGlobalReadingTarget, getLearningReadingUrl } from '@/config/learning
 import { BOOK_CHAPTERS, COURSE_LEVELS, isReleased } from '@/data/courseOutline'
 
 /**
- * Where a learner stands in the course TOC, worked out from what the site already saves:
- * reading_progress.current_page (the last page opened) and completed_chapters (levels
- * finished from their last page). Guests only have the last free page they opened.
- * There is no per-lesson record yet, so lessons before the current one count as done.
+ * Where a learner stands in the course TOC, worked out from what the site saves:
+ * reading_progress.current_page (the last page opened), completed_chapters (levels finished
+ * from their last page) and completed_lessons (each lesson finished with «next»).
+ * Guests, and readers saved before completed_lessons existed, have no per-lesson record:
+ * then the lessons before the last page opened count as done.
  */
 export type Access = 'guest' | 'registered' | 'member'
 export type LevelState = 'done' | 'here' | 'gate' | 'lock' | 'todo' | 'soon' | 'waiting'
@@ -18,6 +19,8 @@ export interface TocInput {
     /** Reader path a guest opened last, e.g. /read/intro/2. */
     guestPath?: string | null
     completedChapters?: number[]
+    /** '<section>:<page>' keys; undefined when there is no per-lesson record. */
+    completedLessons?: string[] | null
 }
 
 export interface TocView {
@@ -50,6 +53,11 @@ function position(input: TocInput): { sectionId: string; page: number } | null {
 export function buildToc(input: TocInput): TocView {
     const member = input.access === 'member'
     const finished = new Set(input.completedChapters ?? [])
+    const tracked = Array.isArray(input.completedLessons)
+    const lessonsDone = new Set(input.completedLessons ?? [])
+    const lessonDone = (i: number, k: number) => lessonsDone.has(`${COURSE_LEVELS[i].sectionId}:${k + 1}`)
+    const levelFinished = (i: number) => finished.has(COURSE_LEVELS[i].chapter)
+        || (tracked && isReleased(COURSE_LEVELS[i]) && COURSE_LEVELS[i].lessons.every((_, k) => lessonDone(i, k)))
     const pos = position(input)
     const levelIndex = pos ? COURSE_LEVELS.findIndex(level => level.sectionId === pos.sectionId) : -1
     const chapter = pos && levelIndex === -1 ? BOOK_CHAPTERS.find(c => `section-${c.n}` === pos.sectionId) : undefined
@@ -64,22 +72,24 @@ export function buildToc(input: TocInput): TocView {
         level = levelIndex
         lesson = Math.max(0, Math.min(pos.page, lessons) - 1)
         // Finished the level on its last page: the next step is the next level.
-        if (lesson === lessons - 1 && finished.has(COURSE_LEVELS[levelIndex].chapter)) { level += 1; lesson = 0 }
+        if (lesson === lessons - 1 && levelFinished(levelIndex)) { level += 1; lesson = 0 }
     }
 
     const levels = COURSE_LEVELS.map((item, i): LevelState => {
         if (!isReleased(item)) return i === level ? 'waiting' : 'soon'
         if (i === level) return !member && !item.free ? 'gate' : 'here'
         // ✓ only for a level really finished; one skipped behind the learner stays unticked.
-        if (finished.has(item.chapter) || (item.free && i < level)) return 'done'
+        if (levelFinished(i) || (!tracked && item.free && i < level)) return 'done'
         return !member && !item.free ? 'lock' : 'todo'
     })
     const lessons = COURSE_LEVELS.map((item, i) => item.lessons.map((_, k): LessonState => {
         const state = levels[i]
         if (state === 'soon' || state === 'waiting') return 'soon'
-        if (state === 'here') return k < lesson ? 'done' : k === lesson ? 'here' : 'todo'
-        if (state === 'gate') return 'lock'
-        return state
+        if (state === 'done') return 'done'
+        if (state === 'gate' || state === 'lock') return 'lock'
+        if (state === 'here' && k === lesson) return 'here'
+        if (tracked) return lessonDone(i, k) ? 'done' : 'todo'
+        return state === 'here' && k < lesson ? 'done' : 'todo'
     }))
     let done = 0, available = 0
     COURSE_LEVELS.forEach((item, i) => {

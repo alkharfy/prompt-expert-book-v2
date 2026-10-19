@@ -13,6 +13,7 @@ import { dbLogger } from '@/lib/logger';
 import { getOrCreateCertificate } from '@/actions/certificates';
 import ShareButton from '@/components/sharing/ShareButton';
 import { CERTIFICATE_CHAPTER_COUNT, getMainChapterCompletion } from '@/lib/reading-completion';
+import { liveStreak } from '@/lib/streak';
 
 type TabType = 'achievements' | 'certificate';
 
@@ -164,12 +165,13 @@ export default function AchievementsPage() {
         .maybeSingle() as {
           data: {
             current_streak?: number;
+            last_activity_date?: string | null;
             total_points?: number;
             total_reading_time_minutes?: number
           } | null
         };
 
-      const currentStreak = gamificationData?.current_streak || 0;
+      const currentStreak = liveStreak(gamificationData).current;
       const totalPoints = gamificationData?.total_points || 0;
 
       // جلب عدد الإشارات المرجعية من reading_progress.bookmarks

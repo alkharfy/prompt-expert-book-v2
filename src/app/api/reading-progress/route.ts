@@ -173,6 +173,13 @@ export async function POST(request: NextRequest) {
             await syncReadingToGamification(userId, getMainChapterCompletion(updatedChapters).completed, supabase)
         }
 
+        // Opening a lesson is today's reading: count it for the streak here, so it never
+        // depends on the streak badge loading in the page. Same-day calls change nothing.
+        if (current_page !== undefined) {
+            const { error: streakError } = await supabase.rpc('update_user_streak', { p_user_id: userId })
+            if (streakError) dbLogger.error('Error updating streak from reading:', streakError)
+        }
+
         return NextResponse.json({ success: true, data: data ? {
             ...data,
             completed_chapters: normalizeCompletedChapters(data.completed_chapters),

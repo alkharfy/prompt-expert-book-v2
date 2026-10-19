@@ -7,6 +7,7 @@ interface QueryTrace {
     columns: string
     orders: { column: string; ascending: boolean }[]
     filters: { column: string; values: unknown[] }[]
+    minimums: { column: string; value: string }[]
     limit: number | null
 }
 interface QueryResult { data: Row[] | null; error: { message: string } | null }
@@ -14,6 +15,7 @@ interface QueryBuilder extends PromiseLike<QueryResult> {
     select: (columns: string) => QueryBuilder
     order: (column: string, options: { ascending: boolean }) => QueryBuilder
     in: (column: string, values: unknown[]) => QueryBuilder
+    gte: (column: string, value: string) => QueryBuilder
     limit: (count: number) => QueryBuilder
 }
 
@@ -30,14 +32,18 @@ vi.mock('@/lib/supabase-admin', () => ({ getSupabaseAdmin: () => ({ from: h.from
 vi.mock('@/lib/logger', () => ({ dbLogger: { error: vi.fn() } }))
 
 import { GET } from '@/app/api/leaderboard/route'
+import { previousDay, streakDay } from '@/lib/streak'
+
+const TODAY = streakDay()
 
 function query(table: string): QueryBuilder {
-    const trace: QueryTrace = { table, columns: '', orders: [], filters: [], limit: null }
+    const trace: QueryTrace = { table, columns: '', orders: [], filters: [], minimums: [], limit: null }
     h.queries.push(trace)
     const result = (): QueryResult => {
         if (h.errors[table]) return { data: null, error: h.errors[table] }
         let rows = [...(h.rows[table] || [])]
         rows = rows.filter(row => trace.filters.every(filter => filter.values.includes(row[filter.column])))
+        rows = rows.filter(row => trace.minimums.every(min => String(row[min.column] ?? '') >= min.value))
         rows.sort((left, right) => {
             for (const order of trace.orders) {
                 const a = left[order.column] as string | number
@@ -56,6 +62,7 @@ function query(table: string): QueryBuilder {
         select: vi.fn(columns => { trace.columns = columns; return builder }),
         order: vi.fn((column, options) => { trace.orders.push({ column, ascending: options.ascending }); return builder }),
         in: vi.fn((column, values) => { trace.filters.push({ column, values }); return builder }),
+        gte: vi.fn((column, value) => { trace.minimums.push({ column, value }); return builder }),
         limit: vi.fn(count => { trace.limit = count; return builder }),
         then: (resolve, reject) => Promise.resolve(result()).then(resolve, reject),
     }
@@ -65,9 +72,9 @@ function query(table: string): QueryBuilder {
 const request = (queryString = '') => new NextRequest(`http://localhost/api/leaderboard${queryString}`)
 const columns = (value: string) => value.split(',').map(column => column.trim()).sort()
 const entries = [
-    { user_id: 'user-current', total_points: 100, current_level: 3, current_streak: 2, exercises_completed: 6, chapters_completed: 77, email: 'private-current@example.com' },
-    { user_id: 'user-a', total_points: 100, current_level: 4, current_streak: 7, exercises_completed: 1, chapters_completed: 99, email: 'private-a@example.com' },
-    { user_id: 'user-z', total_points: 50, current_level: 2, current_streak: 4, exercises_completed: 9, chapters_completed: 88, email: 'private-z@example.com' },
+    { user_id: 'user-current', total_points: 100, current_level: 3, current_streak: 2, last_activity_date: TODAY, exercises_completed: 6, chapters_completed: 77, email: 'private-current@example.com' },
+    { user_id: 'user-a', total_points: 100, current_level: 4, current_streak: 7, last_activity_date: TODAY, exercises_completed: 1, chapters_completed: 99, email: 'private-a@example.com' },
+    { user_id: 'user-z', total_points: 50, current_level: 2, current_streak: 4, last_activity_date: TODAY, exercises_completed: 9, chapters_completed: 88, email: 'private-z@example.com' },
 ]
 
 beforeEach(() => {
@@ -132,7 +139,7 @@ describe('private, entitled leaderboard API', () => {
         const main = h.queries.find(trace => trace.table === 'user_gamification')!
         expect(main.orders).toEqual([{ column: sortColumn, ascending: false }, { column: 'user_id', ascending: true }])
         expect(main.limit).toBe(50)
-        expect(columns(main.columns)).toEqual(['current_level', 'current_streak', 'exercises_completed', 'total_points', 'user_id'])
+        expect(columns(main.columns)).toEqual(['current_level', 'current_streak', 'exercises_completed', 'last_activity_date', 'total_points', 'user_id'])
     })
 
     it('returns only public display fields and restricts enrichment to the ranked users', async () => {
@@ -166,6 +173,15 @@ describe('private, entitled leaderboard API', () => {
         expect(response.status).toBe(200)
         expect(await response.json()).toEqual({ entries: [] })
         expect(h.queries.map(trace => trace.table)).toEqual(['user_gamification'])
+    })
+
+    it('shows 0 for a streak that already broke and keeps it off the streak ranking', async () => {
+        h.rows.user_gamification[1].last_activity_date = '2020-01-01'
+        h.rows.user_gamification[2].last_activity_date = previousDay(TODAY)
+        const points = await (await GET(request())).json()
+        expect(points.entries.map((entry: Row) => entry.current_streak)).toEqual([0, 2, 4])
+        const streak = await (await GET(request('?tab=streak'))).json()
+        expect(streak.entries.map((entry: Row) => entry.current_streak)).toEqual([4, 2])
     })
 
     it('limits the public response to the first 50 ranks', async () => {
