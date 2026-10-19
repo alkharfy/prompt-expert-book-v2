@@ -28,6 +28,7 @@ interface ContentBlock {
     poster?: string
     loop?: boolean
     autoplay?: boolean
+    portrait?: boolean
     widget?: string
     personalize?: 'profession-try'
     collapsed?: boolean
@@ -186,7 +187,7 @@ export default function KnowledgeCardView({
                             <QuizBlock id={block.title || 'quiz'} title={block.title} questions={block.quiz} outro={block.content} formatText={formatText} />
                         )}
                         {block.type === 'video' && block.videoUrl && !block.narrated && (
-                            <div className="kc-image-block">
+                            <div className="kc-image-block" style={block.portrait ? { maxWidth: '420px', margin: '0 auto' } : undefined}>
                                 <video
                                     src={block.videoUrl}
                                     poster={block.poster}
@@ -194,8 +195,9 @@ export default function KnowledgeCardView({
                                     loop={block.loop !== false}
                                     muted
                                     playsInline
+                                    controls={block.autoplay === false}
                                     preload="metadata"
-                                    style={{ width: '100%', height: 'auto', borderRadius: '12px' }}
+                                    style={{ width: '100%', height: 'auto', borderRadius: '12px', aspectRatio: block.portrait ? '4 / 5' : undefined }}
                                 />
                                 {block.title && (
                                     <span className="kc-image-caption">{block.title}</span>

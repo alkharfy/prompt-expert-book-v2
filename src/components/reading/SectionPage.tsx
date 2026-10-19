@@ -45,7 +45,6 @@ import type { PageContent } from '@/data/bookData'
 
 // Running Project banner mapping: sectionNumber → phase info
 const RUNNING_PROJECT_PHASES: Record<number, { phase: number; label: string }> = {
-    3: { phase: 2, label: 'المرحلة 2: كتابة وثيقة متطلبات المنتج (PRD)' },
     4: { phase: 3, label: 'المرحلة 3: تصميم تدفقات المستخدم' },
     5: { phase: 4, label: 'المرحلة 4: هيكل الصفحات والـ Wireframe' },
     6: { phase: 5, label: 'المرحلة 5: كتابة نصوص الواجهة (Microcopy)' },
@@ -1091,7 +1090,8 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                     overflow: 'hidden',
                                                     border: '1px solid rgba(255, 107, 53, 0.2)',
                                                     boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                                                    margin: '10px 0',
+                                                    margin: block.portrait ? '10px auto' : '10px 0',
+                                                    maxWidth: block.portrait ? '420px' : undefined,
                                                     background: '#050505',
                                                 }}
                                             >
@@ -1104,7 +1104,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                     playsInline
                                                     controls={prefersReduced || block.autoplay === false}
                                                     preload="metadata"
-                                                    style={{ width: '100%', height: 'auto', display: 'block' }}
+                                                    style={{ width: '100%', height: 'auto', display: 'block', aspectRatio: block.portrait ? '4 / 5' : undefined }}
                                                 />
                                                 {block.title && (
                                                     <div style={{
@@ -1340,8 +1340,11 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                                     borderRadius: '8px',
                                                                     border: '1px solid rgba(255, 255, 255, 0.05)',
                                                                     padding: '12px 16px',
+                                                                    // Room for the copy button in the top-left corner.
+                                                                    ...(block.copyItems ? { position: 'relative' as const, paddingTop: '48px' } : {}),
                                                                 }}
                                                             >
+                                                                {block.copyItems && <CopyButton text={item.content} className="copy-button--labeled" />}
                                                                 <p style={{ margin: '0 0 4px', fontWeight: 'bold', color: '#e0e0e0', fontSize: '0.95rem' }}>
                                                                     {item.title}
                                                                 </p>

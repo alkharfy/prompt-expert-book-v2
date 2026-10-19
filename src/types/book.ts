@@ -28,6 +28,8 @@ export interface PageContent {
         poster?: string;          // still shown before the video plays / as fallback
         loop?: boolean;           // default true for short explainer loops
         autoplay?: boolean;       // default true (muted) — plays when scrolled into view
+        /** A tall phone-screen clip: shown at most phone width and centred, so it doesn't fill a laptop screen. */
+        portrait?: boolean;
         /** A talking video (المستر): vertical, plays with sound only when the reader taps play, never loops. */
         narrated?: boolean;
         /** Narrated video only: the `anchor` of the block the page scrolls to when the video ends. */
@@ -68,5 +70,7 @@ export interface PageContent {
         reveal?: string;
         /** Shown only to readers on this track; untagged blocks are shown to everyone. */
         track?: 'accounting' | 'service';
+        /** Card items get their own copy button (test cases sent one message at a time). */
+        copyItems?: boolean;
     }[];
 }

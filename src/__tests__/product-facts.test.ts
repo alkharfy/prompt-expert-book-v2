@@ -12,8 +12,8 @@ describe('product facts match the shipped lessons', () => {
   it('counts every reading page, exercise and numbered library template', () => {
     const pages = Object.values(book).filter(Array.isArray).flat()
     expect(PRODUCT_STATS.readingPages).toBe(pages.length)
-    expect(pages.length).toBe(202)
-    expect(BOOK_PAGES_DISPLAY).toBe(202)
+    expect(pages.length).toBe(192)
+    expect(BOOK_PAGES_DISPLAY).toBe(192)
     expect(TOTAL_BOOK_PAGES).toBe(222)
     expect(PRODUCT_STATS.freePages).toBe(3) // only the intro is free since 2026-10-16
     expect(FREE_READING_LAST_PAGE).toBe(6)
@@ -27,14 +27,15 @@ describe('product facts match the shipped lessons', () => {
     expect(SECTION_REGISTRY[0]).toMatchObject({ pageCount: 3, slotSize: 6 })
     expect(SECTION_REGISTRY[1]).toMatchObject({ pageCount: 9, slotSize: 17, freePageLimit: 0, prevSection: { lastPage: 3 } })
     expect(SECTION_REGISTRY[2]).toMatchObject({ pageCount: 9, slotSize: 18, freePageLimit: 0, prevSection: { lastPage: 9 } })
-    expect(SECTION_REGISTRY[3].prevSection?.lastPage).toBe(9)
+    expect(SECTION_REGISTRY[3]).toMatchObject({ pageCount: 8, slotSize: 18, freePageLimit: 0, prevSection: { lastPage: 9 } })
+    expect(SECTION_REGISTRY[4].prevSection?.lastPage).toBe(8)
     let offset = 0
     for (const section of SECTION_REGISTRY) {
       const data = section.id === 'intro' ? book.introData : book[`unit${section.sectionNumber}Data` as keyof typeof book]
       expect(section.progressOffset).toBe(offset)
       expect(section.pageCount).toBe(data.length)
       expect(section.slotSize).toBeGreaterThanOrEqual(section.pageCount)
-      if (section.sectionNumber >= 3) expect(section.slotSize).toBe(section.pageCount)
+      if (section.sectionNumber >= 4) expect(section.slotSize).toBe(section.pageCount)
       offset += section.slotSize
     }
     expect(offset).toBe(182)

@@ -51,11 +51,11 @@ function getSafeRedirectPath(path: string): string {
 const FIRST_CHAPTER = SECTION_REGISTRY.find(section => section.id === 'section-1')!
 const INTRO = SECTION_REGISTRY.find(section => section.id === 'intro')!
 const pagesOf = (id: string) => SECTION_REGISTRY.find(section => section.id === id)?.pageCount ?? 0
-// Levels 1–2 replaced book chapters 1–2 (2026-10-16/18); chapters 3–10 stay until levels 3–5 land.
+// Levels 1–3 replaced book chapters 1–3 (2026-10-16/18/19); chapters 4–10 stay until levels 4–5 land.
 const BOOK_CHAPTERS: { num: number; title: string; pages: number; free: boolean; freeLabel?: string }[] = [
     { num: 1, title: 'المستوى 1: بتستخدمه صح', pages: FIRST_CHAPTER.pageCount, free: false },
     { num: 2, title: 'المستوى 2: بتطلب زي المحترف', pages: pagesOf('section-2'), free: false },
-    { num: 3, title: 'الفصل 3: إطار GOLDS', pages: pagesOf('section-3'), free: false },
+    { num: 3, title: 'المستوى 3: بتجهّزه لشغلك', pages: pagesOf('section-3'), free: false },
     { num: 4, title: 'الفصل 4: الطلبات المتسلسلة', pages: pagesOf('section-4'), free: false },
     { num: 5, title: 'الفصل 5: الجودة والتصحيح', pages: pagesOf('section-5'), free: false },
     { num: 6, title: 'الفصل 6: صور وصوت وملفات', pages: pagesOf('section-6'), free: false },

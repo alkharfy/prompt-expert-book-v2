@@ -5,8 +5,9 @@ import { buildToc, lessonsWord } from '@/lib/tocProgress'
 import { introData } from '@/data/introData'
 import { unit1Data } from '@/data/unit1Data'
 import { unit2Data } from '@/data/unit2Data'
+import { unit3Data } from '@/data/unit3Data'
 
-const PAGES: Record<string, { title: string }[]> = { intro: introData, 'section-1': unit1Data, 'section-2': unit2Data }
+const PAGES: Record<string, { title: string }[]> = { intro: introData, 'section-1': unit1Data, 'section-2': unit2Data, 'section-3': unit3Data }
 const globalPage = (sectionId: string, page: number) => {
     const section = SECTION_REGISTRY.find(s => s.id === sectionId)!
     return section.progressOffset + page
@@ -35,8 +36,8 @@ describe('where the learner stands in the TOC', () => {
     it('starts a new visitor at the first intro lesson, with paid levels locked and unwritten ones coming soon', () => {
         const view = buildToc({ access: 'guest' })
         expect([view.level, view.lesson]).toEqual([0, 0])
-        expect(view.levels).toEqual(['here', 'lock', 'lock', 'soon', 'soon', 'soon'])
-        expect(view.available).toBe(21)
+        expect(view.levels).toEqual(['here', 'lock', 'lock', 'lock', 'soon', 'soon'])
+        expect(view.available).toBe(29)
     })
 
     it('remembers the intro page a guest opened last', () => {
@@ -66,10 +67,10 @@ describe('where the learner stands in the TOC', () => {
         expect(view.lessons[1].includes('done')).toBe(false)
     })
 
-    it('waits at Level 3 once everything released is finished', () => {
-        const view = buildToc({ access: 'member', currentPage: globalPage('section-2', 9), completedChapters: [0, 1, 2] })
-        expect(view.level).toBe(3)
-        expect(view.levels).toEqual(['done', 'done', 'done', 'waiting', 'soon', 'soon'])
+    it('waits at Level 4 once everything released is finished', () => {
+        const view = buildToc({ access: 'member', currentPage: globalPage('section-3', 8), completedChapters: [0, 1, 2, 3] })
+        expect(view.level).toBe(4)
+        expect(view.levels).toEqual(['done', 'done', 'done', 'done', 'waiting', 'soon'])
         expect(view.done).toBe(view.available)
     })
 
@@ -98,8 +99,8 @@ describe('where the learner stands in the TOC', () => {
 
     it('sends a subscriber reading an old book chapter back to that page', () => {
         const view = buildToc({ access: 'member', currentPage: globalPage('section-4', 5), completedChapters: [0] })
-        expect(view.level).toBe(3)
+        expect(view.level).toBe(4)
         expect(view.book).toMatchObject({ n: 4, page: 5, url: '/read/section-4/5' })
-        expect(view.levels.slice(0, 3)).toEqual(['done', 'todo', 'todo'])
+        expect(view.levels.slice(0, 4)).toEqual(['done', 'todo', 'todo', 'todo'])
     })
 })

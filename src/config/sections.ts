@@ -68,11 +68,11 @@ export const SECTION_REGISTRY: SectionConfig[] = [
     {
         id: 'section-3',
         sectionNumber: 3,
-        pageCount: 18,
+        pageCount: 8,
         slotSize: 18,
-        chapterLabel: 'الفصل 03',
+        chapterLabel: 'المستوى ٣',
         progressOffset: 41, // Reserved slots: Intro 6 + S1 17 + S2 18.
-        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
+        freePageLimit: 0, // المستوى ٣ مدفوع (19 أكتوبر 2026: بدل الفصل 03 القديم)
         chapterIndex: 3,
         prevSection: { path: '/read/section-2', lastPage: 9 },
         nextSection: { path: '/read/section-4/1' },
@@ -90,7 +90,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         progressOffset: 59, // + S3: 18
         freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 4,
-        prevSection: { path: '/read/section-3', lastPage: 18 },
+        prevSection: { path: '/read/section-3', lastPage: 8 },
         nextSection: { path: '/read/section-5/1' },
         robotSize: 320,
         hasGlossary: false,

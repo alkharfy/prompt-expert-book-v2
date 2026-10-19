@@ -23,6 +23,8 @@ export function normalizeAnswer(value: string): string {
     return value
         .trim()
         .replace(/[٠-٩]/g, d => String(ARABIC_DIGITS.indexOf(d)))
+        // A list of numbers typed as «1 و 3 و 4» reads the same as «1، 3، 4».
+        .replace(/(\d)\s*و\s*(?=\d)/g, '$1')
         .replace(/٫/g, '.')
         .replace(/[,،٬\s%٪]/g, '')
         .replace(/[أإآ]/g, 'ا')
@@ -53,7 +55,7 @@ export default function AnswerCheck({ id, question, accept, explanation, hint, f
 
     return (
         <section aria-label={question} style={{ margin: '20px 0', padding: '18px', borderRadius: '16px', background: 'rgba(255, 184, 0, 0.05)', border: '1px solid rgba(255, 184, 0, 0.35)' }}>
-            <p style={{ color: '#fff', fontWeight: 700, lineHeight: 1.8, margin: '0 0 12px' }}>✍️ {question}</p>
+            <p style={{ color: '#fff', fontWeight: 700, lineHeight: 1.8, margin: '0 0 12px', whiteSpace: 'pre-line' }}>✍️ {question}</p>
             <div style={{ display: 'flex', gap: '8px' }}>
                 <input
                     value={value}

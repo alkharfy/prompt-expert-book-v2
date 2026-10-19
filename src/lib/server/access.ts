@@ -116,6 +116,6 @@ export function getSectionExtras(config: SectionConfig, hasAccess: boolean): {
   }
 
   // The rewritten levels end with their own project; the old book's profession examples don't belong there.
-  const isLevel = config.id === 'section-1' || config.id === 'section-2'
+  const isLevel = config.id === 'section-1' || config.id === 'section-2' || config.id === 'section-3'
   return { recap, prevRecap, hasSpec: !isLevel && hasSpecContent(config.id) }
 }

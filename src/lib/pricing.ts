@@ -63,7 +63,7 @@ export interface PublicPricingPlan {
 
 /** What every plan opens: the course itself, said as results, not page counts. */
 export const COURSE_OUTCOMES: string[] = [
-  'المستوى 1 والمستوى 2 كاملين دلوقتي، والمستويات 3–5 أول ما تنزل',
+  'المستويات 1 و2 و3 كاملين دلوقتي، والمستويات 4–5 أول ما تنزل',
   'تمارين على ملفات شغل مصرية: فواتير، كشف بنك، شكاوى عملاء',
   `«المستر بيصحّح» طلباتك ويقولك تصلّح إيه: لحد ${GRADER_DAILY_LIMIT} مرات كل 24 ساعة`,
   '«شنطة طلباتك»: تحفظ فيها الطلبات اللي كتبتها، وتنسخها في شغلك',

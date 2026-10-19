@@ -979,7 +979,8 @@ kbd.search-shortcut {
   text-shadow: none;
 }
 @media (max-width: 768px) {
-  .code-block-wrapper .copy-button span {
+  .code-block-wrapper .copy-button span,
+  .copy-button.copy-button--labeled span {
     display: inline;
   }
 }
