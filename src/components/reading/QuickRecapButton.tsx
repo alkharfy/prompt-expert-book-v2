@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import RecapCard from './RecapCard'
 import type { ChapterRecap } from '@/data/recapsData'
@@ -11,7 +12,12 @@ interface QuickRecapButtonProps {
 
 export default function QuickRecapButton({ recap }: QuickRecapButtonProps) {
     const [isOpen, setIsOpen] = useState(false)
+    const [mounted, setMounted] = useState(false)
     const prefersReduced = useReducedMotion()
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- portal mount detection requires client-side check
+        setMounted(true)
+    }, [])
 
     return (
         <>
@@ -23,7 +29,8 @@ export default function QuickRecapButton({ recap }: QuickRecapButtonProps) {
                 📋 ملخص {recap.chapterLabel}
             </button>
 
-            <AnimatePresence>
+            {/* In <body>: inside the page container (its own stacking context) the floating buttons covered the modal. */}
+            {mounted && createPortal(<AnimatePresence>
                 {isOpen && (
                     <>
                         {/* Backdrop */}
@@ -84,7 +91,7 @@ export default function QuickRecapButton({ recap }: QuickRecapButtonProps) {
                         </motion.div>
                     </>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>, document.body)}
         </>
     )
 }

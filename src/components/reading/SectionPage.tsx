@@ -67,6 +67,8 @@ import ConfidenceCheck from '@/components/reading/ConfidenceCheck'
 import ChecklistBlock from '@/components/reading/ChecklistBlock'
 import AnswerCheck from '@/components/reading/AnswerCheck'
 import GradeCheck from '@/components/reading/GradeCheck'
+import { hasPassedGrade } from '@/components/reading/gradePass'
+import { GRADE_RUBRICS } from '@/data/gradeRubrics'
 import { SaveToBagBlock, BagList } from '@/components/reading/BagBlocks'
 import CourseMap from '@/components/reading/CourseMap'
 import { InteractiveWidget } from '@/components/reading/widgets'
@@ -162,6 +164,25 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
             ? pageNum > config.freePageLimit && needsAccess
             : needsAccess
     const isNextPageLocked = hasFreePages && pageNum === config.freePageLimit && needsAccess
+
+    // Owner 2026-10-19: in a lesson, the rest of the page (and «next») waits behind «المستر بيصحّح» until the learner's
+    // own prompt passes — or they tick the self-check (GradeCheck offers it when the grader can't answer or after 3 misses).
+    // Not the free intro demo, and not for guests (they can't be graded).
+    const [passedGrades, setPassedGrades] = useState<Record<string, boolean>>({})
+    useEffect(() => {
+        const passed: Record<string, boolean> = {}
+        for (const b of pageBlocks) if (b.type === 'grade' && b.rubric && hasPassedGrade(b.rubric)) passed[b.rubric] = true
+        setPassedGrades(passed)
+    }, [pageBlocks])
+    const shownBlocks = React.useMemo(
+        () => pageBlocks.filter((block, idx) => !(block.type === 'image' && idx === pageBlocks.findIndex((b) => b.type === 'image'))),
+        [pageBlocks],
+    )
+    const gateAt = isAuthed && !isCurrentPageLocked
+        ? shownBlocks.findIndex((b) => b.type === 'grade' && !!b.rubric && !GRADE_RUBRICS[b.rubric]?.demo && !passedGrades[b.rubric])
+        : -1
+    const gateAtRef = useRef(gateAt)
+    gateAtRef.current = gateAt
 
     // Load glossary components dynamically for sections that need them
     useEffect(() => {
@@ -373,6 +394,11 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
 
     const handleNext = useCallback(async () => {
         if (completionBusyRef.current) return
+        if (gateAtRef.current >= 0) {
+            // The exercise still holds the rest of the lesson: take the learner back to it.
+            document.querySelector(`[data-block-index="${gateAtRef.current}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            return
+        }
         setCompletionError(null)
         if (isNextPageLocked && !isLastPage) {
             setIsLockOverlayOpen(true)
@@ -935,6 +961,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
 
                         <motion.div
                             ref={contentContainerRef}
+                            className="reading-blocks"
                             initial={prefersReduced ? false : { opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={prefersReduced ? { duration: 0 } : { duration: 0.8, delay: 0.4 }}
@@ -948,9 +975,8 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                 opacity: isCurrentPageLocked ? 0.3 : 1,
                             }}
                         >
-                            {pageBlocks
-                                .filter((block, idx) => !(block.type === 'image' && idx === pageBlocks.findIndex((b) => b.type === 'image')))
-                                .map((block, index) => (
+                            {shownBlocks
+                                .map((block, index) => gateAt >= 0 && index > gateAt ? null : (
                                     <div key={index} data-block-index={index} id={block.anchor} style={block.anchor ? { scrollMarginTop: '90px' } : undefined}>
                                         {/* Text Block */}
                                         {block.type === 'text' && (
@@ -1025,7 +1051,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                             <NarratedVideo src={block.videoUrl} poster={block.poster} title={block.title} next={block.next} note={block.content || undefined} />
                                         )}
                                         {block.type === 'audio' && block.audioUrl && (
-                                            <AudioBlock src={block.audioUrl} title={block.title} note={block.content} />
+                                            <AudioBlock src={block.audioUrl} title={block.title} note={block.content} download={block.download} formatText={formatText} />
                                         )}
                                         {block.type === 'flashcards' && block.items && (
                                             <FlashcardDeck title={block.title} cards={block.items} />
@@ -1034,7 +1060,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                             <AnswerCheck key={block.title} id={`${config.id}-${pageNum}-${index}`} question={block.title} accept={block.accept} hint={block.hint} explanation={block.content} formatText={formatText} />
                                         )}
                                         {block.type === 'grade' && block.rubric && (
-                                            <GradeCheck key={block.rubric} rubricId={block.rubric} title={block.title} intro={block.content || undefined} bagLabel={block.bag} sectionId={config.id} pageNumber={pageNum} formatText={formatText} />
+                                            <GradeCheck key={block.rubric} rubricId={block.rubric} title={block.title} intro={block.content || undefined} bagLabel={block.bag} sectionId={config.id} pageNumber={pageNum} formatText={formatText} gated={index === gateAt} onPass={() => setPassedGrades((p) => ({ ...p, [block.rubric!]: true }))} />
                                         )}
                                         {block.type === 'save' && block.bag && (
                                             <SaveToBagBlock key={block.bag} label={block.bag} intro={block.content || undefined} placeholder={block.placeholder} sectionId={config.id} pageNumber={pageNum} formatText={formatText} />
@@ -1315,7 +1341,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                                                 <p style={{ margin: '0 0 4px', fontWeight: 'bold', color: '#e0e0e0', fontSize: '0.95rem' }}>
                                                                     {item.title}
                                                                 </p>
-                                                                <div style={{ fontSize: '0.92rem', color: '#b8b8b8', lineHeight: 1.7 }}>
+                                                                <div style={{ fontSize: '0.92rem', color: '#b8b8b8', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
                                                                     {formatText(item.content)}
                                                                 </div>
                                                             </div>

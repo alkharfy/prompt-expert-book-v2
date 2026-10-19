@@ -928,50 +928,37 @@ kbd.search-shortcut {
   box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
 }
 
-/* Reading Font Size Classes */
+/* Reading Font Size Classes
+   Paragraphs share one base size; the small/large choice zooms the whole lesson (cards, prompts, exercises),
+   because most blocks set their own inline sizes and a rule on <p> alone barely changed anything. */
 .reading-font-small p,
 .reading-font-small .option-text,
 .reading-font-small details summary,
-.reading-font-small details > div {
-  font-size: 0.95rem !important;
-  line-height: 1.7 !important;
-}
-
+.reading-font-small details > div,
 .reading-font-medium p,
 .reading-font-medium .option-text,
 .reading-font-medium details summary,
-.reading-font-medium details > div {
-  font-size: 1.1rem !important;
-  line-height: 1.8 !important;
-}
-
+.reading-font-medium details > div,
 .reading-font-large p,
 .reading-font-large .option-text,
 .reading-font-large details summary,
 .reading-font-large details > div {
-  font-size: 1.3rem !important;
-  line-height: 1.9 !important;
-}
-
-.reading-font-large h3,
-.reading-font-large h4 {
-  font-size: 1.5rem !important;
-}
-
-.reading-font-small h3,
-.reading-font-small h4 {
   font-size: 1.1rem !important;
+  line-height: 1.8 !important;
+}
+
+.reading-font-small .reading-blocks {
+  zoom: 0.88;
+}
+
+.reading-font-large .reading-blocks {
+  zoom: 1.2;
 }
 
 @media (max-width: 768px) {
   .font-size-btn {
     width: 32px;
     height: 32px;
-  }
-
-  .reading-font-large p,
-  .reading-font-large .option-text {
-    font-size: 1.15rem !important;
   }
 }
 

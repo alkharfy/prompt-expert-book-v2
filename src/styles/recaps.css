@@ -252,22 +252,26 @@
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.7);
-    z-index: 999;
+    z-index: 1100; /* above the floating missions/notes buttons (1000) */
 }
 
+/* Centred with inset + margin:auto, not translate(-50%,-50%): framer-motion writes its own transform
+   on this element, which dropped the translate and pushed the bottom half off-screen. */
 .quick-recap-modal {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    margin: auto;
+    height: fit-content;
     background: #111;
     border: 1px solid rgba(255,107,53,0.3);
     border-radius: 16px;
     width: 90%;
     max-width: 500px;
-    max-height: 80vh;
+    max-height: 85vh;
+    max-height: 85dvh;
     overflow-y: auto;
-    z-index: 1000;
+    overscroll-behavior: contain;
+    z-index: 1101;
     padding: 0;
 }
 

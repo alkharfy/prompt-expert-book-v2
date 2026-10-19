@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { apiLogger } from '@/lib/logger'
-import { generateDailyMissions, getTodayMissions } from '@/lib/missions'
+import { generateDailyMissions, getTodayMissions, updateMissionProgress } from '@/lib/missions'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 
 // =====================================================
@@ -51,6 +51,22 @@ export async function GET() {
             const userPlan = planData?.[0]?.plan_id || null
 
             missions = await generateDailyMissions(userId, userLevel, userPlan)
+        }
+
+        // «حافظ على سلسلتك» is done once today already counts in the streak. Nothing ever reported it,
+        // so it stayed 0/1 under a lit streak; sync it here (also covers a streak recorded before today's missions existed).
+        const streakMission = missions.find(m => m.mission_template_id === 'maintain_streak' && m.status === 'active')
+        if (streakMission) {
+            const { data: streakRow } = await getSupabaseAdmin()
+                .from('user_gamification')
+                .select('last_activity_date')
+                .eq('user_id', userId)
+                .maybeSingle() as { data: { last_activity_date: string | null } | null }
+            // update_user_streak() stamps the UTC date, like the missions' own day.
+            if (streakRow?.last_activity_date === new Date().toISOString().slice(0, 10)) {
+                const synced = await updateMissionProgress(userId, 'maintain_streak', streakMission.target_value)
+                if (synced.updatedMissions.length) missions = await getTodayMissions(userId)
+            }
         }
 
         // تجهيز الاستجابة

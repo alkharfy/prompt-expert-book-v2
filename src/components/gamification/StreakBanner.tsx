@@ -73,6 +73,8 @@ export default function StreakBanner({ variant = 'default', showDetails = true, 
             if (json.data) {
                 setStreakData(json.data)
                 setHasRecordedActivity(true)
+                // Today now counts in the streak: let the daily-missions widget tick «حافظ على سلسلتك».
+                window.dispatchEvent(new Event('mission-progress-updated'))
             }
         } catch {
             // Silently fail

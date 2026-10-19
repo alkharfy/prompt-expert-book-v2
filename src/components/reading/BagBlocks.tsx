@@ -58,7 +58,7 @@ export function BagList({ sectionId, title }: { sectionId: string; title?: strin
             <p style={{ color: '#fff', fontWeight: 700, margin: '0 0 10px' }}>🎒 {title || 'شنطتك لحد دلوقتي'}</p>
             {items === 'loading' && <p style={{ color: '#bbb', margin: 0 }}>بيحمّل…</p>}
             {items === null && <p style={{ color: '#bbb', margin: 0 }}>سجّل دخولك عشان تشوف اللي حفظته.</p>}
-            {Array.isArray(items) && items.length === 0 && <p style={{ color: '#bbb', margin: 0, lineHeight: 1.8 }}>لسه محفظتش حاجة. ارجع للدروس واضغط «🎒 احفظه في شنطتك» بعد كل طلب.</p>}
+            {Array.isArray(items) && items.length === 0 && <p style={{ color: '#bbb', margin: 0, lineHeight: 1.8 }}>لسه محفظتش حاجة. ارجع للدروس: تحت كل «المستر بيصحّح» فيه زرار «🎒 احفظه في شنطتك» يظهر أول ما تكتب طلبك.</p>}
             {Array.isArray(items) && items.length > 0 && (
                 <ol style={{ margin: 0, paddingInlineStart: '20px', display: 'grid', gap: '12px' }}>
                     {items.map(item => (

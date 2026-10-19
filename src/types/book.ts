@@ -36,6 +36,8 @@ export interface PageContent {
         anchor?: string;
         // For type: 'audio' — a listen-on-the-go summary (e.g. a NotebookLM audio overview)
         audioUrl?: string;
+        /** Audio only: show a download link (practice voice notes the learner sends to their own tool). */
+        download?: boolean;
         // For type: 'flashcards' — each item is one card: title = front, content = back.
         // For type: 'answer' — title = the question, accept = accepted answers, hint after a miss, content = explanation.
         accept?: string[];
