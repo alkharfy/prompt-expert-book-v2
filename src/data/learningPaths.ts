@@ -92,7 +92,7 @@ export function isSectionInPath(
     return LEARNING_PATHS[pathId].sections.includes(sectionId)
 }
 
-/** Map chapter index (0-based from RoadmapPath chapters array) to section id */
+/** Map chapter index (0-based, in the old book chapter order) to section id */
 export const CHAPTER_TO_SECTION: Record<number, string> = {
     0: 'intro',
     1: 'section-1',

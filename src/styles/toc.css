@@ -1,0 +1,215 @@
+/* =====================================================
+   COURSE TOC (src/components/toc/CourseToc.tsx)
+   Two colors: orange = done / where you are, gray = still ahead; gold is just the trophy.
+   Text on orange is dark so it stays readable (white on #FF6B35 is ~2.8:1).
+   Laptop (900px+): a metro line across. Phone: the line runs down the side.
+   ===================================================== */
+
+.ctoc {
+  --on: #FF6B35;
+  --off: #626262;
+  --ink: #1a0b05;
+  --ct-line: rgba(255, 255, 255, 0.09);
+  --ct-muted: rgba(255, 255, 255, 0.66);
+  --G: 74px;  /* gutter for the line on phones */
+  --L: 34px;  /* the line's center inside the gutter */
+  --R: 70px;  /* robot size on phones */
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 16px 0;
+  color: #f5f5f5;
+}
+
+.ct-head { text-align: center; margin-bottom: 22px; }
+.ct-head h1 {
+  font-weight: 900; font-size: clamp(1.9rem, 4vw, 2.8rem); margin: 0 0 8px;
+  background: linear-gradient(135deg, #FF6B35, #FFB800);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.ct-head p { margin: 0 auto; max-width: 640px; color: var(--ct-muted); font-size: 1.05rem; line-height: 1.8; }
+
+.ct-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; width: 100%;
+  padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 1rem; text-decoration: none; cursor: pointer; border: 0;
+}
+.ct-btn.primary { color: var(--ink); background: linear-gradient(135deg, #FF6B35, #FF8C42); box-shadow: 0 8px 24px rgba(255, 107, 53, 0.25); }
+.ct-btn.ghost { color: #eee; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--ct-line); }
+.ct-chip { display: inline-block; font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--ct-line); color: #ddd; white-space: nowrap; }
+.ct-chip.on { color: var(--on); border-color: rgba(255, 107, 53, 0.5); }
+.ct-chip.here { color: var(--ink); background: var(--on); border-color: var(--on); }
+.ctoc a:focus-visible, .ctoc button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* ---------- the continue card ---------- */
+.ct-resume {
+  max-width: 980px; min-height: 96px; margin: 0 auto; padding: 16px 20px; border-radius: 18px;
+  background: rgba(255, 107, 53, 0.07); border: 1px solid rgba(255, 107, 53, 0.3);
+  display: flex; align-items: center; justify-content: space-between; gap: 14px 22px; flex-wrap: wrap;
+}
+.ct-r-text { flex: 1 1 380px; min-width: 0; }
+.ct-r-acts { flex: 0 1 300px; }
+.ct-info { display: flex; gap: 14px; align-items: center; }
+.ct-kicker { display: block; margin-bottom: 6px; color: #FF8C42; font-weight: 700; font-size: 0.88rem; }
+.ct-resume strong { display: block; font-weight: 800; font-size: 1.12rem; line-height: 1.5; }
+.ct-sub { display: block; color: var(--ct-muted); font-size: 0.9rem; margin-top: 3px; line-height: 1.6; }
+.ct-ring { width: 64px; height: 64px; position: relative; flex-shrink: 0; }
+.ct-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ct-ring b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 0.95rem; }
+.ct-mini-price { display: none; margin-top: 10px; color: #ddd; font-size: 0.9rem; text-align: center; text-decoration: underline; text-underline-offset: 5px; }
+
+/* legend: shape + word, never color alone */
+.ct-legend { display: flex; justify-content: center; gap: 8px 16px; flex-wrap: wrap; color: var(--ct-muted); font-size: 0.85rem; margin: 10px 0 14px; }
+.ct-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -1px; margin-inline-end: 6px; border: 3px solid var(--off); background: #0a0a0a; box-sizing: border-box; }
+.ct-legend i.d { background: var(--on); border-color: var(--on); }
+.ct-legend i.h { border-color: var(--on); box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.3); }
+
+/* ---------- laptop: the line across ---------- */
+.ct-line { display: none; position: relative; height: 330px; }
+.ct-track { position: absolute; top: 140px; height: 10px; border-radius: 6px; background: var(--off); overflow: hidden; }
+.ct-track i { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--on); }
+.ct-tick { position: absolute; top: 141px; width: 8px; height: 8px; border-radius: 50%; background: #0a0a0a; translate: 50% 0; z-index: 1; }
+.ct-tick.done { background: var(--ink); }
+.ct-tick.here { top: 138px; width: 14px; height: 14px; background: #fff; box-shadow: 0 0 0 3px var(--on); }
+.ct-st-w {
+  position: absolute; top: 130px; translate: 50% 0; z-index: 2; width: 30px; height: 30px; border-radius: 50%; padding: 0;
+  background: #0a0a0a; border: 6px solid var(--off); cursor: pointer;
+}
+.ct-st-w.done { background: var(--on); border-color: var(--on); }
+.ct-st-w.here, .ct-st-w.gate, .ct-st-w.waiting { border-color: var(--on); box-shadow: 0 0 0 6px rgba(255, 107, 53, 0.25); }
+.ct-sign {
+  position: absolute; top: 180px; translate: 50% 0; width: min(160px, calc(86% / 6 - 10px)); text-align: center; cursor: pointer; padding: 0;
+  background: #121212; border: 1px solid var(--ct-line); border-radius: 12px; overflow: hidden; color: inherit; font: inherit; transition: transform 0.15s;
+}
+.ct-sign:hover { transform: translateY(-2px); }
+.ct-bar { display: block; background: #222; color: #ddd; font-weight: 800; font-size: 0.82rem; padding: 4px 6px; }
+.ct-sign.done .ct-bar, .ct-sign.here .ct-bar, .ct-sign.gate .ct-bar, .ct-sign.waiting .ct-bar { background: var(--on); color: var(--ink); }
+.ct-sign b { display: block; font-weight: 800; font-size: 0.95rem; line-height: 1.45; padding: 8px 8px 2px; }
+.ct-sign small { display: block; color: var(--ct-muted); font-size: 0.78rem; line-height: 1.5; padding: 0 8px 9px; }
+.ct-sign[aria-pressed="true"] { border-color: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7); }
+.ct-end-w { position: absolute; top: 84px; translate: 50% 0; text-align: center; width: 110px; }
+.ct-end-w img { width: 86px; height: 86px; object-fit: contain; filter: drop-shadow(0 6px 18px rgba(255, 184, 0, 0.35)); }
+.ct-end-w b { display: block; color: #FFB800; font-weight: 800; font-size: 0.95rem; }
+.ct-rider-w { position: absolute; top: 46px; width: 100px; height: 100px; translate: 50% 0; z-index: 4; pointer-events: none; }
+.ct-rider-w .ct-rider { position: static; display: block; width: 100px; height: 100px; }
+
+/* the level picked on the line */
+.ct-panel { display: none; background: #121212; border: 1px solid var(--ct-line); border-radius: 18px; }
+.ct-panel header { padding: 16px 18px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; border-bottom: 1px solid var(--ct-line); }
+.ct-panel h2 { margin: 0; font-size: 1.2rem; }
+.ct-panel header p { width: 100%; margin: 0; color: var(--ct-muted); font-size: 0.95rem; line-height: 1.7; }
+.ct-panel header p b { color: #ddd; }
+.ct-panel footer { padding: 14px 18px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--ct-line); }
+.ct-panel footer .ct-btn { width: auto; }
+.ct-note { color: var(--ct-muted); font-size: 0.92rem; line-height: 1.7; }
+
+/* ---------- lesson rows (laptop panel and phone cards): real links that open straight away ---------- */
+.ct-lessons { list-style: none; margin: 0; padding: 0; }
+.ct-lesson { position: relative; }
+.ct-row { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 16px; color: inherit; text-decoration: none; line-height: 1.6; box-sizing: border-box; }
+a.ct-row:hover { background: rgba(255, 255, 255, 0.035); }
+.ct-k { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 0.78rem; background: rgba(255, 255, 255, 0.08); flex-shrink: 0; }
+.ct-lesson.done .ct-k { background: var(--on); color: var(--ink); }
+.ct-lesson.here .ct-k { background: #0a0a0a; color: #fff; box-shadow: 0 0 0 2px var(--on); }
+.ct-lesson.here .ct-row { background: rgba(255, 107, 53, 0.09); }
+.ct-lesson.soon .ct-row { color: var(--ct-muted); }
+.ct-t { flex: 1; }
+.ct-s { font-size: 0.8rem; color: var(--ct-muted); white-space: nowrap; }
+.ct-lesson.here .ct-s { color: var(--ink); background: var(--on); padding: 2px 10px; border-radius: 999px; font-weight: 800; }
+
+/* ---------- phone: the line down the side ---------- */
+.ct-stops { list-style: none; margin: 0; padding: 0; }
+.ct-stop { position: relative; padding-inline-start: var(--G); padding-bottom: 18px; }
+.ct-seg { position: absolute; inset-inline-start: calc(var(--L) - 4px); width: 8px; top: 0; bottom: 0; background: var(--off); }
+.ct-stop:first-child > .ct-seg { top: 33px; }
+.ct-stop.done > .ct-seg { background: var(--on); }
+.ct-station {
+  position: absolute; inset-inline-start: calc(var(--L) - 17px); top: 16px; z-index: 1;
+  width: 34px; height: 34px; border-radius: 50%; background: #0a0a0a; border: 5px solid var(--off); box-sizing: border-box;
+  display: grid; place-items: center; font-weight: 900; font-size: 0.8rem; color: #bbb;
+}
+.ct-stop.done > .ct-station { background: var(--on); border-color: var(--on); color: var(--ink); }
+.ct-stop.here > .ct-station, .ct-stop.gate > .ct-station, .ct-stop.waiting > .ct-station { border-color: var(--on); color: #fff; box-shadow: 0 0 0 6px rgba(255, 107, 53, 0.25); }
+.ct-card { position: relative; background: #121212; border: 1px solid var(--ct-line); border-radius: 16px; }
+.ct-stop.here .ct-card, .ct-stop.gate .ct-card, .ct-stop.waiting .ct-card { border-color: rgba(255, 107, 53, 0.45); }
+.ct-card-head {
+  all: unset; box-sizing: border-box; position: relative; display: grid; grid-template-columns: 1fr auto; gap: 3px 8px;
+  width: 100%; padding: 12px; cursor: pointer; border-radius: 16px;
+}
+.ct-card-head > * { grid-column: 1; }
+.ct-chev { grid-column: 2 !important; grid-row: 1 / span 4; align-self: center; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.07); transition: rotate 0.2s; }
+.ct-stop.open .ct-chev { rotate: 180deg; }
+.ct-top { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-weight: 800; font-size: 0.86rem; color: #ddd; }
+.ct-name { font-weight: 800; font-size: 1.05rem; line-height: 1.45; }
+.ct-meta { color: var(--ct-muted); font-size: 0.86rem; }
+.ct-out { color: var(--ct-muted); font-size: 0.9rem; line-height: 1.7; }
+.ct-out b { color: #ddd; }
+.ct-stops .ct-lessons { border-top: 1px solid var(--ct-line); }
+.ct-stops .ct-row { padding: 8px 12px; font-size: 0.95rem; }
+.ct-stops .ct-lesson:last-child .ct-row { border-radius: 0 0 16px 16px; }
+.ct-stops .ct-lesson.done .ct-s { display: none; }
+/* the line keeps going orange down the open level, up to where you are */
+.ct-stop.here.open .ct-card-head::before { content: ''; position: absolute; inset-inline-start: calc(var(--L) - var(--G) - 5px); width: 8px; top: 32px; bottom: -1px; background: var(--on); }
+/* each lesson is a small stop on the line, right next to its row */
+.ct-stops .ct-lesson::before { content: ''; position: absolute; inset-inline-start: calc(var(--L) - var(--G) - 5px); width: 8px; top: 0; bottom: 0; }
+.ct-stops .ct-lesson.done::before { background: var(--on); }
+.ct-stops .ct-lesson.here::before { background: linear-gradient(var(--on) 50%, transparent 50%); }
+.ct-stops .ct-lesson::after { content: ''; position: absolute; inset-inline-start: calc(var(--L) - var(--G) - 7px); top: calc(50% - 6px); width: 12px; height: 12px; border-radius: 50%; background: #0a0a0a; border: 3px solid var(--off); box-sizing: border-box; }
+.ct-stops .ct-lesson.done::after { background: var(--on); border-color: var(--on); }
+.ct-stops .ct-lesson.here::after { inset-inline-start: calc(var(--L) - var(--G) - 9px); top: calc(50% - 8px); width: 16px; height: 16px; border-color: var(--on); box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.25); }
+.ct-stop.end { min-height: 86px; padding-bottom: 0; }
+.ct-stop.end > .ct-station { width: 54px; height: 54px; inset-inline-start: calc(var(--L) - 27px); top: -6px; border: 0; background: transparent; box-shadow: none; }
+.ct-stop.end > .ct-station img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 16px rgba(255, 184, 0, 0.35)); }
+.ct-end-card { display: flex; gap: 12px; align-items: center; padding: 12px 0 0; }
+.ct-end-card b { display: block; color: #FFB800; font-weight: 800; font-size: 1.1rem; }
+.ct-end-card small { color: var(--ct-muted); line-height: 1.6; }
+.ct-end-card .ct-rider { position: static; flex-shrink: 0; }
+
+/* the robot: stands where you really are */
+.ct-rider { position: absolute; width: var(--R); height: var(--R); pointer-events: none; z-index: 3; }
+.ct-rider img { width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1); filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.55)); }
+.ct-lesson > .ct-rider { inset-inline-start: calc(var(--L) - var(--G) - 1px - var(--R) / 2); top: calc(50% - var(--R) + 4px); }
+.ct-stop > .ct-rider { display: none; inset-inline-start: calc(var(--L) - var(--R) / 2); top: calc(35px - var(--R)); }
+.ct-stop.gate > .ct-rider, .ct-stop.waiting > .ct-rider, .ct-stop.here:not(.open) > .ct-rider { display: block; }
+
+/* ---------- under the line: old book chapters + price / tools ---------- */
+.ct-layout { display: grid; gap: 24px; align-items: start; margin-top: 22px; }
+.ct-book { margin-top: 22px; padding: 16px; border-radius: 16px; background: #101010; border: 1px dashed rgba(255, 255, 255, 0.2); }
+.ct-book h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.ct-book p { margin: 0 0 10px; color: var(--ct-muted); font-size: 0.92rem; line-height: 1.7; }
+.ct-book ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.ct-book a { display: block; min-height: 44px; padding: 9px 12px; border-radius: 10px; color: inherit; text-decoration: none; line-height: 1.5; }
+.ct-book a:hover { background: rgba(255, 255, 255, 0.04); }
+.ct-book small { display: block; color: var(--ct-muted); font-size: 0.84rem; }
+.ct-price { padding: 16px; border-radius: 16px; background: #121212; border: 1px solid var(--ct-line); }
+.ct-price > b { display: block; font-weight: 800; font-size: 1.1rem; }
+.ct-price > small { display: block; color: var(--ct-muted); margin: 4px 0 10px; line-height: 1.6; font-size: 0.9rem; }
+.ct-price ul { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 7px; font-size: 0.94rem; line-height: 1.5; }
+.ct-tools { display: grid; gap: 8px; }
+.ct-tools a { display: flex; gap: 10px; align-items: center; min-height: 48px; padding: 10px 14px; border-radius: 14px; background: #121212; border: 1px solid var(--ct-line); color: inherit; text-decoration: none; }
+.ct-tools a:hover { border-color: rgba(255, 255, 255, 0.25); }
+.ct-tools small { display: block; color: var(--ct-muted); font-size: 0.84rem; }
+
+.ct-sticky {
+  position: sticky; bottom: 0; z-index: 5; margin: 22px -16px 0; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: rgba(10, 10, 10, 0.96); border-top: 1px solid rgba(255, 107, 53, 0.25);
+}
+.ctoc.loading .ct-resume { opacity: 0.5; }
+
+@media (max-width: 899px) {
+  .ct-resume { display: block; padding: 14px; }
+  .ct-resume .ct-btn { margin-top: 14px; }
+  .ct-mini-price { display: block; }
+  .ct-legend { justify-content: flex-start; padding-inline-start: var(--G); font-size: 0.8rem; gap: 6px 12px; margin-top: 22px; }
+  .ct-layout { margin-top: 0; }
+}
+
+@media (min-width: 900px) {
+  .ctoc { padding-bottom: 60px; }
+  .ct-line, .ct-panel { display: block; }
+  .ct-stops, .ct-sticky { display: none; }
+  .ct-layout { grid-template-columns: 1fr 340px; }
+  .ct-side { position: sticky; top: 90px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-sign, .ct-chev { transition: none; }
+}
