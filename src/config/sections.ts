@@ -84,16 +84,16 @@ export const SECTION_REGISTRY: SectionConfig[] = [
     {
         id: 'section-4',
         sectionNumber: 4,
-        pageCount: 18,
+        pageCount: 6,
         slotSize: 18,
-        chapterLabel: 'الفصل 04',
+        chapterLabel: 'المستوى ٤',
         progressOffset: 59, // + S3: 18
-        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
+        freePageLimit: 0, // المستوى ٤ مدفوع (20 أكتوبر 2026: بدل الفصل 04 القديم)
         chapterIndex: 4,
         prevSection: { path: '/read/section-3', lastPage: 8 },
         nextSection: { path: '/read/section-5/1' },
         robotSize: 320,
-        hasGlossary: false,
+        hasGlossary: true,
         hasRewards: true,
         useExplicitImageSize: false,
     },
@@ -106,7 +106,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         progressOffset: 77, // + S4: 18
         freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 5,
-        prevSection: { path: '/read/section-4', lastPage: 18 },
+        prevSection: { path: '/read/section-4', lastPage: 6 },
         nextSection: { path: '/read/section-6/1' },
         robotSize: 320,
         hasGlossary: false,

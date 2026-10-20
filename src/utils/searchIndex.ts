@@ -70,7 +70,7 @@ export async function buildSearchIndex(): Promise<SearchIndexItem[]> {
         { id: 'section-1', label: 'الفصل 01', pathPrefix: '/read/section-1', data: unit1Data },
         { id: 'section-2', label: 'المستوى ٢', pathPrefix: '/read/section-2', data: unit2Data },
         { id: 'section-3', label: 'المستوى ٣', pathPrefix: '/read/section-3', data: unit3Data },
-        { id: 'section-4', label: 'الفصل 04', pathPrefix: '/read/section-4', data: unit4Data },
+        { id: 'section-4', label: 'المستوى ٤', pathPrefix: '/read/section-4', data: unit4Data },
         { id: 'section-5', label: 'الفصل 05', pathPrefix: '/read/section-5', data: unit5Data },
         { id: 'section-6', label: 'الفصل 06', pathPrefix: '/read/section-6', data: unit6Data },
         { id: 'section-7', label: 'الفصل 07', pathPrefix: '/read/section-7', data: unit7Data },

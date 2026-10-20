@@ -19,7 +19,7 @@ describe('pricing constants (single source of truth)', () => {
   it('canonical product stats match the real data', () => {
     expect(PRODUCT_STATS.templates).toBe(95)
     expect(PRODUCT_STATS.exercises).toBe(45)
-    expect(PRODUCT_STATS.readingPages).toBe(192)
+    expect(PRODUCT_STATS.readingPages).toBe(180)
     expect(PRODUCT_STATS.freePages).toBe(3)
   })
 
@@ -33,7 +33,7 @@ describe('public pricing without a stale fallback', () => {
     const plans = normalizePricingPlans([{ id: 'vip', price: '1200.50' }, { id: 'basic', price: '350' }])
     expect(plans.map(p => p.price)).toEqual([350, 1200.5])
     // No monthly row (before the migration, or switched off): basic lists the course itself
-    expect(plans[0].features_ar.join(' ')).toContain('المستويات 1 و2 و3')
+    expect(plans[0].features_ar.join(' ')).toContain('المستويات من 1 لـ 4')
     expect(plans[0].features_ar.join(' ')).not.toContain('الشهري')
     expect(plans[1].features_ar).toContain('كل اللي في المتقدمة')
     expect(plans[1].features_ar).toContain('المساعد الذكي: لحد 30 رسالة في اليوم تسأله في شغلك')

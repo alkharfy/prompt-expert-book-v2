@@ -5,14 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { SECTION_REGISTRY } from '@/config/sections'
 import { MONTHLY_PRICE_EGP, PRODUCT_STATS } from '@/lib/pricing'
 
-const LIVE_LESSONS = SECTION_REGISTRY.filter(section => ['section-1', 'section-2', 'section-3'].includes(section.id)).reduce((total, section) => total + section.pageCount, 0)
+const LIVE_LESSONS = SECTION_REGISTRY.filter(section => ['section-1', 'section-2', 'section-3', 'section-4'].includes(section.id)).reduce((total, section) => total + section.pageCount, 0)
 
-/** The public promise of each level (docs/curriculum/levels-2-5/map.md); 1, 2 and 3 are out. */
+/** The public promise of each level (docs/curriculum/levels-2-5/map.md); 1 to 4 are out. */
 const levels = [
     { n: 1, name: 'بتستخدمه صح', open: true, result: 'تطلب شغل يتسلّم، وتعرف إمتى الـ AI بيألّف، وتراجع النتيجة بدليل قبل ما تسلّمها.' },
     { n: 2, name: 'بتطلب زي المحترف', open: true, result: 'طلبات جاهزة لأكتر حاجات بتعملها، وتشتغل بالصور والفويس والملفات.' },
     { n: 3, name: 'بتجهّزه لشغلك', open: true, result: 'تعلّمه طريقة شغلك مرة، فيعمل المهمة اللي بتتكرر من غير ما تشرح كل مرة.' },
-    { n: 4, name: 'بيشتغل معاك', open: false, result: 'تسلّمه مهمة فيها كذا خطوة، وتراقبه، وتوقّفه لو غلط.' },
+    { n: 4, name: 'بيشتغل معاك', open: true, result: 'تسلّمه مهمة فيها كذا خطوة، وتراقبه، وتوقّفه لو غلط.' },
     { n: 5, name: 'نظام شغلك', open: false, result: 'طريقة شغل بالـ AI ليك أو لفريقك، وتقيس وفّرت قد إيه.' },
 ]
 
@@ -141,7 +141,7 @@ export default function WhatYouLearn() {
                         </li>
                     ))}
                 </ol>
-                <p className="wyl-note">ولحد ما المستويات 4–5 تنزل، الفصول 4–10 من كتاب PromptMaster مفتوحة للمشتركين.</p>
+                <p className="wyl-note">ولحد ما المستوى 5 ينزل، الفصول 5–10 من كتاب PromptMaster مفتوحة للمشتركين.</p>
 
                 <p className="wyl-section-label">حاجات مش هتلاقيها في فيديو على يوتيوب</p>
                 <div className="wyl-tools">

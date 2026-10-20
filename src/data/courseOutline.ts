@@ -43,7 +43,7 @@ export const COURSE_LEVELS: CourseLevel[] = [
         lessons: ['ليه بتشرحله كل مرة من الأول؟', 'هو فاكر عنك إيه بالظبط؟', 'لو زميل جديد مسك شغلك بكرة، هيعرف يعمله؟', 'بيرد من دماغه ولا من الملف؟', 'محتاجه جاهز دايماً؟', 'تعتمد عليه من أول تجربة؟', 'غلط؟ صلّح الدليل مش الرد', '🎓 مساعد شغلانتك'],
     },
     {
-        id: 'l4', sectionId: null, chapter: 4, label: 'المستوى 4', name: 'بيشتغل معاك', icon: '🤝',
+        id: 'l4', sectionId: 'section-4', chapter: 4, label: 'المستوى 4', name: 'بيشتغل معاك', icon: '🤝',
         time: 'حوالي ساعتين ونص', out: 'مهمة فيها كذا خطوة اتنفّذت بخطة إنت وافقت عليها',
         lessons: ['سؤال ولا مهمة؟', 'بحث في 10 دقايق… بس مين راجع المصادر؟', 'سيبه يشتغل… وإنت فين؟', 'توصّله بإيميلك؟ استنى', 'لما يمشي ورا كلام حد تاني', '🎓 مهمة من شغلك'],
     },
@@ -54,9 +54,8 @@ export const COURSE_LEVELS: CourseLevel[] = [
     },
 ]
 
-/** Old book chapters: open to subscribers until Levels 4–5 come out. */
+/** Old book chapters: open to subscribers until Level 5 comes out. */
 export const BOOK_CHAPTERS = [
-    { n: 4, title: 'الطلبات المتسلسلة', note: 'شغلانة كبيرة على كذا خطوة' },
     { n: 5, title: 'الجودة والتصحيح', note: 'تراجع النتيجة وتصلّح الطلب' },
     { n: 6, title: 'صور وصوت وفيديو', note: 'تشتغل بأكتر من نوع ملف' },
     { n: 7, title: 'وكلاء AI', note: 'أدوات بتنفّذ مهام عنك تحت عينك' },

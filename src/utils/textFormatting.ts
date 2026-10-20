@@ -106,7 +106,8 @@ export function formatInlineMarkdown(text: string): (string | React.ReactElement
             return React.createElement('a', {
                 key: nextKey('md-link'),
                 href: internal ? encodeURI(url) : url,
-                ...(internal ? {} : { target: '_blank', rel: 'noopener noreferrer' }),
+                // Practice web pages (/practice/…) open beside the lesson, like outside links, so the reader keeps their place.
+                ...(!internal || url.startsWith('/practice/') ? { target: '_blank', rel: 'noopener noreferrer' } : {}),
                 ...(url.startsWith('/assets/practice/') ? { download: '' } : {}),
                 style: { color: '#FF6B35', textDecoration: 'underline', fontWeight: 600 },
             }, label)

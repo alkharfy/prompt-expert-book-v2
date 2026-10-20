@@ -1,29 +1,31 @@
 import type { PageContent } from '@/types/book'
 import { estimateReadingTime } from '@/utils/readingTime'
 
-type StationId = 'intro' | 'level-1' | 'level-2' | 'level-3' | 'book'
+type StationId = 'intro' | 'level-1' | 'level-2' | 'level-3' | 'level-4' | 'book'
 
 /**
  * «إنت هنا»: where the reader is in the course, how much is left of this stop and
- * what comes next. Levels 4–5 are still being written, so chapters 4–10 of the
- * current book stand in for them as one honest stop.
+ * what comes next. Level 5 is still being written, so chapters 5–10 of the
+ * current book stand in for it as one honest stop.
  */
 const STATIONS: { id: StationId; label: string; note: string }[] = [
     { id: 'intro', label: 'التمهيد', note: 'مجاني' },
     { id: 'level-1', label: 'المستوى 1', note: 'بتستخدمه صح' },
     { id: 'level-2', label: 'المستوى 2', note: 'بتطلب زي المحترف' },
     { id: 'level-3', label: 'المستوى 3', note: 'بتجهّزه لشغلك' },
-    { id: 'book', label: 'المستويات 4–5', note: 'بتنزل تباعاً' },
+    { id: 'level-4', label: 'المستوى 4', note: 'بيشتغل معاك' },
+    { id: 'book', label: 'المستوى 5', note: 'بينزل قريب' },
 ]
 
 /** The chapter number the server marks complete for each stop (reading_progress.completed_chapters). */
-const STATION_CHAPTER: Record<StationId, number | null> = { intro: 0, 'level-1': 1, 'level-2': 2, 'level-3': 3, book: null }
+const STATION_CHAPTER: Record<StationId, number | null> = { intro: 0, 'level-1': 1, 'level-2': 2, 'level-3': 3, 'level-4': 4, book: null }
 
 export function stationFor(sectionId: string): StationId {
     if (sectionId === 'intro') return 'intro'
     if (sectionId === 'section-1') return 'level-1'
     if (sectionId === 'section-2') return 'level-2'
     if (sectionId === 'section-3') return 'level-3'
+    if (sectionId === 'section-4') return 'level-4'
     return 'book'
 }
 
