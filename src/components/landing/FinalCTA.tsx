@@ -26,7 +26,7 @@ export default function FinalCTA() {
                     {member ? (
                         <>
                             <h2>اشتراكك شغال — كمّل الكورس</h2>
-                            <p>المستويات من 1 لـ 4 مفتوحة قدامك، والمستوى 5 بينزلك أول ما يجهز.</p>
+                            <p>المستويات الخمسة مفتوحة قدامك، ومعاهم الورش.</p>
                             <Link href="/toc" className="btn btn-primary btn-lg">
                                 ادخل الكورس ←
                             </Link>
@@ -34,7 +34,7 @@ export default function FinalCTA() {
                     ) : (
                         <>
                             <h2>جاهز تبدأ؟ الاشتراك بـ{MONTHLY_PRICE_EGP} جنيه في الشهر</h2>
-                            <p>المستويات من 1 لـ 4 كاملين، وتمارين على ملفات شغل حقيقية، و«المستر» بيصحّحلك. ومن غير تجديد تلقائي.</p>
+                            <p>المستويات الخمسة كاملين، وتمارين على ملفات شغل حقيقية، و«المستر» بيصحّحلك. ومن غير تجديد تلقائي.</p>
                             <Link href="#pricing" className="btn btn-primary btn-lg" onClick={() => trackCtaClick('اشترك الآن', 'final_cta')}>
                                 اشترك دلوقتي — شوف الباقات ←
                             </Link>

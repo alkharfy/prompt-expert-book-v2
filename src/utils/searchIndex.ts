@@ -71,7 +71,7 @@ export async function buildSearchIndex(): Promise<SearchIndexItem[]> {
         { id: 'section-2', label: 'المستوى ٢', pathPrefix: '/read/section-2', data: unit2Data },
         { id: 'section-3', label: 'المستوى ٣', pathPrefix: '/read/section-3', data: unit3Data },
         { id: 'section-4', label: 'المستوى ٤', pathPrefix: '/read/section-4', data: unit4Data },
-        { id: 'section-5', label: 'الفصل 05', pathPrefix: '/read/section-5', data: unit5Data },
+        { id: 'section-5', label: 'المستوى ٥', pathPrefix: '/read/section-5', data: unit5Data },
         { id: 'section-6', label: 'الفصل 06', pathPrefix: '/read/section-6', data: unit6Data },
         { id: 'section-7', label: 'الفصل 07', pathPrefix: '/read/section-7', data: unit7Data },
         { id: 'section-8', label: 'الفصل 08', pathPrefix: '/read/section-8', data: unit8Data },

@@ -357,6 +357,15 @@ export default function Navigation() {
 
                         <li>
                             <Link
+                                href="/workshops"
+                                className={`nav-link ${pathname === '/workshops' || pathname.startsWith('/workshops/') ? 'active' : ''}`}
+                            >
+                                🛠️ الورش
+                            </Link>
+                        </li>
+
+                        <li>
+                            <Link
                                 href="/blog"
                                 className={`nav-link ${pathname === '/blog' || pathname.startsWith('/blog/') ? 'active' : ''}`}
                             >

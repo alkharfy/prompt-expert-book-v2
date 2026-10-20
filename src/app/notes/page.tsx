@@ -40,7 +40,7 @@ const SECTION_NAMES: Record<string, string> = {
     'section-2': 'المستوى ٢: بتطلب زي المحترف',
     'section-3': 'المستوى ٣: بتجهّزه لشغلك',
     'section-4': 'المستوى ٤: بيشتغل معاك',
-    'section-5': 'الفصل 5: الجودة والتحسين',
+    'section-5': 'المستوى ٥: نظام شغلك',
     'section-6': 'الفصل 6: الأدوات',
     'appendix': 'الملحق',
     'glossary': 'المعجم',

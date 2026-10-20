@@ -5,9 +5,10 @@ import { unit1Data } from '@/data/unit1Data'
 import { unit2Data } from '@/data/unit2Data'
 import { unit3Data } from '@/data/unit3Data'
 import { unit4Data } from '@/data/unit4Data'
+import { unit5Data } from '@/data/unit5Data'
 
 // The narrated one-minute opener at the top of each level (Remotion in D:\pm-videos, the owner's ElevenLabs voice).
-const LEVELS = { 1: unit1Data, 2: unit2Data, 3: unit3Data, 4: unit4Data }
+const LEVELS = { 1: unit1Data, 2: unit2Data, 3: unit3Data, 4: unit4Data, 5: unit5Data }
 
 describe('level openers', () => {
     for (const [level, pages] of Object.entries(LEVELS)) {

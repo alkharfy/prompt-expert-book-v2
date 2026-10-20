@@ -30,7 +30,7 @@ describe('learning catalog matches the shipped data', () => {
         }
         const actualTotal = Object.values(actualPages).reduce((sum, pages) => sum + pages.length, 0)
         expect(LEARNING_SECTIONS.reduce((sum, section) => sum + section.pageCount, 0)).toBe(actualTotal)
-        expect(actualTotal).toBe(180)
+        expect(actualTotal).toBe(170)
     })
 
     it('has continuous reserved global slots, including the references', () => {
@@ -105,7 +105,7 @@ describe('learning path totals', () => {
 
     it('includes the whole catalog in the comprehensive path', () => {
         expect(LEARNING_PATHS.comprehensive.sections).toEqual(LEARNING_SECTIONS.map(section => section.id))
-        expect(LEARNING_PATHS.comprehensive.totalPages).toBe(180)
+        expect(LEARNING_PATHS.comprehensive.totalPages).toBe(170)
         expect(getPathCompletion(182, 'comprehensive')).toBeLessThan(100)
         expect(getPathCompletion(222, 'comprehensive')).toBe(100)
     })

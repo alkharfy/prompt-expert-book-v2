@@ -41,6 +41,12 @@ export const unit1Data: PageContent[] = [
                 poster: '/assets/content/level-1/level-intro.webp'
             },
             {
+                // The workshops sit beside the levels and show from the start of Level 1 (owner, 20 Oct 2026).
+                type: 'card' as const,
+                title: '🛠️ وجنب الكورس: الورش',
+                content: "محتاج صورة لبوست شغلك، أو فيديو قصير؟ فيه ورش قصيرة، كل واحدة ربع ساعة بنتيجة في إيدك. **ورش الصور والفيديو ببلاش.** [افتح الورش](/workshops)\n\nبس الأول: كمّل الدرس ده. الورش هتفضل موجودة."
+            },
+            {
                 type: 'text' as const,
                 content: "في التمهيد عرفت إن الـ AI ممكن يغلط وهو واثق. النهارده هتعرف **ليه**، وتطلع بحاجة تستخدمها كل يوم: إمتى تقبل رده، وإمتى تراجعه، وإمتى ترفضه.\n\nقبل ما تشوف الأنيميشن اللي تحت: كمّل الجملة دي في دماغك — «الفول بيتاكل الصبح مع…»"
             },

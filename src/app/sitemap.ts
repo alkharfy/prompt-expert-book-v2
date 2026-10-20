@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { BLOG_POSTS } from '@/data/blogPosts'
 import { SITE_URL } from '@/lib/config'
 import { SECTION_REGISTRY } from '@/config/sections'
+import { WORKSHOPS, isOpen } from '@/data/workshopsData'
 
 const BASE_URL = SITE_URL
 
@@ -55,9 +56,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
         }
     }
 
+    // Free workshops render in full for guests; paid and unfinished ones don't, so they stay out.
+    const workshopPages: MetadataRoute.Sitemap = [
+        { url: `${BASE_URL}/workshops`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+        ...WORKSHOPS.filter(w => w.free && isOpen(w)).map(w => ({
+            url: `${BASE_URL}/workshops/${w.slug}`,
+            lastModified: now,
+            changeFrequency: 'monthly' as const,
+            priority: 0.7,
+        })),
+    ]
+
     return [
         ...staticPages,
         ...blogPages,
         ...sectionPages,
+        ...workshopPages,
     ]
 }

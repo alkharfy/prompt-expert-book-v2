@@ -12,7 +12,8 @@ describe('«إنت هنا» course map', () => {
     expect(stationFor('section-2')).toBe('level-2')
     expect(stationFor('section-3')).toBe('level-3')
     expect(stationFor('section-4')).toBe('level-4')
-    for (const id of ['section-5', 'section-6', 'section-10']) expect(stationFor(id)).toBe('book')
+    expect(stationFor('section-5')).toBe('level-5')
+    for (const id of ['section-6', 'section-10']) expect(stationFor(id)).toBe('book')
   })
 
   it('ticks only the stops the reader finished, not every stop behind them', () => {

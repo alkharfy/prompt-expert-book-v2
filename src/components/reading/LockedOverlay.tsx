@@ -51,15 +51,14 @@ function getSafeRedirectPath(path: string): string {
 const FIRST_CHAPTER = SECTION_REGISTRY.find(section => section.id === 'section-1')!
 const INTRO = SECTION_REGISTRY.find(section => section.id === 'intro')!
 const pagesOf = (id: string) => SECTION_REGISTRY.find(section => section.id === id)?.pageCount ?? 0
-// Levels 1–4 replaced book chapters 1–4 (2026-10-16/18/19/20). Level 5 is still being written, and until it lands
-// chapters 5–10 of the book stay open to subscribers (same wording as WhatYouLearn), so they're listed as the book's.
+// Levels 1–5 replaced book chapters 1–5 (2026-10-16 to 2026-10-20). Chapters 6–10 of the book stay open to
+// subscribers as extra reading (same wording as WhatYouLearn), so they're listed as the book's.
 const BOOK_CHAPTERS: { key: string; title: string; pages?: number; free: boolean; freeLabel?: string; soon?: boolean; book?: boolean }[] = [
     { key: 'l1', title: 'المستوى 1: بتستخدمه صح', pages: FIRST_CHAPTER.pageCount, free: false },
     { key: 'l2', title: 'المستوى 2: بتطلب زي المحترف', pages: pagesOf('section-2'), free: false },
     { key: 'l3', title: 'المستوى 3: بتجهّزه لشغلك', pages: pagesOf('section-3'), free: false },
     { key: 'l4', title: 'المستوى 4: بيشتغل معاك', pages: pagesOf('section-4'), free: false },
-    { key: 'l5', title: 'المستوى 5: نظام شغلك', free: false, soon: true },
-    { key: 'c5', title: 'الفصل 5: الجودة والتصحيح', pages: pagesOf('section-5'), free: false, book: true },
+    { key: 'l5', title: 'المستوى 5: نظام شغلك', pages: pagesOf('section-5'), free: false },
     { key: 'c6', title: 'الفصل 6: صور وصوت وملفات', pages: pagesOf('section-6'), free: false, book: true },
     { key: 'c7', title: 'الفصل 7: وكلاء AI والأتمتة', pages: pagesOf('section-7'), free: false, book: true },
     { key: 'c8', title: 'الفصل 8: AI على ملفاتك وبياناتك', pages: pagesOf('section-8'), free: false, book: true },
@@ -299,7 +298,7 @@ export default function LockedOverlay({
                             >
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">📖</span>
-                                    <span>المستويات من 1 لـ 4 وباقي الكورس</span>
+                                    <span>المستويات الخمسة والورش</span>
                                 </div>
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">✏️</span>
@@ -349,7 +348,7 @@ export default function LockedOverlay({
                                             {BOOK_CHAPTERS.map((ch, i) => (
                                                 <Fragment key={ch.key}>
                                                     {ch.book && !BOOK_CHAPTERS[i - 1]?.book && (
-                                                        <li className="lock-chapters-note">ولحد ما المستوى 5 ينزل، الفصول دي من كتاب PromptMaster مفتوحة للمشتركين:</li>
+                                                        <li className="lock-chapters-note">وزيادة على المستويات، الفصول دي من كتاب PromptMaster مفتوحة للمشتركين:</li>
                                                     )}
                                                     <li className={`lock-chapter-item ${ch.free ? 'lock-chapter-free' : ''}`}>
                                                         <span className="lock-chapter-icon">{ch.free ? '🆓' : ch.soon ? '⏳' : ch.book ? '📘' : '📗'}</span>

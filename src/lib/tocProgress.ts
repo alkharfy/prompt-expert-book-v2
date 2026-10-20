@@ -64,7 +64,7 @@ export function buildToc(input: TocInput): TocView {
 
     let level = 0, lesson = 0, book: TocView['book'] = null
     if (chapter && pos) {
-        // Old book chapters stand in for Levels 3–5, so the robot waits at Level 3.
+        // Old book chapters come after the released levels, so the robot waits at the first unreleased one (or the end).
         level = firstUnreleased()
         book = { n: chapter.n, title: chapter.title, page: pos.page, url: getLearningReadingUrl(pos.sectionId, pos.page) }
     } else if (levelIndex !== -1 && pos) {

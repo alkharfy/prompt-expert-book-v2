@@ -48,15 +48,14 @@ export const COURSE_LEVELS: CourseLevel[] = [
         lessons: ['سؤال ولا مهمة؟', 'بحث في 10 دقايق… بس مين راجع المصادر؟', 'سيبه يشتغل… وإنت فين؟', 'توصّله بإيميلك؟ استنى', 'لما يمشي ورا كلام حد تاني', '🎓 مهمة من شغلك'],
     },
     {
-        id: 'l5', sectionId: null, chapter: 5, label: 'المستوى 5', name: 'نظام شغلك', icon: '🏗️',
-        time: 'حوالي ساعتين + أسبوع شغل', out: 'تقرير «قبل وبعد» بالأرقام، وقواعد لفريقك',
-        lessons: ['وفّرت قد إيه بجد؟', 'تدفع اشتراك ولا المجاني كفاية؟', 'فريقك كله بيستخدمه… كل واحد على مزاجه؟', 'لو اتنقلت بكرة، شغلك يكمّل؟', '🎓 تقرير «قبل وبعد»'],
+        id: 'l5', sectionId: 'section-5', chapter: 5, label: 'المستوى 5', name: 'نظام شغلك', icon: '🏗️',
+        time: 'حوالي 3 ساعات + 3 أيام شغل', out: 'تقرير «قبل وبعد» بالأرقام لمديرك، ونظام شغل ليك أو لفريقك',
+        lessons: ['وفّرت قد إيه بجد؟', 'تدفع اشتراك ولا المجاني كفاية؟', 'حاجة تتعمل لوحدها كل يوم؟', 'بتلزق الدليل في كل محادثة؟', 'تخلّيه يفتح ملفاتك بنفسه؟', 'فريقك كله بيستخدمه… كل واحد على مزاجه؟', 'لو اتنقلت بكرة، شغلك يكمّل؟', '🎓 3 أيام بالنظام'],
     },
 ]
 
-/** Old book chapters: open to subscribers until Level 5 comes out. */
+/** Old book chapters 6–10: extra reading for subscribers, after the five levels (Level 5 replaced chapter 5 on 2026-10-20). */
 export const BOOK_CHAPTERS = [
-    { n: 5, title: 'الجودة والتصحيح', note: 'تراجع النتيجة وتصلّح الطلب' },
     { n: 6, title: 'صور وصوت وفيديو', note: 'تشتغل بأكتر من نوع ملف' },
     { n: 7, title: 'وكلاء AI', note: 'أدوات بتنفّذ مهام عنك تحت عينك' },
     { n: 8, title: 'AI على ملفاتك', note: 'يرد من مصادرك، وتتأكد من إجابته' },
@@ -65,6 +64,7 @@ export const BOOK_CHAPTERS = [
 ]
 
 export const COURSE_EXTRAS = [
+    { icon: '🛠️', name: 'الورش', note: 'صورة وفيديو لشغلك ببلاش، وسكريبت وصوت وأكتر للمشتركين', href: '/workshops' },
     { icon: '📚', name: 'مكتبة القوالب', note: `${PRODUCT_STATS.templates} قالب جاهز تنسخه`, href: '/library/1' },
     { icon: '🎒', name: 'شنطة طلباتك', note: 'كل طلب حفظته من الدروس', href: '/notes' },
     { icon: '📝', name: 'الملحق', note: 'تمارين وإجابات', href: '/read/appendix/1' },

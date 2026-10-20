@@ -151,7 +151,7 @@ export default function CourseToc() {
     if (view.book) {
         kicker = `إنت واقف عند: الفصل ${view.book.n} من الكتاب · صفحة ${view.book.page}`
         title = view.book.title
-        sub = `لحد ما المستويات ${nextLevelsText} تنزل، فصول الكتاب مفتوحالك.`
+        sub = releasedCount < N ? `لحد ما المستويات ${nextLevelsText} تنزل، فصول الكتاب مفتوحالك.` : 'قراية زيادة من الكتاب، بعد المستويات الخمسة.'
         cta = 'كمّل من مكانك'; ctaHref = view.book.url; ring = true
     } else if (spotState === 'end') {
         title = `خلّصت الـ ${view.available} درس كلهم 🎉`; kicker = 'خلّصت الكورس'
@@ -306,10 +306,10 @@ export default function CourseToc() {
                         </li>
                     </ol>
 
-                    {releasedCount < N && (
+                    {BOOK_CHAPTERS.length > 0 && (
                         <section className="ct-book" id="ct-book">
                             <h3>📖 من الكتاب</h3>
-                            <p>لحد ما المستويات {nextLevelsText} تنزل، فصول الكتاب مفتوحة {member ? 'ليك' : 'للمشتركين'}.</p>
+                            <p>{releasedCount < N ? `لحد ما المستويات ${nextLevelsText} تنزل، فصول الكتاب مفتوحة ` : 'وزيادة على المستويات الخمسة: فصول من كتاب PromptMaster، مفتوحة '}{member ? 'ليك' : 'للمشتركين'}.</p>
                             <ul>
                                 {BOOK_CHAPTERS.map(chapter => (
                                     <li key={chapter.n}><Link href={bookChapterHref(chapter.n)}>الفصل {chapter.n}: {chapter.title}{member ? '' : ' 🔒'}<small>{chapter.note}</small></Link></li>
@@ -332,7 +332,7 @@ export default function CourseToc() {
                             <small>{releasedCount < N ? `بيفتحلك ${COURSE_LEVELS.filter(level => isReleased(level) && !level.free).map(level => level.label).join(' و')} دلوقتي، واللي بعدهم أول ما ينزل` : 'بيفتحلك الخمس مستويات'}، ومعاهم:</small>
                             <ul>
                                 {COURSE_EXTRAS.map(extra => <li key={extra.href}>{extra.icon} {extra.name}: {extra.note}</li>)}
-                                {releasedCount < N && <li>📖 فصول الكتاب، لحد ما المستويات الجاية تنزل</li>}
+                                <li>📖 {releasedCount < N ? 'فصول الكتاب، لحد ما المستويات الجاية تنزل' : 'فصول من كتاب PromptMaster، قراية زيادة'}</li>
                             </ul>
                             <Link className="ct-btn ghost" href="/#pricing" onClick={() => trackCtaClick('شوف الباقات', 'toc_price')}>شوف الباقات</Link>
                         </div>

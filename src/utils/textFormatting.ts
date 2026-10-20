@@ -93,10 +93,19 @@ function formatCharacterNames(parts: (string | React.ReactElement)[]): (string |
 
 const MARKDOWN_INLINE = /(\[[^\]]+\]\([^)\s]+\)|\*\*[^*]+\*\*)/g
 
+/**
+ * A step path like «Customize ← Connectors ← Google Drive» is English words joined by arrows. Between two English
+ * words the arrow takes their left-to-right direction, so the whole path shows backwards on an Arabic page.
+ * A right-to-left mark on both sides keeps every arrow pointing the way the steps go. (Code blocks are not formatted,
+ * so a copied prompt keeps its plain arrows.)
+ */
+const RLM = '‏'
+const keepArrowsRtl = (text: string) => text.replace(/ ← /g, ` ${RLM}←${RLM} `)
+
 /** **bold** and [text](url) in lesson text; practice files under /assets/practice/ download. */
 export function formatInlineMarkdown(text: string): (string | React.ReactElement)[] {
     if (!text) return [text]
-    return text.split(MARKDOWN_INLINE).filter(part => part !== '').map(part => {
+    return keepArrowsRtl(text).split(MARKDOWN_INLINE).filter(part => part !== '').map(part => {
         const link = part.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/)
         if (link) {
             const [, label, url] = link

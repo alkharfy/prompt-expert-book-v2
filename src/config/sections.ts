@@ -100,16 +100,16 @@ export const SECTION_REGISTRY: SectionConfig[] = [
     {
         id: 'section-5',
         sectionNumber: 5,
-        pageCount: 18,
+        pageCount: 8,
         slotSize: 18,
-        chapterLabel: 'الفصل 05',
+        chapterLabel: 'المستوى ٥',
         progressOffset: 77, // + S4: 18
-        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
+        freePageLimit: 0, // المستوى ٥ مدفوع (20 أكتوبر 2026: بدل الفصل 05 القديم)
         chapterIndex: 5,
         prevSection: { path: '/read/section-4', lastPage: 6 },
         nextSection: { path: '/read/section-6/1' },
         robotSize: 320,
-        hasGlossary: false,
+        hasGlossary: true,
         hasRewards: true,
         useExplicitImageSize: false,
     },
@@ -122,7 +122,7 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         progressOffset: 95, // + S5: 18
         freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
         chapterIndex: 6,
-        prevSection: { path: '/read/section-5', lastPage: 18 },
+        prevSection: { path: '/read/section-5', lastPage: 8 },
         nextSection: { path: '/read/section-7/1' },
         robotSize: 320,
         hasGlossary: false,
