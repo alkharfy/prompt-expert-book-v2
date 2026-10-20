@@ -28,6 +28,18 @@ describe('Level 2 — بتطلب زي المحترف', () => {
         expect(demo?.rubric).toBe('intro-demo')
     })
 
+    it('shows each track its own table-to-Excel clip, after the question it would give away', () => {
+        const page = unit2Data[2].contentBlocks
+        const clips = page.filter(block => block.type === 'video')
+        expect(clips.map(clip => clip.track)).toEqual(['accounting', 'service'])
+        for (const clip of clips) {
+            const question = page.findIndex(block => block.type === 'answer' && block.track === clip.track)
+            expect(page.indexOf(clip)).toBeGreaterThan(question)
+            expect(clip.portrait && clip.autoplay === false && !/SIZE_/.test(clip.title ?? ''), clip.title).toBe(true)
+            for (const file of [clip.videoUrl!, clip.poster!]) expect(existsSync(join(process.cwd(), 'public', file)), file).toBe(true)
+        }
+    })
+
     it('links only to practice files that exist', () => {
         const links = allText.flatMap(text => [...text.matchAll(/\]\((\/assets\/practice\/[^)]+)\)/g)].map(match => match[1]))
         expect(links).toEqual(expect.arrayContaining(['/assets/practice/receipts-oct-2026.jpg', '/assets/practice/order-invoice-photo.jpg']))

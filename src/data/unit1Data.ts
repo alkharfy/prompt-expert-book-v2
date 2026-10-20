@@ -148,6 +148,16 @@ export const unit1Data: PageContent[] = [
                 ]
             },
             {
+                type: 'video' as const,
+                title: '🎬 في ChatGPT بالصور (اضغط تشغيل · 15 ثانية · حوالي 170 كيلو)',
+                content: '',
+                videoUrl: '/assets/content/level-1/chatgpt-training-off.mp4',
+                poster: '/assets/content/level-1/chatgpt-training-off.webp',
+                autoplay: false,
+                loop: false,
+                portrait: true
+            },
+            {
                 type: 'code' as const,
                 title: '4️⃣ اكتب بصوتك (أهم خطوة على الموبايل)',
                 code: '"أنا [شغلتك] في شركة صغيرة. إيه أحسن طريقة أرتّب بيها الشغل اللي بيتكرر عندي كل أسبوع؟"',
@@ -157,6 +167,16 @@ export const unit1Data: PageContent[] = [
                 type: 'card' as const,
                 title: '5️⃣ ارفع ملف من الموبايل',
                 content: `• **ترفع:** علامة ➕ أو 📎 جنب خانة الكتابة ← اختار الملف من «الملفات». ولو الملف جالك على واتساب: افتحه ← مشاركة ← اختار الأداة.\n• **تنزّل:** لو الأداة عملتلك ملف، دوس عليه ← فتح بـ Google Sheets أو Excel أو Word، مش من المعاينة. (هتجرّب التنزيل في درس «حاجة تتشاف».)\n• النسخ المجانية ليها حد لعدد الملفات في اليوم، فمترفعش ملفات مش محتاجها.\n\n👉 جرّبها دلوقتي: نزّل [ملف فواتير سبتمبر التجريبي](${FILES}invoices-sep-2026.xlsx)، وارفعه لأداتك، واسألها: «الملف ده فيه كام فاتورة؟».`
+            },
+            {
+                type: 'video' as const,
+                title: '🎬 الرفع في ChatGPT بالصور (اضغط تشغيل · 12 ثانية · حوالي 150 كيلو)',
+                content: '',
+                videoUrl: '/assets/content/level-1/chatgpt-upload.mp4',
+                poster: '/assets/content/level-1/chatgpt-upload.webp',
+                autoplay: false,
+                loop: false,
+                portrait: true
             },
             {
                 type: 'answer' as const,
@@ -344,6 +364,16 @@ export const unit1Data: PageContent[] = [
                 title: '✍️ ده اللي تكتبه هناك (غيّر اللي بين القوسين)',
                 code: '"أنا [محاسب] في شركة [صغيرة] في [القاهرة].\nاكتبلي بالعامية المصرية البسيطة، ومختصر، ومن غير مقدمات.\nلو معلومة ناقصة، اسألني بدل ما تخمّن.\nمتألّفش أرقام أو أسامي أو مصادر من عندك."',
                 content: '⚠️ متكتبش هنا أي حاجة حساسة: لا أسامي عملاء، ولا أرقام، ولا اسم شركتك الحقيقي لو مش مسموح. الكلام ده بيتبعت مع كل محادثة.\n\nوجملة «متألّفش» بتقلّل التأليف، مش بتمنعه. المراجعة لسه شغلك.'
+            },
+            {
+                type: 'video' as const,
+                title: '🎬 في ChatGPT بالصور (اضغط تشغيل · 22 ثانية · حوالي 300 كيلو)',
+                content: '',
+                videoUrl: '/assets/content/level-1/chatgpt-instructions.mp4',
+                poster: '/assets/content/level-1/chatgpt-instructions.webp',
+                autoplay: false,
+                loop: false,
+                portrait: true
             },
             {
                 type: 'card' as const,

@@ -327,6 +327,17 @@ S-768 | سريع للشحن | 1380
                 content: "صح: 6,178.8 (5,420 قبل الضريبة). لو الجدول فيه رقم تاني، الأداة غلطت في الحساب، وده بيحصل. صلّحه، وقولها: «راجع الحساب سطر سطر».\n\nوبص كمان على الترتيب: أعلى مورد المفروض «دلتا للأجهزة». الحساب ممكن يطلع صح والترتيب غلط."
             },
             {
+                type: 'video' as const,
+                track: 'accounting' as const,
+                title: '🎬 من الشات للشيت في ChatGPT (اضغط تشغيل · 15 ثانية · حوالي 190 كيلو)',
+                content: '',
+                videoUrl: '/assets/content/level-2/chatgpt-excel-ahmed.mp4',
+                poster: '/assets/content/level-2/chatgpt-excel-ahmed.webp',
+                autoplay: false,
+                loop: false,
+                portrait: true
+            },
+            {
                 type: 'code' as const,
                 track: 'service' as const,
                 title: '📋 جرّب: طلب منى (البيانات جوه الطلب، مفيش تحميل)',
@@ -366,6 +377,17 @@ NS-5590 | تأخير التوصيل | اترد عليه
                 accept: ['3', 'تلاتة', 'ثلاثة'],
                 hint: 'دوّر على «تأخير التوصيل» و«مستني رد» في نفس السطر.',
                 content: "صح: 3 (NS-5501 وNS-5512 وNS-5571). لو الجدول قال رقم تاني، الأداة غلطت في العد. صلّحه، وقولها: «راجع العد سطر سطر»."
+            },
+            {
+                type: 'video' as const,
+                track: 'service' as const,
+                title: '🎬 من الشات للشيت في ChatGPT (اضغط تشغيل · 15 ثانية · حوالي 180 كيلو)',
+                content: '',
+                videoUrl: '/assets/content/level-2/chatgpt-excel-mona.mp4',
+                poster: '/assets/content/level-2/chatgpt-excel-mona.webp',
+                autoplay: false,
+                loop: false,
+                portrait: true
             },
             {
                 type: 'card' as const,

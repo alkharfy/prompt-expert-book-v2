@@ -35,6 +35,16 @@ describe('Level 1 v2', () => {
     expect(project.some(block => block.rewardId === 'unit1_complete')).toBe(true)
   })
 
+  it('ships the ChatGPT step clips next to their steps, at phone width with play controls', () => {
+    const clipsOn = (page: number) => unit1Data[page - 1].contentBlocks.filter(block => block.type === 'video')
+    expect(clipsOn(2).map(clip => clip.videoUrl)).toEqual(['/assets/content/level-1/chatgpt-training-off.mp4', '/assets/content/level-1/chatgpt-upload.mp4'])
+    expect(clipsOn(4).map(clip => clip.videoUrl)).toEqual(['/assets/content/level-1/chatgpt-instructions.mp4'])
+    for (const clip of [...clipsOn(2), ...clipsOn(4)]) {
+      expect(clip.portrait && clip.autoplay === false && !/SIZE_/.test(clip.title ?? ''), clip.title).toBe(true)
+      for (const file of [clip.videoUrl!, clip.poster!]) expect(existsSync(join(process.cwd(), 'public', file)), file).toBe(true)
+    }
+  })
+
   it('reports checklist progress in plain Egyptian Arabic', () => {
     expect(checklistMessage(6, 6)).toContain('6 من 6')
     expect(checklistMessage(4, 6)).toContain('فاضل 2')
