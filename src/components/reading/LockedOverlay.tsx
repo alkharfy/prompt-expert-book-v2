@@ -13,7 +13,7 @@
  * @module components/reading/LockedOverlay
  */
 
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -51,18 +51,20 @@ function getSafeRedirectPath(path: string): string {
 const FIRST_CHAPTER = SECTION_REGISTRY.find(section => section.id === 'section-1')!
 const INTRO = SECTION_REGISTRY.find(section => section.id === 'intro')!
 const pagesOf = (id: string) => SECTION_REGISTRY.find(section => section.id === id)?.pageCount ?? 0
-// Levels 1–4 replaced book chapters 1–4 (2026-10-16/18/19/20); chapters 5–10 stay until level 5 lands.
-const BOOK_CHAPTERS: { num: number; title: string; pages: number; free: boolean; freeLabel?: string }[] = [
-    { num: 1, title: 'المستوى 1: بتستخدمه صح', pages: FIRST_CHAPTER.pageCount, free: false },
-    { num: 2, title: 'المستوى 2: بتطلب زي المحترف', pages: pagesOf('section-2'), free: false },
-    { num: 3, title: 'المستوى 3: بتجهّزه لشغلك', pages: pagesOf('section-3'), free: false },
-    { num: 4, title: 'المستوى 4: بيشتغل معاك', pages: pagesOf('section-4'), free: false },
-    { num: 5, title: 'الفصل 5: الجودة والتصحيح', pages: pagesOf('section-5'), free: false },
-    { num: 6, title: 'الفصل 6: صور وصوت وملفات', pages: pagesOf('section-6'), free: false },
-    { num: 7, title: 'الفصل 7: وكلاء AI والأتمتة', pages: pagesOf('section-7'), free: false },
-    { num: 8, title: 'الفصل 8: AI على ملفاتك وبياناتك', pages: pagesOf('section-8'), free: false },
-    { num: 9, title: 'الفصل 9: تطبيقات عملية', pages: pagesOf('section-9'), free: false },
-    { num: 10, title: 'الفصل 10: مستقبل AI', pages: pagesOf('section-10'), free: false },
+// Levels 1–4 replaced book chapters 1–4 (2026-10-16/18/19/20). Level 5 is still being written, and until it lands
+// chapters 5–10 of the book stay open to subscribers (same wording as WhatYouLearn), so they're listed as the book's.
+const BOOK_CHAPTERS: { key: string; title: string; pages?: number; free: boolean; freeLabel?: string; soon?: boolean; book?: boolean }[] = [
+    { key: 'l1', title: 'المستوى 1: بتستخدمه صح', pages: FIRST_CHAPTER.pageCount, free: false },
+    { key: 'l2', title: 'المستوى 2: بتطلب زي المحترف', pages: pagesOf('section-2'), free: false },
+    { key: 'l3', title: 'المستوى 3: بتجهّزه لشغلك', pages: pagesOf('section-3'), free: false },
+    { key: 'l4', title: 'المستوى 4: بيشتغل معاك', pages: pagesOf('section-4'), free: false },
+    { key: 'l5', title: 'المستوى 5: نظام شغلك', free: false, soon: true },
+    { key: 'c5', title: 'الفصل 5: الجودة والتصحيح', pages: pagesOf('section-5'), free: false, book: true },
+    { key: 'c6', title: 'الفصل 6: صور وصوت وملفات', pages: pagesOf('section-6'), free: false, book: true },
+    { key: 'c7', title: 'الفصل 7: وكلاء AI والأتمتة', pages: pagesOf('section-7'), free: false, book: true },
+    { key: 'c8', title: 'الفصل 8: AI على ملفاتك وبياناتك', pages: pagesOf('section-8'), free: false, book: true },
+    { key: 'c9', title: 'الفصل 9: تطبيقات عملية', pages: pagesOf('section-9'), free: false, book: true },
+    { key: 'c10', title: 'الفصل 10: مستقبل AI', pages: pagesOf('section-10'), free: false, book: true },
 ]
 
 type UserStatus =
@@ -297,7 +299,7 @@ export default function LockedOverlay({
                             >
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">📖</span>
-                                    <span>المستوى 1 و2 وباقي الكورس</span>
+                                    <span>المستويات من 1 لـ 4 وباقي الكورس</span>
                                 </div>
                                 <div className="lock-stat-item">
                                     <span className="lock-stat-icon">✏️</span>
@@ -344,17 +346,22 @@ export default function LockedOverlay({
                                             exit={{ height: 0, opacity: 0 }}
                                             transition={{ duration: 0.3 }}
                                         >
-                                            {BOOK_CHAPTERS.map((ch) => (
-                                                <li key={ch.num} className={`lock-chapter-item ${ch.free ? 'lock-chapter-free' : ''}`}>
-                                                    <span className="lock-chapter-icon">{ch.free ? '🆓' : '📗'}</span>
-                                                    <span className="lock-chapter-info">
-                                                        <span className="lock-chapter-title">{ch.title}</span>
-                                                        <span className="lock-chapter-meta">
-                                                            {ch.pages} صفحة
-                                                            {ch.freeLabel && <span className="lock-chapter-badge">{ch.freeLabel}</span>}
+                                            {BOOK_CHAPTERS.map((ch, i) => (
+                                                <Fragment key={ch.key}>
+                                                    {ch.book && !BOOK_CHAPTERS[i - 1]?.book && (
+                                                        <li className="lock-chapters-note">ولحد ما المستوى 5 ينزل، الفصول دي من كتاب PromptMaster مفتوحة للمشتركين:</li>
+                                                    )}
+                                                    <li className={`lock-chapter-item ${ch.free ? 'lock-chapter-free' : ''}`}>
+                                                        <span className="lock-chapter-icon">{ch.free ? '🆓' : ch.soon ? '⏳' : ch.book ? '📘' : '📗'}</span>
+                                                        <span className="lock-chapter-info">
+                                                            <span className="lock-chapter-title">{ch.title}</span>
+                                                            <span className="lock-chapter-meta">
+                                                                {ch.soon ? 'بينزل قريب' : `${ch.pages} صفحة${ch.book ? ' · من الكتاب' : ''}`}
+                                                                {ch.freeLabel && <span className="lock-chapter-badge">{ch.freeLabel}</span>}
+                                                            </span>
                                                         </span>
-                                                    </span>
-                                                </li>
+                                                    </li>
+                                                </Fragment>
                                             ))}
                                         </motion.ul>
                                     )}

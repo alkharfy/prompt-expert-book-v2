@@ -145,6 +145,16 @@ export const unit3Data: PageContent[] = [
         minutes: 15,
         contentBlocks: [
             {
+                // Level opener: the whole level in about a minute, lesson by lesson. Remotion (D:\pm-videos, intro-l3),
+                // the owner's ElevenLabs voice; every spoken word is also on screen.
+                type: 'video' as const,
+                narrated: true,
+                title: '🎥 المستوى ده في دقيقة',
+                content: '🔊 بالصوت، والكلام مكتوب على الشاشة كمان. الصوت معمول بالذكاء الاصطناعي.',
+                videoUrl: '/assets/content/level-3/level-intro.mp4',
+                poster: '/assets/content/level-3/level-intro.webp'
+            },
+            {
                 type: 'text' as const,
                 content: "أهلاً في المستوى التالت.\n\nفي المستوى التاني عملت «شنطة طلباتك». بس كل مرة بتلزق الطلب، وتملا الفراغات، وتشرح نفس الحاجات.\n\nالمستوى ده هيطلّعك بـ **«مساعد شغلانتك»**: مكان في أداتك فيه طريقة شغلك وملفاتك، بيعمل شغلانة بتتكرر **من غير ما تشرح كل مرة**. واتجرّب على حالات مشافهاش قبل ما تعتمد عليه.\n\nهتمشي المستوى كله على شغلانة واحدة من شنطتك."
             },

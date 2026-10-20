@@ -31,6 +31,16 @@ export const unit1Data: PageContent[] = [
         minutes: 10,
         contentBlocks: [
             {
+                // Level opener: the whole level in about a minute, lesson by lesson. Remotion (D:\pm-videos, intro-l1),
+                // the owner's ElevenLabs voice; every spoken word is also on screen.
+                type: 'video' as const,
+                narrated: true,
+                title: '🎥 المستوى ده في دقيقة',
+                content: '🔊 بالصوت، والكلام مكتوب على الشاشة كمان. الصوت معمول بالذكاء الاصطناعي.',
+                videoUrl: '/assets/content/level-1/level-intro.mp4',
+                poster: '/assets/content/level-1/level-intro.webp'
+            },
+            {
                 type: 'text' as const,
                 content: "في التمهيد عرفت إن الـ AI ممكن يغلط وهو واثق. النهارده هتعرف **ليه**، وتطلع بحاجة تستخدمها كل يوم: إمتى تقبل رده، وإمتى تراجعه، وإمتى ترفضه.\n\nقبل ما تشوف الأنيميشن اللي تحت: كمّل الجملة دي في دماغك — «الفول بيتاكل الصبح مع…»"
             },

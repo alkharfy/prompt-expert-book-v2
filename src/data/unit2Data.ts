@@ -44,6 +44,16 @@ export const unit2Data: PageContent[] = [
         minutes: 15,
         contentBlocks: [
             {
+                // Level opener: the whole level in about a minute, lesson by lesson. Remotion (D:\pm-videos, intro-l2),
+                // the owner's ElevenLabs voice; every spoken word is also on screen.
+                type: 'video' as const,
+                narrated: true,
+                title: '🎥 المستوى ده في دقيقة',
+                content: '🔊 بالصوت، والكلام مكتوب على الشاشة كمان. الصوت معمول بالذكاء الاصطناعي.',
+                videoUrl: '/assets/content/level-2/level-intro.mp4',
+                poster: '/assets/content/level-2/level-intro.webp'
+            },
+            {
                 type: 'text' as const,
                 content: "أهلاً في المستوى التاني.\n\nفي المستوى الأول اتعلمت تطلب شغلانة واحدة صح وتراجعها. المستوى ده هيطلّعك بـ **«شنطة طلباتك»**: طلبات جاهزة لأكتر الشغلانات اللي بتعملها، كل واحد فيه فراغات تملاها، وتستخدمه تاني من غير ما تكتبه من الأول.\n\nبس قبل ما نكتب أي طلب: مش كل شغلانة تستاهل تديها للـ AI."
             },

@@ -22,7 +22,7 @@ describe('Level 3 — بتجهّزه لشغلك', () => {
     })
 
     it('ships every memory clip and its poster, at phone width with play controls', () => {
-        const clips = blocks.filter(block => block.type === 'video')
+        const clips = blocks.filter(block => block.type === 'video' && !block.narrated)
         expect(clips).toHaveLength(2)
         for (const clip of clips) {
             expect(clip.portrait && clip.autoplay === false, clip.title).toBe(true)

@@ -239,6 +239,18 @@
   direction: rtl;
 }
 
+/* The line before the book chapters that stay open until Level 5 lands */
+.lock-chapters-note {
+  margin: 10px 12px 2px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: #b0b0b0;
+  direction: rtl;
+  text-align: start;
+}
+
 .lock-chapter-item:hover {
   background: rgba(255, 255, 255, 0.04);
 }
