@@ -7,6 +7,7 @@ import QuizBlock from '@/components/reading/QuizBlock'
 import ChecklistBlock from '@/components/reading/ChecklistBlock'
 import AnswerCheck from '@/components/reading/AnswerCheck'
 import NarratedVideo from '@/components/reading/NarratedVideo'
+import AudioBlock from '@/components/reading/AudioBlock'
 import { formatDialogue, formatEnhancedText } from '@/utils/textFormatting'
 
 type Block = PageContent['contentBlocks'][number]
@@ -75,6 +76,10 @@ export default function WorkshopBlocks({ slug, blocks }: { slug: string; blocks:
                             <video src={block.videoUrl} poster={block.poster} controls playsInline preload="metadata" />
                             {block.title && <figcaption>{formatEnhancedText(block.title)}</figcaption>}
                         </figure>
+                    )}
+
+                    {block.type === 'audio' && block.audioUrl && (
+                        <AudioBlock src={block.audioUrl} title={block.title} note={block.content || undefined} formatText={formatDialogue} />
                     )}
 
                     {block.type === 'quiz' && block.quiz && (

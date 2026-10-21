@@ -74,7 +74,7 @@ describe('Level 5 — نظام شغلك', () => {
     it('dates every box of tool steps, since the tools change monthly', () => {
         const toolBoxes = blocks.filter(b => b.title?.startsWith('🧰'))
         expect(toolBoxes.length).toBe(4)
-        for (const box of toolBoxes) expect(box.title, box.title).toMatch(/آخر مراجعة: 20 أكتوبر 2026/)
+        for (const box of toolBoxes) expect(box.title, box.title).toMatch(/آخر مراجعة: 2[01] أكتوبر 2026/)
     })
 
     it('every quiz has one right option per question', () => {

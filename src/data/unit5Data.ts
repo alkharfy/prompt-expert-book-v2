@@ -293,12 +293,23 @@ export const unit5Data: PageContent[] = [
             {
                 type: 'card' as const,
                 title: '⏰ المهمة المتجدولة',
-                content: "بتكتب المهمة مرة: **تعمل إيه، وإمتى، وتوصلك إزاي**. والأداة بتشغّلها لوحدها في ميعادها، والنتيجة بتجيلك رسالة في الشات وإشعار.\n\n• **كويسة في:** تذكير فيه قائمة مراجعة، أو مسودة رسالة جاهزة، أو ملخص لموضوع بتتابعه.\n• **مش بتعمل:** إنها تفتح إيميلك أو ملفاتك على الحساب المجاني. يعني اللي محتاجاه يبقى مكتوب في المهمة نفسها.\n• **والموافقة:** المهمة بتبعتلك **إنت** بس. والإرسال للعميل أو المورد، والدفع، بإيدك بعد ما تراجع."
+                content: "بتكتب المهمة مرة: **تعمل إيه، وإمتى، وتوصلك إزاي**. والأداة بتشغّلها لوحدها في ميعادها، والنتيجة بتنزل في نفس المحادثة اللي عملت فيها المهمة، وبيجيلك إيميل بيها.\n\n• **كويسة في:** تذكير فيه قائمة مراجعة، أو مسودة رسالة جاهزة، أو ملخص لموضوع بتتابعه.\n• **مش بتعمل:** إنها تفتح إيميلك أو ملفاتك على الحساب المجاني. يعني اللي محتاجاه يبقى مكتوب في المهمة نفسها.\n• **والموافقة:** المهمة بتبعتلك **إنت** بس. والإرسال للعميل أو المورد، والدفع، بإيدك بعد ما تراجع."
             },
             {
                 type: 'card' as const,
-                title: '🧰 في ChatGPT النهارده — آخر مراجعة: 20 أكتوبر 2026',
-                content: "على حساب مجاني:\n1. من القايمة الجانبية: **Scheduled**.\n2. اكتب المهمة في الخانة، **بالأيام والساعة**، وابعت.\n3. هيطلعلك كارت المهمة، وفيه **Open**: منه تشوف الأيام والساعة والتوقيت (لازم يبقى **Africa/Cairo**)، وتعدّلهم.\n\nوتقدر تكتبها من أي محادثة عادية كمان: «كل يوم أحد الساعة 9 الصبح: …».\n\nفي تجربتنا الأداة كتبت إن الميعاد «مرن، قريب من 9»، يعني ممكن يتأخر شوية. وفي Gemini فيه **مجدوَل** (تجريبي)، بس شفناه على حساب مدفوع بس."
+                title: '🧰 في ChatGPT النهارده — آخر مراجعة: 21 أكتوبر 2026',
+                content: "على حساب مجاني:\n1. من القايمة الجانبية: **Scheduled**.\n2. اكتب المهمة في الخانة، **بالأيام والساعة**، وابعت.\n3. هيطلعلك كارت المهمة، وفيه **Open**: منه تشوف الأيام والساعة والتوقيت (لازم يبقى **Africa/Cairo**)، وتعدّلهم.\n\nوتقدر تكتبها من أي محادثة عادية كمان: «كل يوم أحد الساعة 9 الصبح: …».\n\nفي تجربتنا الأداة كتبت إن الميعاد «مرن، قريب من 9». **وفعلاً أول تشغيل وصل الساعة 9:27**: الرسالة نزلت في نفس المحادثة، وجالنا إيميل عنوانه «Task Update». يعني متعتمدش عليها في حاجة لازم تتعمل في دقيقة معينة.\n\nوالإيميل والإشعار بتختارهم من الإعدادات ← Notifications ← Tasks.\n\nوفي Gemini فيه **مجدوَل** (تجريبي)، بس شفناه على حساب مدفوع بس."
+            },
+            {
+                // Step clip from the free ChatGPT test account (D:\pm-videos, walkthrough l5-sched, 21 Oct 2026).
+                type: 'video' as const,
+                title: '🎬 في ChatGPT بالصور (اضغط تشغيل · 15 ثانية · حوالي 210 كيلو)',
+                content: '',
+                videoUrl: '/assets/content/level-5/chatgpt-scheduled.mp4',
+                poster: '/assets/content/level-5/chatgpt-scheduled.webp',
+                autoplay: false,
+                loop: false,
+                portrait: true
             },
             {
                 type: 'code' as const,
@@ -342,7 +353,7 @@ export const unit5Data: PageContent[] = [
                 type: 'save' as const,
                 bag: 'أول أتمتة ليك',
                 content: "👉 دورك: مهمة متجدولة واحدة لشغلك. اكتب نصها، وميعادها، وفين الموافقة، وإزاي توقفها.\n\nلو مش عارف توقفها منين: Scheduled ← المهمة. ومتسيبش مهمة شغالة مش محتاجها.",
-                placeholder: "المهمة: تذكير مراجعة فواتير الأسبوع + قائمة الـ 4 نقط\nالميعاد: كل أحد 9 الصبح · Africa/Cairo\nبتوصلني: رسالة في ChatGPT + إشعار\nالموافقة: المهمة بتفكّرني بس، والمراجعة والدفع بإيدي\nأوقفها إزاي: Scheduled ← المهمة\nأراجعها: بعد أسبوعين، لسه مفيدة؟"
+                placeholder: "المهمة: تذكير مراجعة فواتير الأسبوع + قائمة الـ 4 نقط\nالميعاد: كل أحد 9 الصبح · Africa/Cairo\nبتوصلني: رسالة في نفس المحادثة + إيميل (أول مرة وصلت 9:27)\nالموافقة: المهمة بتفكّرني بس، والمراجعة والدفع بإيدي\nأوقفها إزاي: Scheduled ← المهمة\nأراجعها: بعد أسبوعين، لسه مفيدة؟"
             },
             {
                 type: 'card' as const,
@@ -408,6 +419,17 @@ export const unit5Data: PageContent[] = [
                     { title: 'ChatGPT (مجاني)', content: 'مكتوب «Skills aren\'t available for this account». يعني المهارات مش في الحساب المجاني النهارده، وكمّل بالمساحة زي المستوى التالت.' },
                     { title: 'Gemini', content: 'تخصيص ← المهارات ← إنشاء (بإيدك، أو تخلّي Gemini يساعدك). شفناه على حساب مدفوع، وصفحة مساعدة جوجل بتقول إنه للحسابات الشخصية 18 سنة وأكتر.' }
                 ]
+            },
+            {
+                // Step clip from the free Claude test account (D:\pm-videos, walkthrough l5-skill, 21 Oct 2026).
+                type: 'video' as const,
+                title: '🎬 في Claude بالصور (اضغط تشغيل · 17 ثانية · حوالي 260 كيلو)',
+                content: '',
+                videoUrl: '/assets/content/level-5/claude-skill.mp4',
+                poster: '/assets/content/level-5/claude-skill.webp',
+                autoplay: false,
+                loop: false,
+                portrait: true
             },
             {
                 type: 'quiz' as const,
@@ -511,8 +533,19 @@ export const unit5Data: PageContent[] = [
             },
             {
                 type: 'card' as const,
-                title: '🧰 في Claude المجاني — آخر مراجعة: 20 أكتوبر 2026',
-                content: "1. **Customize** ← **Connectors** ← **Google Drive**.\n2. **Connect to Claude**.\n3. اختار حساب Google، ووافق على الصلاحيات.\n4. هيطلع **Connected**.\n5. **Your tool permissions**: اتأكد إن الكتابة والمسح على «Needs approval».\n\nوالفصل: نفس الصفحة ← **Disconnect**.\n\nوفي ChatGPT المجاني: جنب Gmail، وجنب Google Drive، وجنب Google Calendar مكتوب «Upgrade to Plus». وفيه حاجات تانية ببلاش، زي Notion، أو Outlook Email."
+                title: '🧰 في Claude المجاني — آخر مراجعة: 21 أكتوبر 2026',
+                content: "1. **Customize** ← **Connectors** ← **Google Drive**.\n2. **Connect to Claude**.\n3. اختار حسابك الشخصي، ودوس **Continue**.\n4. جوجل هيسألك على حاجتين، علّم على الاتنين: الأولى **يقرا ملفاتك**، والتانية **يعدّل في الملفات اللي Claude عملها بس** (مش ملفاتك التانية). وبعدين **Continue**.\n5. هيطلع **Connected**.\n6. **Your tool permissions**: اتأكد إن الكتابة والمسح على «Needs approval».\n\nوالفصل: نفس الصفحة ← النقط التلاتة ← **Disconnect**.\n\nوفي ChatGPT المجاني: جنب Gmail، وجنب Google Drive، وجنب Google Calendar مكتوب «Upgrade to Plus». وفيه حاجات تانية ببلاش، زي Notion، أو Outlook Email."
+            },
+            {
+                // Step clip from the free Claude test account (D:\pm-videos, walkthrough l5-conn, 21 Oct 2026); emails blurred.
+                type: 'video' as const,
+                title: '🎬 في Claude بالصور (اضغط تشغيل · 28 ثانية · حوالي 450 كيلو)',
+                content: '',
+                videoUrl: '/assets/content/level-5/claude-drive.mp4',
+                poster: '/assets/content/level-5/claude-drive.webp',
+                autoplay: false,
+                loop: false,
+                portrait: true
             },
             {
                 type: 'code' as const,
