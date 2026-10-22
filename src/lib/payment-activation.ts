@@ -3,6 +3,7 @@ import { dbLogger } from '@/lib/logger'
 import { alertMoneyPath } from '@/lib/alert'
 import { PLAN_ORDER } from '@/lib/pricing'
 import { PLAN_DURATION_DAYS, type PlanId } from '@/types/subscription'
+import { LIVE_PLAN_ID, activateLiveEnrollment } from '@/lib/live-enrollment'
 
 // EGP tolerance for the amount guard (rounding / currency-minor differences).
 const AMOUNT_TOLERANCE = 0.01
@@ -170,6 +171,8 @@ export async function activateStoredPayment(userId: string, paymentId: string, s
   if (error || !payment || payment.user_id !== userId || payment.status !== 'success' || !payment.paid_at) {
     return { ok: false, blocked: true, error: 'payment_not_verified' }
   }
+  // The live challenge is its own product: a seat, not a subscription.
+  if (payment.plan_id === LIVE_PLAN_ID) return activateLiveEnrollment(userId, paymentId, payment, source)
   const isUpgrade = typeof payment.notes === 'string' && payment.notes.startsWith('upgrade:')
   const upgradeExpiresAt = isUpgrade ? payment.notes.match(/\|expires:([^|]+)/)?.[1] : null
   return activatePaidSubscription({

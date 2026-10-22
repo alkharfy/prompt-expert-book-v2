@@ -23,6 +23,7 @@ const PLAN_NAMES: Record<string, string> = {
     basic: 'الأساسية — Basic',
     pro: 'الاحترافية — Pro',
     vip: 'المميزة — VIP',
+    live: 'تحدّي ٣ أيام لايف',
 }
 
 

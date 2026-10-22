@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import { trackPurchase } from '@/lib/meta-pixel'
 import { trackPurchase as trackGA4Purchase, trackPaymentCompleted, trackPaymentFailed, trackFunnelStep, trackGoogleAdsConversion } from '@/lib/analytics'
+import { LIVE_PLAN_ID } from '@/lib/live'
 import '@/app/auth.css'
 import '../payment.css'
 
@@ -20,6 +21,7 @@ function CallbackContent() {
 
     const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading')
     const [error, setError] = useState('')
+    const [isLive, setIsLive] = useState(false)
 
     const verifyPayment = useCallback(async () => {
         // إذا كاشير أرسل حالة الفشل مباشرة
@@ -63,9 +65,11 @@ function CallbackContent() {
                     trackPaymentCompleted(paidPlan, paidAmount ?? 0)
                     trackGoogleAdsConversion(paidAmount ?? 0, paidOrder)
                     trackFunnelStep('purchase_complete', 6)
+                    setIsLive(paidPlan === LIVE_PLAN_ID)
                     setStatus('success')
                     setTimeout(() => {
-                        window.location.href = '/toc'
+                        // A live-challenge seat is not course access: send them to its own page.
+                        window.location.href = paidPlan === LIVE_PLAN_ID ? '/live/welcome' : '/toc'
                     }, 2500)
                     return
                 }
@@ -172,9 +176,9 @@ function CallbackContent() {
                                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
                             </svg>
                         </div>
-                        <h2 className="callback-title success-text">تم الدفع وتفعيل حسابك بنجاح! 🎉</h2>
+                        <h2 className="callback-title success-text">{isLive ? 'تم الدفع، ومكانك في التحدّي محجوز! 🎉' : 'تم الدفع وتفعيل حسابك بنجاح! 🎉'}</h2>
                         <p className="callback-text">
-                            سيتم تحويلك الآن لصفحة الفهرس لبدء القراءة...
+                            {isLive ? 'ثانية واحدة وهنوديك على صفحة التحدّي…' : 'سيتم تحويلك الآن لصفحة الفهرس لبدء القراءة...'}
                         </p>
                         <div className="callback-redirect-bar">
                             <div className="redirect-progress"></div>

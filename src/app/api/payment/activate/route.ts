@@ -6,6 +6,7 @@ import { verifyPaymentSession } from '@/lib/kashier'
 import { activateStoredPayment, paymentAmountMatches } from '@/lib/payment-activation'
 import { checkRateLimitAsync, getClientIP, RATE_LIMITS } from '@/lib/rate-limit'
 import { dbLogger } from '@/lib/logger'
+import { LIVE_PLAN_ID } from '@/lib/live'
 
 /** Recover verified checkouts without extending an old term or hiding upgrades. */
 export async function POST(request: NextRequest) {
@@ -18,6 +19,9 @@ export async function POST(request: NextRequest) {
     const { data: payment, error } = await (supabase.from('payments') as any)
       .select('id, status, plan_id, amount, paid_at, kashier_session_id, kashier_order_id')
       .eq('user_id', userId).in('status', ['pending', 'success'])
+      // Course access only: a newer live-challenge order must not hide a course payment
+      // (live seats are recovered by the webhook and the reconcile cron).
+      .neq('plan_id', LIVE_PLAN_ID)
       .order('created_at', { ascending: false }).limit(1).maybeSingle()
     if (error) throw new Error('Payment lookup failed')
     if (payment?.status === 'pending' && payment.kashier_session_id) {

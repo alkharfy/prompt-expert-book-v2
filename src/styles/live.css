@@ -1,0 +1,124 @@
+/* «تحدّي ٣ أيام لايف» landing page. Same dark theme and orange as the rest of the site. */
+.live-page { max-width: 880px; margin: 0 auto; padding: 96px 16px 140px; color: #e8e8e8; }
+.live-page h2 { font-size: clamp(1.4rem, 4.5vw, 2rem); line-height: 1.5; margin: 0 0 8px; color: #fff; text-align: center; }
+.live-page h2 span, .live-hero h1 span { color: #FF6B35; }
+.live-page h3 { margin: 0 0 6px; color: #fff; font-size: 1.1rem; line-height: 1.6; }
+.live-page p { line-height: 1.9; margin: 0; }
+.live-sub { color: #aaa; text-align: center; margin: 0 auto 24px !important; max-width: 620px; }
+.live-section { margin-top: 64px; }
+.live-kicker { display: inline-block; color: #FF6B35; font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; }
+
+/* Bottom bar: dates + countdown + button, always in reach on a phone. */
+.live-bar { position: fixed; inset: auto 0 0 0; z-index: 40; display: flex; align-items: center; justify-content: center; gap: 14px;
+    flex-wrap: wrap; padding: 10px 16px; background: rgba(12, 12, 12, 0.96); border-top: 1px solid rgba(255, 107, 53, 0.35);
+    backdrop-filter: blur(6px); }
+.live-bar-dot { width: 9px; height: 9px; border-radius: 50%; background: #FF6B35; box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.2); }
+.live-bar-title { color: #fff; font-weight: 700; font-size: 0.95rem; }
+.live-bar-title em { font-style: normal; color: #FF6B35; margin-inline-start: 6px; }
+@media (max-width: 640px) { .live-bar-title, .live-bar-dot { display: none; } .live-bar { gap: 10px; } }
+
+.live-count { display: inline-flex; gap: 8px; direction: rtl; }
+.live-count-cell { display: flex; flex-direction: column; align-items: center; min-width: 58px; padding: 8px 6px; border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
+.live-count-cell b { color: #fff; font-size: 1.5rem; line-height: 1.2; }
+.live-count-cell small { color: #999; font-size: 0.75rem; }
+.live-count.compact { gap: 4px; }
+.live-count.compact .live-count-cell { min-width: 40px; padding: 3px 4px; border-radius: 8px; }
+.live-count.compact .live-count-cell b { font-size: 1rem; }
+.live-count.compact .live-count-cell small { font-size: 0.65rem; }
+
+.live-hero { text-align: center; }
+/* The global h1 paints an orange gradient through the text; this page wants white with an orange middle line. */
+.live-page .live-hero h1 { font-size: clamp(1.8rem, 6.5vw, 3rem); line-height: 1.45; margin: 0 0 14px; color: #fff;
+    background: none; -webkit-text-fill-color: currentColor; }
+.live-page .live-hero h1 span { display: block; color: #FF6B35; }
+.live-hero > p { color: #bbb; max-width: 640px; margin: 0 auto; font-size: 1.08rem; }
+.live-hero-count { margin-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.live-hero-count > small { color: #999; }
+
+.live-cta { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; padding: 14px 26px; border-radius: 14px;
+    background: #FF6B35; color: #fff; text-decoration: none; box-shadow: 0 8px 24px rgba(255, 107, 53, 0.25); }
+.live-cta b { font-size: 1.05rem; }
+.live-cta small { font-size: 0.8rem; opacity: 0.9; }
+.live-cta:hover, .live-cta:focus-visible { background: #ff7f50; }
+.live-cta.small { padding: 9px 16px; border-radius: 10px; box-shadow: none; }
+.live-cta.small b { font-size: 0.92rem; }
+
+.live-price { margin: 40px auto 0; max-width: 680px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    flex-wrap: wrap; padding: 22px; border-radius: 18px; background: rgba(255, 107, 53, 0.05); border: 1px solid rgba(255, 107, 53, 0.3); }
+.live-price.center { flex-direction: column; text-align: center; margin-top: 28px; }
+.live-chip { display: inline-block; font-size: 0.8rem; padding: 3px 12px; border-radius: 999px; border: 1px solid rgba(255, 107, 53, 0.6); color: #FF6B35; }
+.live-price-num { color: #ccc; font-size: 1.1rem; margin-top: 6px !important; }
+.live-price-num b { color: #fff; font-size: 2.6rem; line-height: 1.2; margin-inline-end: 6px; }
+.live-price-note { color: #999; font-size: 0.92rem; }
+
+.live-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 640px) { .live-compare { grid-template-columns: 1fr; } }
+.live-side { padding: 20px; border-radius: 18px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); }
+.live-side.yes { background: rgba(255, 107, 53, 0.05); border-color: rgba(255, 107, 53, 0.3); }
+.live-side > small { display: block; color: #999; margin-bottom: 14px; }
+.live-side.yes > small { color: #FF6B35; }
+.live-side ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.live-side li { position: relative; padding: 10px 40px 10px 12px; border-radius: 10px; background: rgba(0, 0, 0, 0.25); line-height: 1.7; color: #ddd; }
+.live-side li::before { position: absolute; right: 12px; top: 10px; font-weight: 700; }
+.live-side.no li::before { content: '✕'; color: #777; }
+.live-side.yes li::before { content: '✓'; color: #FF6B35; }
+
+.live-strip { margin-top: 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    padding: 16px 20px; border-radius: 16px; background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 107, 53, 0.4); }
+.live-strip p { color: #ccc; }
+.live-strip p b { color: #FF6B35; }
+
+.live-cards { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; counter-reset: c; }
+@media (max-width: 720px) { .live-cards { grid-template-columns: 1fr; } }
+.live-cards li { counter-increment: c; padding: 20px; border-radius: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); text-align: center; }
+.live-cards li::before { content: counter(c, arabic-indic); display: inline-grid; place-items: center; width: 40px; height: 40px; margin-bottom: 10px;
+    border-radius: 50%; color: #FF6B35; background: rgba(255, 107, 53, 0.1); font-weight: 700; }
+.live-cards p { color: #aaa; }
+
+.live-days { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.live-days li { padding: 20px; border-radius: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 4px solid #FF6B35; }
+.live-day-date { display: block; color: #FF6B35; font-size: 0.88rem; font-weight: 700; margin-bottom: 4px; }
+.live-days p { color: #bbb; }
+.live-day-out { margin-top: 10px !important; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); color: #ddd !important; }
+.live-day-out b { color: #FF6B35; }
+
+.live-includes { list-style: none; padding: 0; margin: 0 auto; max-width: 680px; display: grid; gap: 10px; }
+.live-includes li { display: grid; gap: 2px; padding: 14px 16px; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); }
+.live-includes b { color: #fff; }
+.live-includes span { color: #aaa; line-height: 1.8; }
+
+.live-qa { display: grid; gap: 12px; max-width: 720px; margin: 0 auto; }
+.live-qa div { padding: 18px; border-radius: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); }
+.live-qa h3 { color: #FF6B35; }
+.live-qa p { color: #bbb; }
+
+.live-presenter { text-align: center; }
+.live-presenter p { color: #bbb; max-width: 620px; margin: 0 auto 6px; }
+
+.live-final { text-align: center; padding: 32px 20px; border-radius: 20px; background: rgba(255, 107, 53, 0.05); border: 1px solid rgba(255, 107, 53, 0.25); }
+
+.live-faq { display: grid; gap: 10px; max-width: 720px; margin: 0 auto; }
+.live-faq details { padding: 14px 18px; border-radius: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); }
+.live-faq summary { cursor: pointer; color: #fff; font-weight: 700; line-height: 1.7; }
+.live-faq details p { color: #bbb; margin-top: 8px; }
+
+/* /live/checkout and /live/welcome */
+.live-checkout { max-width: 560px; padding-bottom: 64px; text-align: center; }
+.live-checkout .live-price { margin-top: 20px; }
+.live-done { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.live-done p { color: #ddd; }
+.live-link { color: #FF6B35; text-decoration: none; }
+.live-form { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; max-width: 360px; text-align: start; }
+.live-form label { color: #fff; font-weight: 700; }
+.live-form input { padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(0, 0, 0, 0.35);
+    color: #fff; font-size: 1.05rem; text-align: left; }
+.live-form input:focus { outline: 2px solid #FF6B35; border-color: transparent; }
+.live-form small { color: #999; margin-bottom: 8px; }
+.live-form .live-cta { border: 0; cursor: pointer; font-family: inherit; }
+.live-form .live-cta:disabled { opacity: 0.7; cursor: wait; }
+.live-error { margin-top: 16px !important; color: #ff8a65; }
+.live-help { margin-top: 24px !important; }
+.live-help a { color: #FF6B35; white-space: nowrap; }
+.live-next { margin-top: 28px; text-align: start; }

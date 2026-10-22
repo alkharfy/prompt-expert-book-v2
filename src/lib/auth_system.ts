@@ -943,6 +943,9 @@ class AuthSystem {
                 .select('status')
                 .eq('user_id', targetUserId)
                 .eq('status', 'success')
+                // A live-challenge seat is not course access.
+                .neq('plan_id', 'live')
+                .limit(1)
                 .maybeSingle()
 
             if (error) {

@@ -6,6 +6,7 @@ import { dbLogger } from '@/lib/logger'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { checkRateLimitAsync, getClientIP, RATE_LIMITS } from '@/lib/rate-limit'
 import { sendCAPIPurchase } from '@/lib/meta-capi'
+import { LIVE_PLAN_ID } from '@/lib/live'
 
 /**
  * Process Kashier payment callback
@@ -161,7 +162,8 @@ export async function POST(request: NextRequest) {
 
         // 6b. Mark this user's open payment intents as completed so cart-recovery
         //     never re-emails a buyer (defense-in-depth; non-blocking).
-        try {
+        //     A live-challenge seat does not buy the course, so its intents stay open.
+        if (payment.plan_id !== LIVE_PLAN_ID) try {
             await (supabase.from('payment_intents') as any)
                 .update({ completed: true })
                 .eq('user_id', userId)
