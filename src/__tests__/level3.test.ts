@@ -21,9 +21,9 @@ describe('Level 3 — بتجهّزه لشغلك', () => {
         expect(minutesLeft(unit3Data, 1)).toBe(195)
     })
 
-    it('ships every memory clip and its poster, at phone width with play controls', () => {
+    it('ships every step clip (memory 3.2, projects 3.5) and its poster, at phone width with play controls', () => {
         const clips = blocks.filter(block => block.type === 'video' && !block.narrated)
-        expect(clips).toHaveLength(2)
+        expect(clips).toHaveLength(4)
         for (const clip of clips) {
             expect(clip.portrait && clip.autoplay === false, clip.title).toBe(true)
             for (const file of [clip.videoUrl!, clip.poster!]) expect(existsSync(join(process.cwd(), 'public', file)), file).toBe(true)

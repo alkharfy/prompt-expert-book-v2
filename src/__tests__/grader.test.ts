@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { buildGraderPrompt, findSensitiveData, graderResponseSchema, parseGraderResult, placeholderCriterion, toLatinDigits } from '@/lib/grader'
+import { buildGraderPrompt, copiedFromSample, findSensitiveData, graderResponseSchema, parseGraderResult, placeholderCriterion, toLatinDigits } from '@/lib/grader'
 import { GRADE_RUBRICS } from '@/data/gradeRubrics'
+import { unit2Data } from '@/data/unit2Data'
 
 const rubric = GRADE_RUBRICS['l2-examples']
 const submission = 'صنّف البنود دي.\nأمثلة:\n• «ورق» ← مكتبية\n• «تكييف» ← صيانة\nالقاعدة: الحسابات دي بس. لو مش واضح اكتب محتاج مراجعة.'
@@ -74,5 +75,27 @@ describe('grading rubrics', () => {
             expect(r.maxChars).toBeLessThanOrEqual(4000)
         }
         expect(Object.values(GRADE_RUBRICS).filter(r => r.demo).map(r => r.id)).toEqual(['intro-demo'])
+    })
+})
+
+describe('«المستر بيصحّح» — the lesson\'s own prompt pasted back', () => {
+    const ahmed = unit2Data[1].contentBlocks.find(b => b.type === 'code' && b.track === 'accounting')!.code!
+    const samples = unit2Data[1].contentBlocks.filter(b => b.type === 'code').map(b => b.code!)
+
+    it('catches the example, whole or in part, even re-spaced', () => {
+        expect(copiedFromSample(ahmed, samples)).toBe(true)
+        expect(copiedFromSample(ahmed.split('البنود:')[0].replace(/\s+/g, ' '), samples)).toBe(true)
+    })
+
+    it('lets through a prompt in the same shape about the learner\'s own work', () => {
+        const own = `صنّف رسائل العملاء دي على نوع من الأنواع دي بس: تأخير · مقاس غلط · منتج مكسور · إلغاء
+
+أمثلة:
+• «الطلب بقاله أسبوع ما وصلش» ← تأخير
+• «الجزمة جت 42 وأنا طالب 44» ← مقاس غلط
+
+القاعدة: الأنواع دي بس. لو الرسالة مش واضحة اكتب «محتاج مراجعة».`
+        expect(copiedFromSample(own, samples)).toBe(false)
+        expect(copiedFromSample('حلل الملف الصوتي ده و رجعلي ملخص فيه المهام المطلوبة و علم علي اي حاجة تم تغيرها', samples)).toBe(false)
     })
 })

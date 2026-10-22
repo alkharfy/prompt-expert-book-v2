@@ -5,7 +5,8 @@ import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { userHasFeature } from '@/lib/subscription'
 import { apiLogger } from '@/lib/logger'
 import { GRADE_RUBRICS } from '@/data/gradeRubrics'
-import { buildGraderPrompt, findSensitiveData, parseGraderResult, placeholderCriterion } from '@/lib/grader'
+import { buildGraderPrompt, copiedFromSample, findSensitiveData, parseGraderResult, placeholderCriterion } from '@/lib/grader'
+import { lessonSamples } from '@/lib/server/grade-samples'
 import { gradeWithModel } from '@/lib/grader-model'
 import { GRADER_DAILY_LIMIT } from '@/lib/pricing'
 
@@ -57,6 +58,11 @@ export async function POST(request: NextRequest) {
     const sensitive = findSensitiveData(text)
     if (sensitive.length) {
         return NextResponse.json({ error: 'sensitive', found: sensitive, message: `لقيت في كلامك: ${sensitive.join('، ')}. شيله أو غيّره لرقم وهمي، وابعت تاني.` }, { status: 422 })
+    }
+
+    // The lesson's own prompt pasted back would pass every criterion and teach nothing. Not counted as a try.
+    if (copiedFromSample(text, lessonSamples(rubric.id))) {
+        return NextResponse.json({ error: 'copied', message: 'ده تقريباً نفس الطلب اللي في الدرس 🙂 المستر عايز يشوف طلبك إنت: خد نفس الفكرة وطبّقها على شغلانة من شغلك (أو غيّر الأمثلة والتفاصيل)، وابعت تاني. المحاولة دي متحسبتش من تصحيحاتك.' }, { status: 422 })
     }
 
     const subscribed = await userHasFeature(userId, 'reading')

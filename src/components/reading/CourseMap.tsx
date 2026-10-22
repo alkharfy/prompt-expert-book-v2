@@ -44,12 +44,19 @@ export function stationState(index: number, currentIndex: number, completedChapt
     return chapter !== null && completedChapters.includes(chapter) ? 'done' : 'skipped'
 }
 
+/** What a circle shows: the level's own number (Level 2 → 2), not its place in the row, which counts the intro too. */
+export function stationNumber(id: StationId): string {
+    if (id.startsWith('level-')) return id.slice('level-'.length)
+    return id === 'book' ? '📖' : '★'
+}
+
 export function formatMinutes(minutes: number): string {
     if (minutes >= 60) {
         const hours = Math.floor(minutes / 60)
         const rest = Math.round((minutes % 60) / 5) * 5
         const hoursText = hours === 1 ? 'ساعة' : hours === 2 ? 'ساعتين' : `${hours} ساعات`
-        return rest ? `${hoursText} و${rest} دقيقة` : hoursText
+        // A thin space after «و»: glued to the digits it reads like «15g» (separateWawFromDigits in utils/textFormatting)
+        return rest ? `${hoursText} و\u2009${rest} دقيقة` : hoursText
     }
     return `${minutes} ${minutes >= 3 && minutes <= 10 ? 'دقايق' : 'دقيقة'}`
 }
@@ -103,14 +110,18 @@ export default function CourseMap({ sectionId, chapterLabel, pageNum, pageCount,
                                 color: done ? '#fff' : state === 'skipped' ? '#ccc' : '#888',
                                 overflow: 'hidden',
                             }}>
-                                {here ? <img src="/assets/robot-marker.png" alt="" width={26} height={26} style={{ transform: 'scaleX(-1)' }} /> : done ? '✓' : index + 1}
+                                {here ? <img src="/assets/robot-marker.png" alt="" width={26} height={26} style={{ transform: 'scaleX(-1)' }} /> : done ? '✓' : stationNumber(station.id)}
                             </span>
                             <span style={{ display: 'block', marginTop: '6px', fontSize: '0.85rem', lineHeight: 1.35, fontWeight: 700, color: here ? '#FF6B35' : done || state === 'skipped' ? '#ddd' : '#888' }}>
                                 {/* The circle already shows a level's number, so «المستوى N» is written only where the reader is:
                                     six «المستوى» labels ran into each other on a phone. */}
                                 {here || !station.id.startsWith('level-') ? station.label : ' '}
                             </span>
-                            <span style={{ display: 'block', marginTop: '3px', fontSize: '0.78rem', lineHeight: 1.35, color: '#999' }}>{state === 'skipped' && known ? 'لسه مخلّصتوش' : station.note}</span>
+                            <span style={{ display: 'block', marginTop: '3px', fontSize: '0.78rem', lineHeight: 1.35, color: '#999' }}>{station.note}</span>
+                            {/* A short word under the level's name: «لسه مخلّصتوش» in its place ran into the next stop on a phone */}
+                            {state === 'skipped' && known && (
+                                <span title="لسه مخلّصتوش" style={{ display: 'block', marginTop: '2px', fontSize: '0.72rem', lineHeight: 1.3, color: 'rgba(255,107,53,0.85)' }}>لسه</span>
+                            )}
                         </li>
                     )
                 })}

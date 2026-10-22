@@ -102,10 +102,16 @@ const MARKDOWN_INLINE = /(\[[^\]]+\]\([^)\s]+\)|\*\*[^*]+\*\*)/g
 const RLM = '‏'
 const keepArrowsRtl = (text: string) => text.replace(/ ← /g, ` ${RLM}←${RLM} `)
 
+/**
+ * «و» glued to a number («المستوى 1 و2», «ساعات و15») draws its final form against the digits and reads like
+ * «2g» (owner 2026-10-22). A thin space keeps the conjunction readable; only after a space, «(» or the line start.
+ */
+export const separateWawFromDigits = (text: string) => text.replace(/(^|[\s(«])و(\d)/g, '$1و\u2009$2')
+
 /** **bold** and [text](url) in lesson text; practice files under /assets/practice/ download. */
 export function formatInlineMarkdown(text: string): (string | React.ReactElement)[] {
     if (!text) return [text]
-    return keepArrowsRtl(text).split(MARKDOWN_INLINE).filter(part => part !== '').map(part => {
+    return separateWawFromDigits(keepArrowsRtl(text)).split(MARKDOWN_INLINE).filter(part => part !== '').map(part => {
         const link = part.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/)
         if (link) {
             const [, label, url] = link

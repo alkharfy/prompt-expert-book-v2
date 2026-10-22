@@ -63,13 +63,7 @@ export default function ChatMessage({ role, content, isStreaming, onRetry, onRat
                         <circle cx="12" cy="7" r="4" />
                     </svg>
                 ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="10" rx="2" />
-                        <circle cx="12" cy="5" r="2" />
-                        <path d="M12 7v4" />
-                        <line x1="8" y1="16" x2="8" y2="16" />
-                        <line x1="16" y1="16" x2="16" y2="16" />
-                    </svg>
+                    <img src="/assets/robot-marker.png" alt="" width={24} height={24} style={{ transform: 'scaleX(-1)' }} />
                 )}
             </div>
             <div className="chat-message__bubble">

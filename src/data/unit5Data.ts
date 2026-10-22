@@ -303,7 +303,7 @@ export const unit5Data: PageContent[] = [
             {
                 // Step clip from the free ChatGPT test account (D:\pm-videos, walkthrough l5-sched, 21 Oct 2026).
                 type: 'video' as const,
-                title: '🎬 في ChatGPT بالصور (اضغط تشغيل · 15 ثانية · حوالي 210 كيلو)',
+                title: '🎬 في ChatGPT بالصور (فيديو صامت · اضغط تشغيل · 15 ثانية · حوالي 210 كيلو)',
                 content: '',
                 videoUrl: '/assets/content/level-5/chatgpt-scheduled.mp4',
                 poster: '/assets/content/level-5/chatgpt-scheduled.webp',
@@ -423,7 +423,7 @@ export const unit5Data: PageContent[] = [
             {
                 // Step clip from the free Claude test account (D:\pm-videos, walkthrough l5-skill, 21 Oct 2026).
                 type: 'video' as const,
-                title: '🎬 في Claude بالصور (اضغط تشغيل · 17 ثانية · حوالي 260 كيلو)',
+                title: '🎬 في Claude بالصور (فيديو صامت · اضغط تشغيل · 17 ثانية · حوالي 260 كيلو)',
                 content: '',
                 videoUrl: '/assets/content/level-5/claude-skill.mp4',
                 poster: '/assets/content/level-5/claude-skill.webp',
@@ -539,7 +539,7 @@ export const unit5Data: PageContent[] = [
             {
                 // Step clip from the free Claude test account (D:\pm-videos, walkthrough l5-conn, 21 Oct 2026); emails blurred.
                 type: 'video' as const,
-                title: '🎬 في Claude بالصور (اضغط تشغيل · 28 ثانية · حوالي 450 كيلو)',
+                title: '🎬 في Claude بالصور (فيديو صامت · اضغط تشغيل · 28 ثانية · حوالي 450 كيلو)',
                 content: '',
                 videoUrl: '/assets/content/level-5/claude-drive.mp4',
                 poster: '/assets/content/level-5/claude-drive.webp',

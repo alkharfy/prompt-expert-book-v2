@@ -57,7 +57,7 @@ async function callGroq(system: string, user: string): Promise<string> {
     if (!apiKey) throw new Error('grader key missing')
     const client = new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1', timeout: 25_000 })
     // JSON mode plus the shape in words (the same setup scripts/try-grader.ts checked); parseGraderResult validates it.
-    const response = await client.chat.completions.create({
+    const ask = () => client.chat.completions.create({
         model: process.env.GRADER_MODEL || 'openai/gpt-oss-120b',
         messages: [
             { role: 'system', content: system + '\nرجّع JSON بس بالشكل ده: {"criteria":[{"id":"","verdict":"pass|fail|unsure","evidence":"","note":""}],"fix":""}' },
@@ -67,6 +67,11 @@ async function callGroq(system: string, user: string): Promise<string> {
         reasoning_effort: 'low',
         temperature: 0.2,
         max_completion_tokens: 2500,
+    })
+    // Groq rejects a reply that isn't valid JSON (400 json_validate_failed); a second try almost always comes back clean.
+    const response = await ask().catch(err => {
+        if ((err as { code?: string })?.code === 'json_validate_failed') return ask()
+        throw err
     })
     return response.choices[0]?.message?.content || ''
 }

@@ -131,16 +131,20 @@ export default function StreakBanner({ variant = 'default', showDetails = true, 
                     </motion.span>
                 </AnimatePresence>
                 <span className="streak-label">
-                    {current_streak >= 3 && current_streak <= 10 ? 'أيام ورا بعض' : 'يوم ورا بعض'}
+                    {current_streak >= 3 && current_streak <= 10 ? 'أيام' : 'يوم'}
+                    <span className="streak-label-rest"> ورا بعض</span>
                 </span>
             </div>
 
-            <span
-                className="streak-level-badge"
-                style={{ borderColor: streakLevel.color, color: streakLevel.color }}
-            >
-                {streakLevel.label}
-            </span>
+            {/* The small one sits in the reading bar: a one-line pill, without the level badge that made it a tall card on phones */}
+            {variant !== 'small' && (
+                <span
+                    className="streak-level-badge"
+                    style={{ borderColor: streakLevel.color, color: streakLevel.color }}
+                >
+                    {streakLevel.label}
+                </span>
+            )}
 
             {showDetails && variant !== 'small' && (
                 <div className="streak-details">

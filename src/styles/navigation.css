@@ -15,8 +15,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-sm) var(--spacing-lg);
-  max-width: 1350px;
-  /* Slightly reduced width to prevent edge-touching */
+  max-width: 1600px;
   margin: 0 auto;
 }
 
@@ -490,9 +489,9 @@
   }
 }
 
-/* Laptops (1025–1440px): a logged-in member's menu has 10 items plus «سجّل خروج»;
-   tighten it so nothing runs off the edge or under the logo */
-@media (min-width: 1025px) and (max-width: 1440px) {
+/* Desktop: a logged-in learner who hasn't paid has 11 items («أكمل الدفع» too). With the old 2rem gap they ran
+   past the edge at every width, even 1920 (measured 2026-10-22), so the gap is tighter on every desktop */
+@media (min-width: 1025px) {
   .nav-content {
     padding-left: 16px;
     padding-right: 16px;
@@ -511,8 +510,9 @@
   }
 }
 
-/* Narrow laptops (1025–1200px): still too tight for every label; the logout keeps its icon and its name on hover/screen readers */
-@media (min-width: 1025px) and (max-width: 1200px) {
+/* Laptops (1025–1440px): the logout keeps its icon (its name on hover and for screen readers),
+   and «ادعي صاحبك» waits on the profile page, where it also lives */
+@media (min-width: 1025px) and (max-width: 1440px) {
   .nav-links {
     gap: 10px;
   }
@@ -523,5 +523,20 @@
 
   .logout-label {
     display: none;
+  }
+
+  .nav-links .referral-nav-link {
+    display: none;
+  }
+}
+
+/* Narrow laptops (1025–1200px) */
+@media (min-width: 1025px) and (max-width: 1200px) {
+  .nav-links {
+    gap: 8px;
+  }
+
+  .nav-link {
+    font-size: 0.8rem;
   }
 }

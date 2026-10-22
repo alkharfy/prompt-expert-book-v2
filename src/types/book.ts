@@ -50,6 +50,11 @@ export interface PageContent {
         sound?: boolean;
         // For type: 'grade' — «المستر بيصحّح»: rubric = id in src/data/gradeRubrics.ts, content = what to paste, bag = save label.
         rubric?: string;
+        /**
+         * For type: 'grade' — a project done one question at a time: each step is graded on its own rubric, and the
+         * next one opens once it passes. `rubric` is then only the gate's key. A step missed 3 times points back to `lesson`.
+         */
+        steps?: { rubric: string; title: string; ask: string; placeholder?: string; lesson: { label: string; href: string }; bag?: string }[];
         // For type: 'save' — bag = the label it is saved under in «شنطتك», content = intro, placeholder = textarea hint.
         // For type: 'bag' — lists what this section saved in «شنطتك».
         bag?: string;

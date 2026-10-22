@@ -37,8 +37,9 @@ export const PRODUCT_STATS = {
     + (section.id === 'intro' ? section.pageCount : Math.min(section.freePageLimit, section.pageCount)), 0),
 } as const
 
-/** «المستر بيصحّح» checks per subscriber per 24 hours; src/app/api/grade enforces this same constant. */
-export const GRADER_DAILY_LIMIT = 10
+/** «المستر بيصحّح» checks per subscriber per 24 hours, shared by every exercise; src/app/api/grade enforces this same constant.
+ *  30 since 2026-10-22 (owner): a guided project grades each step, and one hard question can take several tries. */
+export const GRADER_DAILY_LIMIT = 30
 
 /** The monthly price said in copy (hero, FAQ, buttons). Change it together with the plans row (admin) and the migration. */
 export const MONTHLY_PRICE_EGP = 100
@@ -65,7 +66,7 @@ export interface PublicPricingPlan {
 export const COURSE_OUTCOMES: string[] = [
   'المستويات الخمسة كاملين، من أول «بتستخدمه صح» لحد «نظام شغلك»',
   'تمارين على ملفات شغل مصرية: فواتير، كشف بنك، شكاوى عملاء',
-  `«المستر بيصحّح» طلباتك ويقولك تصلّح إيه: لحد ${GRADER_DAILY_LIMIT} مرات كل 24 ساعة`,
+  `«المستر بيصحّح» طلباتك ويقولك تصلّح إيه: لحد ${GRADER_DAILY_LIMIT} تصحيح كل 24 ساعة، في كل التمارين`,
   '«شنطة طلباتك»: تحفظ فيها الطلبات اللي كتبتها، وتنسخها في شغلك',
   `${PRODUCT_STATS.exercises} تمرين و${PRODUCT_STATS.templates} قالب جاهز`,
 ]

@@ -32,10 +32,10 @@ const SESSION_KEY = 'book-chat-session-id'
 const MAX_MESSAGE_LENGTH = 2000
 
 const SUGGESTED_QUESTIONS = [
-    'ما هو إطار GOLDS؟',
-    'كيف أكتب برومبت فعال؟',
-    'ما الفرق بين Zero-shot و Few-shot؟',
-    'ما هي تقنية Chain of Thought؟',
+    'إنت مين؟',
+    'إيه الخمس حاجات اللي في الطلب الواضح؟',
+    'أنضّف البيانات إزاي قبل ما أبعتها للأداة؟',
+    'يعني إيه «مساحة» (Project) في الأداة؟',
 ]
 
 // ===== Helpers =====
@@ -340,7 +340,7 @@ export default function ChatWindow() {
             day: 'numeric',
         })
 
-        let text = `\u0645\u062d\u0627\u062f\u062b\u0629 \u0645\u0633\u0627\u0639\u062f \u0627\u0644\u0643\u062a\u0627\u0628 - \u062e\u0628\u064a\u0631 \u0627\u0644\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a\n`
+        let text = `\u0645\u062d\u0627\u062f\u062b\u0629 \u0627\u0644\u0645\u0633\u062a\u0631 - \u062e\u0628\u064a\u0631 \u0627\u0644\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a\n`
         text += `\u0627\u0644\u062a\u0627\u0631\u064a\u062e: ${date}\n`
         text += `\u0627\u0644\u0646\u0645\u0648\u0630\u062c: ${modelLabel}\n`
         text += `================================\n\n`
@@ -349,7 +349,7 @@ export default function ChatWindow() {
             if (msg.role === 'user') {
                 text += `[\u0623\u0646\u062a]: ${msg.content}\n\n`
             } else {
-                text += `[\u0645\u0633\u0627\u0639\u062f \u0627\u0644\u0643\u062a\u0627\u0628]: ${msg.content}\n\n`
+                text += `[\u0627\u0644\u0645\u0633\u062a\u0631]: ${msg.content}\n\n`
             }
             text += `================================\n\n`
         }
@@ -442,19 +442,14 @@ export default function ChatWindow() {
                         transition={{ duration: 0.2 }}
                         role="dialog"
                         aria-modal="true"
-                        aria-label="\u0645\u0633\u0627\u0639\u062f \u0627\u0644\u0643\u062a\u0627\u0628"
+                        aria-label="\u0627\u0644\u0645\u0633\u062a\u0631"
                     >
                         {/* Header */}
                         <div className="chat-window__header">
                             <div className="chat-window__title">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <rect x="3" y="11" width="18" height="10" rx="2" />
-                                    <circle cx="12" cy="5" r="2" />
-                                    <path d="M12 7v4" />
-                                    <line x1="8" y1="16" x2="8" y2="16" />
-                                    <line x1="16" y1="16" x2="16" y2="16" />
-                                </svg>
-                                <span>{'\u0645\u0633\u0627\u0639\u062f \u0627\u0644\u0643\u062a\u0627\u0628'}</span>
+                                {/* The course's own coach answers here (owner 2026-10-22), not a generic \u00abbook assistant\u00bb */}
+                                <img src="/assets/robot-marker.png" alt="" width={26} height={26} style={{ transform: 'scaleX(-1)' }} />
+                                <span>\u0627\u0633\u0623\u0644 \u0627\u0644\u0645\u0633\u062a\u0631</span>
                             </div>
                             <div className="chat-window__controls">
                                 {isLoggedIn && messages.length > 0 && (
@@ -530,7 +525,7 @@ export default function ChatWindow() {
                                     </svg>
                                 </div>
                                 <h3>{'\u0633\u062c\u0644 \u062f\u062e\u0648\u0644\u0643 \u0623\u0648\u0644\u0627\u064b'}</h3>
-                                <p>{'\u064a\u062c\u0628 \u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644 \u0644\u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0645\u0633\u0627\u0639\u062f \u0627\u0644\u0643\u062a\u0627\u0628 \u0627\u0644\u0630\u0643\u064a.'}</p>
+                                <p>\u0633\u062c\u0651\u0644 \u062f\u062e\u0648\u0644\u0643 \u0639\u0634\u0627\u0646 \u062a\u0633\u0623\u0644 \u0627\u0644\u0645\u0633\u062a\u0631.</p>
                                 <Link href="/login" className="chat-window__auth-gate-btn">
                                     {'\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644'}
                                 </Link>
@@ -540,13 +535,9 @@ export default function ChatWindow() {
                                 <div className="chat-window__messages" aria-live="polite" aria-relevant="additions">
                                     {messages.length === 0 && (
                                         <div className="chat-window__welcome">
-                                            <div className="chat-window__welcome-icon">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                                </svg>
-                                            </div>
-                                            <h3>{'\u0645\u0631\u062d\u0628\u0627\u064b! \u0623\u0646\u0627 \u0645\u0633\u0627\u0639\u062f \u0627\u0644\u0643\u062a\u0627\u0628'}</h3>
-                                            <p>{'\u0627\u0633\u0623\u0644\u0646\u064a \u0623\u064a \u0633\u0624\u0627\u0644 \u0639\u0646 \u0645\u062d\u062a\u0648\u0649 \u0627\u0644\u0643\u062a\u0627\u0628 \u0648\u0633\u0623\u062c\u064a\u0628\u0643 \u0645\u0646 \u0627\u0644\u0641\u0635\u0648\u0644 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629.'}</p>
+                                            <img src="/assets/robot-toc.webp" alt="" width={64} height={64} style={{ display: 'block', margin: '0 auto 8px', objectFit: 'contain' }} />
+                                            <h3>\u0623\u0647\u0644\u0627\u064b\u060c \u0623\u0646\u0627 \u0627\u0644\u0645\u0633\u062a\u0631 \ud83d\udc4b</h3>
+                                            <p>\u0627\u0633\u0623\u0644\u0646\u064a \u0639\u0646 \u0623\u064a \u062f\u0631\u0633 \u0623\u0648 \u0641\u0643\u0631\u0629 \u0623\u0648 \u062a\u0645\u0631\u064a\u0646 \u0641\u064a \u0627\u0644\u0643\u0648\u0631\u0633\u060c \u0648\u0647\u062c\u0627\u0648\u0628\u0643 \u0645\u0646 \u0627\u0644\u062f\u0631\u0648\u0633 \u0646\u0641\u0633\u0647\u0627\u060c \u0648\u0645\u0639\u0627\u0647\u0627 \u0631\u0627\u0628\u0637 \u0627\u0644\u062f\u0631\u0633.</p>
 
                                             {/* Suggested questions */}
                                             <div className="chat-window__suggestions">
@@ -596,13 +587,7 @@ export default function ChatWindow() {
                                     {isLoading && messages[messages.length - 1]?.role === 'user' && (
                                         <div className="chat-message chat-message--assistant">
                                             <div className="chat-message__avatar" aria-hidden="true">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <rect x="3" y="11" width="18" height="10" rx="2" />
-                                                    <circle cx="12" cy="5" r="2" />
-                                                    <path d="M12 7v4" />
-                                                    <line x1="8" y1="16" x2="8" y2="16" />
-                                                    <line x1="16" y1="16" x2="16" y2="16" />
-                                                </svg>
+                                                <img src="/assets/robot-marker.png" alt="" width={24} height={24} style={{ transform: 'scaleX(-1)' }} />
                                             </div>
                                             <div className="chat-message__bubble">
                                                 <div className="chat-window__loading" role="status" aria-label="\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0645\u064a\u0644">

@@ -324,7 +324,7 @@ export const unit4Data: PageContent[] = [
             },
             {
                 type: 'video' as const,
-                title: '🎬 في ChatGPT بالصور (اضغط تشغيل · 15 ثانية · حوالي 210 كيلو)',
+                title: '🎬 في ChatGPT بالصور (فيديو صامت · اضغط تشغيل · 15 ثانية · حوالي 210 كيلو)',
                 content: '',
                 videoUrl: '/assets/content/level-4/chatgpt-deep-research.mp4',
                 poster: '/assets/content/level-4/chatgpt-deep-research.webp',
@@ -596,7 +596,7 @@ ${MONA_BRIEF}
             },
             {
                 type: 'video' as const,
-                title: '🎬 في ChatGPT بالصور (اضغط تشغيل · 17 ثانية · حوالي 210 كيلو)',
+                title: '🎬 في ChatGPT بالصور (فيديو صامت · اضغط تشغيل · 17 ثانية · حوالي 210 كيلو)',
                 content: '',
                 videoUrl: '/assets/content/level-4/chatgpt-permission.mp4',
                 poster: '/assets/content/level-4/chatgpt-permission.webp',

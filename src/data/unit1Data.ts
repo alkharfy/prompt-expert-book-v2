@@ -165,7 +165,7 @@ export const unit1Data: PageContent[] = [
             },
             {
                 type: 'video' as const,
-                title: '🎬 في ChatGPT بالصور (اضغط تشغيل · 15 ثانية · حوالي 170 كيلو)',
+                title: '🎬 في ChatGPT بالصور (فيديو صامت · اضغط تشغيل · 15 ثانية · حوالي 170 كيلو)',
                 content: '',
                 videoUrl: '/assets/content/level-1/chatgpt-training-off.mp4',
                 poster: '/assets/content/level-1/chatgpt-training-off.webp',
@@ -186,7 +186,7 @@ export const unit1Data: PageContent[] = [
             },
             {
                 type: 'video' as const,
-                title: '🎬 الرفع في ChatGPT بالصور (اضغط تشغيل · 12 ثانية · حوالي 150 كيلو)',
+                title: '🎬 الرفع في ChatGPT بالصور (فيديو صامت · اضغط تشغيل · 12 ثانية · حوالي 150 كيلو)',
                 content: '',
                 videoUrl: '/assets/content/level-1/chatgpt-upload.mp4',
                 poster: '/assets/content/level-1/chatgpt-upload.webp',
@@ -383,7 +383,7 @@ export const unit1Data: PageContent[] = [
             },
             {
                 type: 'video' as const,
-                title: '🎬 في ChatGPT بالصور (اضغط تشغيل · 22 ثانية · حوالي 300 كيلو)',
+                title: '🎬 في ChatGPT بالصور (فيديو صامت · اضغط تشغيل · 22 ثانية · حوالي 300 كيلو)',
                 content: '',
                 videoUrl: '/assets/content/level-1/chatgpt-instructions.mp4',
                 poster: '/assets/content/level-1/chatgpt-instructions.webp',
@@ -422,7 +422,7 @@ export const unit1Data: PageContent[] = [
             },
             {
                 type: 'text' as const,
-                content: "في التمهيد نضّفت رسالة منى بسهولة: الاسم والرقم والعنوان كانوا قدامك.\n\nبس في الشغل الحقيقي، البيانات الحساسة بتستخبى: رقم جوه نص طويل، أو اسم في عمود «ملاحظات» محدش بيبص فيه. والأداة بتقرا الملف كله، مش اللي إنت شايفه بس."
+                content: "في التمهيد نضّفت إيميل أحمد بسهولة: الاسم والرقم القومي ورقم الحساب كانوا قدامك.\n\nبس في الشغل الحقيقي، البيانات الحساسة بتستخبى: رقم جوه نص طويل، أو اسم في عمود «ملاحظات» محدش بيبص فيه. والأداة بتقرا الملف كله، مش اللي إنت شايفه بس."
             },
             {
                 type: 'card' as const,

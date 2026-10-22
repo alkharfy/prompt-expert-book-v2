@@ -42,8 +42,8 @@ describe('«إنت هنا» course map', () => {
     expect(formatMinutes(8)).toBe('8 دقايق')
     expect(formatMinutes(20)).toBe('20 دقيقة')
     expect(formatMinutes(60)).toBe('ساعة')
-    expect(formatMinutes(88)).toBe('ساعة و30 دقيقة')
-    expect(formatMinutes(125)).toBe('ساعتين و5 دقيقة')
+    expect(formatMinutes(88)).toBe('ساعة و\u200930 دقيقة')
+    expect(formatMinutes(125)).toBe('ساعتين و\u20095 دقيقة')
   })
 })
 

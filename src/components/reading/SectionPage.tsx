@@ -35,7 +35,7 @@ import SpecializationExamples from '@/components/reading/SpecializationExamples'
 import AdvancedCollapsedCard from '@/components/reading/AdvancedCollapsedCard'
 import RevealCard from '@/components/reading/RevealCard'
 import { useLearning } from '@/context/LearningContext'
-import { personalizeBlocks } from '@/lib/personalizeBlocks'
+import { personalizeBlocks, readerTrack, type ReaderTrack } from '@/lib/personalizeBlocks'
 import { GUEST_LAST_PAGE_KEY } from '@/lib/onboarding'
 import '@/styles/notes.css'
 import '@/styles/recaps.css'
@@ -68,14 +68,19 @@ import ChecklistBlock from '@/components/reading/ChecklistBlock'
 import AnswerCheck from '@/components/reading/AnswerCheck'
 import GradeCheck from '@/components/reading/GradeCheck'
 import { hasPassedGrade } from '@/components/reading/gradePass'
+import GuidedSteps from '@/components/reading/GuidedSteps'
 import { GRADE_RUBRICS } from '@/data/gradeRubrics'
 import { SaveToBagBlock, BagList } from '@/components/reading/BagBlocks'
 import CourseMap from '@/components/reading/CourseMap'
+import TrackSwitch from '@/components/reading/TrackSwitch'
 import { InteractiveWidget } from '@/components/reading/widgets'
 
 // Lazy imports for glossary (only used in sections 2-3)
 let GlossaryTerm: React.ComponentType<{ termId: string; displayText: string }> | null = null
 let GLOSSARY_PATTERNS: { termId: string; patterns: string[] }[] = []
+
+/** localStorage: the reader's pick of Ahmed's or Mona's examples (TrackSwitch). */
+const TRACK_KEY = 'pm_track'
 
 interface SectionExtras {
     recap: React.ComponentProps<typeof ChapterRecap>['recap'] | null
@@ -148,9 +153,23 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
     const { preferences: learner } = useLearning()
     const learnerProfession = learner?.profession ?? null
     const learnerLevel = learner?.aiLevel ?? null
+    // The reader's own pick of Ahmed's or Mona's examples beats the guess from their profession (TrackSwitch).
+    const [trackChoice, setTrackChoice] = useState<ReaderTrack | null>(null)
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(TRACK_KEY)
+            if (saved === 'accounting' || saved === 'service') setTrackChoice(saved)
+        } catch { /* private window: the profession decides */ }
+    }, [])
+    const chooseTrack = useCallback((next: ReaderTrack) => {
+        setTrackChoice(next)
+        try { localStorage.setItem(TRACK_KEY, next) } catch { /* the choice lasts for this visit */ }
+    }, [])
+    const track = trackChoice ?? readerTrack(learnerProfession)
+    const pageHasTracks = !!currentPage?.contentBlocks.some(block => block.track)
     const pageBlocks = React.useMemo(
-        () => personalizeBlocks(currentPage?.contentBlocks ?? [], { profession: learnerProfession, aiLevel: learnerLevel }),
-        [currentPage, learnerProfession, learnerLevel],
+        () => personalizeBlocks(currentPage?.contentBlocks ?? [], { profession: learnerProfession, aiLevel: learnerLevel, track }),
+        [currentPage, learnerProfession, learnerLevel, track],
     )
     const onTryCopy = useCallback(() => trackTryCopy(learnerProfession ?? 'other'), [learnerProfession])
 
@@ -166,7 +185,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
     const isNextPageLocked = hasFreePages && pageNum === config.freePageLimit && needsAccess
 
     // Owner 2026-10-19: in a lesson, the rest of the page (and «next») waits behind «المستر بيصحّح» until the learner's
-    // own prompt passes — or they tick the self-check (GradeCheck offers it when the grader can't answer or after 3 misses).
+    // own prompt passes — or they tick the self-check (GradeCheck offers it when the grader can't answer or after 5 misses).
     // Not the free intro demo, and not for guests (they can't be graded).
     const [passedGrades, setPassedGrades] = useState<Record<string, boolean>>({})
     useEffect(() => {
@@ -675,6 +694,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
 
                     {/* The intro is a first-time visitor's first page: the map comes after the content there. */}
                     {!mapAtBottom && courseMap}
+                    {pageHasTracks && !isCurrentPageLocked && <TrackSwitch track={track} onChange={chooseTrack} />}
 
                     {/* Header */}
                     <motion.div
@@ -1054,7 +1074,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                             <NarratedVideo src={block.videoUrl} poster={block.poster} title={block.title} next={block.next} note={block.content || undefined} />
                                         )}
                                         {block.type === 'audio' && block.audioUrl && (
-                                            <AudioBlock src={block.audioUrl} title={block.title} note={block.content} download={block.download} formatText={formatText} />
+                                            <AudioBlock src={block.audioUrl} title={block.title} note={block.content} download={block.download} reveal={block.reveal} formatText={formatText} />
                                         )}
                                         {block.type === 'flashcards' && block.items && (
                                             <FlashcardDeck title={block.title} cards={block.items} />
@@ -1062,7 +1082,10 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                         {block.type === 'answer' && block.accept && block.title && (
                                             <AnswerCheck key={block.title} id={`${config.id}-${pageNum}-${index}`} question={block.title} accept={block.accept} hint={block.hint} explanation={block.content} formatText={formatText} />
                                         )}
-                                        {block.type === 'grade' && block.rubric && (
+                                        {block.type === 'grade' && block.rubric && block.steps && (
+                                            <GuidedSteps key={block.rubric} id={block.rubric} title={block.title} intro={block.content || undefined} steps={block.steps} sectionId={config.id} pageNumber={pageNum} formatText={formatText} gated={index === gateAt} onPass={() => setPassedGrades((p) => ({ ...p, [block.rubric!]: true }))} />
+                                        )}
+                                        {block.type === 'grade' && block.rubric && !block.steps && (
                                             <GradeCheck key={block.rubric} rubricId={block.rubric} title={block.title} intro={block.content || undefined} bagLabel={block.bag} sectionId={config.id} pageNumber={pageNum} formatText={formatText} gated={index === gateAt} onPass={() => setPassedGrades((p) => ({ ...p, [block.rubric!]: true }))} />
                                         )}
                                         {block.type === 'save' && block.bag && (
@@ -1418,8 +1441,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                         </motion.div>
                     )}
 
-                    {/* Chapter Recap — shows on last page of each section */}
-                    {isLastPage && config.sectionNumber >= 1 && extras?.recap && (
+                    {/* Chapter Recap — shows on last page of each section, once the project's exercise has passed
+                        (its «ابدأ الفصل التالي» skipped the gated exercise, owner 2026-10-22) */}
+                    {isLastPage && gateAt < 0 && config.sectionNumber >= 1 && extras?.recap && (
                         <ChapterRecap
                             recap={extras.recap}
                             nextSectionPath={config.nextSection?.path || null}

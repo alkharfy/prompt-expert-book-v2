@@ -21,10 +21,18 @@ interface GradeCheckProps {
     /** The rest of the lesson waits behind this exercise (SectionPage hides it until onPass). */
     gated?: boolean
     onPass?: () => void
+    /** A step of a guided project: after 3 misses, send the learner back to this lesson; the self-check comes later. */
+    stuckLesson?: { label: string; href: string }
+    placeholder?: string
 }
 
-/** Graded tries with a ❌ before the self-check list shows up anyway: the grader can be wrong, nobody stays stuck. */
-const MISSES_BEFORE_SELF_CHECK = 3
+/**
+ * Graded tries with a ❌ before the self-check list shows up anyway: the grader can be wrong, nobody stays stuck.
+ * Owner 2026-10-22: 3 came too soon (a learner ticked it instead of trying again); 5 still spares 10 wrong tries.
+ */
+const MISSES_BEFORE_SELF_CHECK = 5
+/** In a guided project the lesson link comes first, before the self-check. */
+const MISSES_BEFORE_SEND_BACK = 3
 
 const MARK: Record<CriterionResult['verdict'], string> = { pass: '✅', fail: '❌', unsure: '🤔' }
 
@@ -35,7 +43,7 @@ type State =
     | { kind: 'done'; criteria: CriterionResult[]; fix: string; remaining?: number }
 
 /** «المستر بيصحّح»: the learner pastes their prompt or reply and gets feedback per criterion. */
-export default function GradeCheck({ rubricId, title, intro, bagLabel, sectionId, pageNumber, formatText = text => text, gated = false, onPass }: GradeCheckProps) {
+export default function GradeCheck({ rubricId, title, intro, bagLabel, sectionId, pageNumber, formatText = text => text, gated = false, onPass, stuckLesson, placeholder }: GradeCheckProps) {
     const rubric = GRADE_RUBRICS[rubricId]
     const [text, setText] = useState('')
     const [state, setState] = useState<State>({ kind: 'idle' })
@@ -46,8 +54,9 @@ export default function GradeCheck({ rubricId, title, intro, bagLabel, sectionId
     if (!rubric) return null
     const ready = text.trim().length >= 15
     // When the grader can't answer (down, busy, out of today's gradings, offline), the learner checks the same list by hand.
-    const graderDown = state.kind === 'error' && !['login', 'subscription', 'sensitive', 'too_short', 'too_long', 'bad_request'].includes(state.code || '')
-    const stuck = gated && misses >= MISSES_BEFORE_SELF_CHECK && state.kind === 'done'
+    const graderDown = state.kind === 'error' && !['login', 'subscription', 'sensitive', 'copied', 'too_short', 'too_long', 'bad_request'].includes(state.code || '')
+    const stuck = state.kind === 'done' && (!!stuckLesson || gated) && misses >= MISSES_BEFORE_SELF_CHECK
+    const sendBack = !!stuckLesson && misses >= MISSES_BEFORE_SEND_BACK && state.kind === 'done' && state.criteria.some(c => c.verdict === 'fail')
     const selfCheck = graderDown || stuck
     const checks = [...(rubric.placeholders ? [{ id: 'placeholders', label: 'فيه فراغات [  ] بدل البيانات' }] : []), ...rubric.criteria]
     const allTicked = checks.every(c => ticked[c.id])
@@ -116,7 +125,7 @@ export default function GradeCheck({ rubricId, title, intro, bagLabel, sectionId
                 onChange={e => { setText(e.target.value); setSaved(''); if (state.kind === 'error' && !selfCheck) setState({ kind: 'idle' }) }}
                 rows={6}
                 dir="rtl"
-                placeholder="الزق هنا اللي كتبته"
+                placeholder={placeholder || 'الزق هنا اللي كتبته'}
                 aria-label="اللي كتبته"
                 style={{ width: '100%', boxSizing: 'border-box', minHeight: '140px', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.3)', color: '#fff', font: 'inherit', fontSize: '1rem', lineHeight: 1.8, resize: 'vertical' }}
             />
@@ -170,6 +179,12 @@ export default function GradeCheck({ rubricId, title, intro, bagLabel, sectionId
                             </div>
                         )}
                         <p style={{ color: '#999', fontSize: '0.85rem', margin: '10px 0 0' }}>ملاحظات المستر، وممكن يغلط. إنت اللي بتقرر في الآخر.{typeof state.remaining === 'number' ? ` · فاضلك النهارده ${state.remaining}` : ''}</p>
+                    </div>
+                )}
+                {sendBack && stuckLesson && (
+                    <div style={{ margin: '12px 0 0', padding: '12px 14px', borderRadius: '12px', background: 'rgba(0, 212, 255, 0.07)', border: '1px solid rgba(0, 212, 255, 0.4)', lineHeight: 1.8 }}>
+                        <strong style={{ color: '#e8fbff' }}>🔁 النقطة دي محتاجة مراجعة.</strong>
+                        <div style={{ color: '#ddd' }}>ارجع لدرس <Link href={stuckLesson.href} style={{ color: '#00D4FF', fontWeight: 700 }}>«{stuckLesson.label}»</Link>، وتعالى كمّل من هنا. مكانك محفوظ.</div>
                     </div>
                 )}
                 {selfCheck && (

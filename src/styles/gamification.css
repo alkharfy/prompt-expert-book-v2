@@ -227,9 +227,12 @@
 }
 
 .streak-counter-small {
-  padding: 15px;
+  padding: 6px 14px;
   flex-direction: row;
-  gap: 15px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  min-height: 44px;
 }
 
 .streak-counter-large {
@@ -241,7 +244,8 @@
 }
 
 .streak-counter-small .streak-flames {
-  font-size: 2rem;
+  font-size: 1.2rem;
+  line-height: 1;
 }
 
 .streak-fire.inactive {
@@ -257,7 +261,9 @@
 
 .streak-counter-small .streak-info {
   flex-direction: row;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .streak-number {
@@ -266,7 +272,8 @@
 }
 
 .streak-counter-small .streak-number {
-  font-size: 1.5rem;
+  font-size: 1.15rem;
+  line-height: 1;
 }
 
 .streak-label {
@@ -788,7 +795,12 @@
   }
 
   .streak-counter-small {
-    flex-direction: column;
+    padding: 6px 12px;
+  }
+
+  /* Phones: «🔥 5 أيام» — the reading bar also holds the font buttons and the bookmark */
+  .streak-counter-small .streak-label-rest {
+    display: none;
   }
 
   .badges-grid {

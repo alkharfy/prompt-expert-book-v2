@@ -66,8 +66,8 @@ export async function buildSearchIndex(): Promise<SearchIndexItem[]> {
     } = await import('@/data/bookData')
 
     const sections: SectionDataMapping[] = [
-        { id: 'intro', label: 'المقدمة', pathPrefix: '/read/intro', data: introData },
-        { id: 'section-1', label: 'الفصل 01', pathPrefix: '/read/section-1', data: unit1Data },
+        { id: 'intro', label: 'التمهيد', pathPrefix: '/read/intro', data: introData },
+        { id: 'section-1', label: 'المستوى ١', pathPrefix: '/read/section-1', data: unit1Data },
         { id: 'section-2', label: 'المستوى ٢', pathPrefix: '/read/section-2', data: unit2Data },
         { id: 'section-3', label: 'المستوى ٣', pathPrefix: '/read/section-3', data: unit3Data },
         { id: 'section-4', label: 'المستوى ٤', pathPrefix: '/read/section-4', data: unit4Data },

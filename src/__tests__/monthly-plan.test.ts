@@ -31,7 +31,7 @@ describe('the 100 EGP monthly plan says the same thing everywhere', () => {
 
   it('promises the grader limit the API enforces', () => {
     expect(read('src/app/api/grade/route.ts')).toContain('const PER_DAY = GRADER_DAILY_LIMIT')
-    expect(GRADER_DAILY_LIMIT).toBe(10)
+    expect(GRADER_DAILY_LIMIT).toBe(30)
   })
 
   it('gives the monthly plan a 7-day refund and the yearly ones 30, in every text', () => {

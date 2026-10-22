@@ -22,8 +22,12 @@ describe('Level 2 — بتطلب زي المحترف', () => {
     it('grades only with rubrics the server knows, and the intro has the free demo', () => {
         const graded = blocks.filter(block => block.type === 'grade')
         expect(graded.length).toBeGreaterThanOrEqual(8)
-        for (const block of graded) expect(GRADE_RUBRICS[block.rubric!], block.rubric).toBeDefined()
-        expect(graded.some(block => block.rubric === 'l2-bag' && block.bag)).toBe(true)
+        // A guided project's own rubric is only the gate's key; each of its steps is graded on a server rubric.
+        const rubrics = graded.flatMap(block => block.steps ? block.steps.map(step => step.rubric) : [block.rubric!])
+        for (const id of rubrics) expect(GRADE_RUBRICS[id], id).toBeDefined()
+        const project = graded.find(block => block.steps)
+        expect(project?.steps?.some(step => step.rubric === 'l2-bag' && step.bag)).toBe(true)
+        for (const step of project?.steps || []) expect(step.lesson.href).toMatch(/^\/read\/section-\d\/\d$/)
         const demo = introData.flatMap(page => page.contentBlocks).find(block => block.type === 'grade')
         expect(demo?.rubric).toBe('intro-demo')
     })

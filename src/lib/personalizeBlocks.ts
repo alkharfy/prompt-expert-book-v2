@@ -1,5 +1,5 @@
 // Onboarding v2 personalisation of reading-page blocks:
-// * Level 1 blocks tagged with a track show only to that track (customer service vs everyone else);
+// * blocks tagged with a track show only to that track (Mona's customer-service version or Ahmed's accounting one);
 // * the intro p1 «جرّبها بنفسك» card becomes a live try of the SAME request the
 //   reader checked on the onboarding result screen (their profession);
 // * '⚡ للمتمرسين' cards collapse to one tappable line for first-time AI users.
@@ -10,17 +10,24 @@ import { asRolePhrase, getProfessionTry } from '@/data/professionTries'
 import type { AiLevelId, ProfessionId } from '@/types/learning'
 
 export type ContentBlock = PageContent['contentBlocks'][number]
+export type ReaderTrack = 'accounting' | 'service'
 
-/** Level-1 pilot tracks: customer service gets Mona's version, everyone else Ahmed's (accounting). */
-export function readerTrack(profession: ProfessionId | null): 'accounting' | 'service' {
-  return profession === 'sales_service' ? 'service' : 'accounting'
+/**
+ * Whose story the levels follow. Jobs that live on messages from people (customers, staff, parents, users)
+ * get Mona; numbers and everyone unknown get Ahmed. The reader can switch on the page (TrackSwitch):
+ * owner 2026-10-22, a programmer's new account still read only accounting.
+ */
+const SERVICE_PROFESSIONS: ProfessionId[] = ['sales_service', 'marketing_business', 'hr_admin', 'teacher', 'programmer']
+
+export function readerTrack(profession: ProfessionId | null): ReaderTrack {
+  return profession && SERVICE_PROFESSIONS.includes(profession) ? 'service' : 'accounting'
 }
 
 export function personalizeBlocks(
   blocks: ContentBlock[],
-  reader: { profession: ProfessionId | null; aiLevel: AiLevelId | null },
+  reader: { profession: ProfessionId | null; aiLevel: AiLevelId | null; track?: ReaderTrack | null },
 ): ContentBlock[] {
-  const track = readerTrack(reader.profession)
+  const track = reader.track ?? readerTrack(reader.profession)
   const onTrack = blocks.some(block => block.track)
     ? blocks.filter(block => !block.track || block.track === track)
     : blocks

@@ -62,17 +62,27 @@ describe('reading block personalization', () => {
     }
   })
 
-  it('maps only customer service to the service track; everyone else reads the accounting version', () => {
-    expect(readerTrack('sales_service')).toBe('service')
-    for (const profession of ['accounting', 'teacher', 'marketing_business', 'other', null] as const) {
+  it("maps people-facing jobs to Mona's service track; accounting, students and unknown readers get Ahmed", () => {
+    for (const profession of ['sales_service', 'marketing_business', 'hr_admin', 'teacher', 'programmer'] as const) {
+      expect(readerTrack(profession)).toBe('service')
+    }
+    for (const profession of ['accounting', 'student_jobseeker', 'other', null] as const) {
       expect(readerTrack(profession)).toBe('accounting')
     }
+  })
+
+  it("lets the reader's own pick beat the guess from their profession", () => {
+    const page = unit1Data.find(page => page.contentBlocks.some(block => block.track))!
+    const result = personalizeBlocks(page.contentBlocks, { profession: 'programmer', aiLevel: 'some', track: 'accounting' })
+    expect(result.some(block => block.track === 'service')).toBe(false)
+    expect(result.some(block => block.track === 'accounting')).toBe(true)
   })
 
   it.each([
     ['sales_service', 'service', 'accounting'],
     ['accounting', 'accounting', 'service'],
-    ['teacher', 'accounting', 'service'],
+    ['teacher', 'service', 'accounting'],
+    ['student_jobseeker', 'accounting', 'service'],
   ] as const)('shows a %s reader the %s blocks and hides the %s blocks on every Level 1 page', (profession, shown, hidden) => {
     for (const page of unit1Data) {
       const result = personalizeBlocks(page.contentBlocks, { profession, aiLevel: 'some' })

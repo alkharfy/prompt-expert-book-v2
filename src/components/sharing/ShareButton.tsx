@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { trackWhatsAppClick } from '@/lib/analytics'
 import ShareCardPreview, { type ShareCardData, type ShareCardType } from './ShareCardPreview'
@@ -131,7 +132,8 @@ export default function ShareButton({ type, data, variant = 'full', label }: Sha
                 </button>
             )}
 
-            <AnimatePresence>
+            {/* In a portal: inside a moving popup (the daily-missions celebration) a fixed modal was placed off-centre */}
+            {typeof document !== 'undefined' && createPortal(<AnimatePresence>
                 {isOpen && (
                     <>
                         <motion.div
@@ -169,7 +171,7 @@ export default function ShareButton({ type, data, variant = 'full', label }: Sha
                         </motion.div>
                     </>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>, document.body)}
 
             <AnimatePresence>
                 {toast && (

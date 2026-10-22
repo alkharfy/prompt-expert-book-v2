@@ -41,6 +41,25 @@ interface DailyMissionsWidgetProps {
     className?: string
 }
 
+const ALL_CLEAR_KEY = 'pm_all_clear_shown'
+const today = () => new Date().toISOString().slice(0, 10)
+
+function allClearShownToday(): boolean {
+    try {
+        return localStorage.getItem(ALL_CLEAR_KEY) === today()
+    } catch {
+        return false
+    }
+}
+
+function markAllClearShown() {
+    try {
+        localStorage.setItem(ALL_CLEAR_KEY, today())
+    } catch {
+        // Private mode: it may show again on the next page, as before.
+    }
+}
+
 export default function DailyMissionsWidget({ className = '' }: DailyMissionsWidgetProps) {
     const [missions, setMissions] = useState<MissionData[]>([])
     const [stats, setStats] = useState({ total: 0, completed: 0, total_points: 0, all_clear: false })
@@ -85,8 +104,10 @@ export default function DailyMissionsWidget({ className = '' }: DailyMissionsWid
             setStats(json.stats || { total: 0, completed: 0, total_points: 0, all_clear: false })
 
             // عرض احتفال All Clear
-            if (json.stats?.all_clear && !allClearShownRef.current) {
+            // Once a day, not on every page: the widget mounts again with each page (owner saw it 5 times, 2026-10-22).
+            if (json.stats?.all_clear && !allClearShownRef.current && !allClearShownToday()) {
                 allClearShownRef.current = true
+                markAllClearShown()
                 // تأخير قليل لعرض toast أولاً
                 setTimeout(() => setShowAllClear(true), 1500)
             }
