@@ -66,6 +66,20 @@ describe('تحدّي ٣ أيام لايف', () => {
         // Right after day 1 starts, the next cohort opens at the early price.
         expect(p('2026-11-10T18:00:00Z').phase.price).toBe(599)
     })
+
+    it('regular price runs until the last-two-days price starts at Cairo midnight on the 8th', () => {
+        const p = (iso: string) => livePricing(at(iso))
+        expect(p('2026-11-07T21:59:00Z').phase.id).toBe('regular')
+        expect(p('2026-11-07T21:59:00Z').phaseEndsAt?.toISOString()).toBe('2026-11-07T22:00:00.000Z')
+        expect(p('2026-11-07T21:59:00Z').next?.id).toBe('last')
+    })
+
+    it('the last phase has no end date of its own and stays until day 1 starts', () => {
+        const last = livePricing(at('2026-11-10T17:59:00Z'))
+        expect(last.phase.id).toBe('last')
+        expect(last.phaseEndsAt).toBeNull()
+        expect(last.cohort.id).toBe('2026-11')
+    })
 })
 
 describe('حجز التحدّي', () => {
