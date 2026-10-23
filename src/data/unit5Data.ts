@@ -27,6 +27,7 @@
  */
 
 import { PageContent } from '@/types/book';
+import { STORY_NOTE } from '@/data/stories';
 import { POLICY } from './unit2Data';
 import { AHMED_V1, AHMED_V2_RULES, APPROVED_REPLIES, MONA_V1, MONA_V2_RULES, SOURCES_RULE, SUPPLIERS } from './unit3Data';
 
@@ -133,12 +134,38 @@ export const unit5Data: PageContent[] = [
                 content: "صح: 70 دقيقة.\n150 − (10 + 5 + 45) − 20 = 70.\n\nيعني وفّر أكتر من ساعة فعلاً، بس مش «ساعتين ونص». ولو قال للمدير 145 دقيقة، كان أول شهر فيه مراجعة طويلة هيبان إنه مبالغ."
             },
             {
+                type: 'story' as const,
+                track: 'accounting' as const,
+                title: '👀 حسبة أحمد الحقيقية، خطوة خطوة',
+                content: '📊 الأرقام من حكاية الدرس، مرسومة خطوة خطوة. دوس على الصورة عشان تقلّب.',
+                frames: [
+                    { src: '/assets/content/stories/level-5/5-1-ahmed/1.webp', caption: 'أحمد قال للمدير: «المساعد بيراجع الفواتير في 5 دقايق، بدل 150». بس الـ 5 دي وقت **التشغيل** بس.' },
+                    { src: '/assets/content/stories/level-5/5-1-ahmed/2.webp', caption: 'زوّد التحضير: تجهيز الملف والطلب، وتنضيف البيانات الحساسة. 10 دقايق.' },
+                    { src: '/assets/content/stories/level-5/5-1-ahmed/3.webp', caption: 'وزوّد المراجعة والتصليح: 45 دقيقة. ده مش وقت ضايع، ده اللي بيخلّي الجدول يتسلّم.' },
+                    { src: '/assets/content/stories/level-5/5-1-ahmed/4.webp', caption: 'وفاتورة فلتت منه، وخدت 20 دقيقة مع المورد بعدها. دي بتتخصم كمان.' },
+                    { src: '/assets/content/stories/level-5/5-1-ahmed/5.webp', caption: 'التوفير الصافي: 150 − (10 + 5 + 45) − 20 = **70 دقيقة**. أكتر من ساعة فعلاً، بس مش «ساعتين ونص».' }
+                ]
+            },
+            {
                 type: 'answer' as const,
                 track: 'service' as const,
                 title: 'منى وفّرت كام دقيقة صافي في الـ 20 رد؟ (احسبها من الحكاية)',
                 accept: ['25', '25 دقيقه', '25دقيقه'],
                 hint: 'الوقت معاها = 5 + 10 + 25. واطرحه هو ووقت الوعد اللي فلت من الـ 80.',
                 content: "صح: 25 دقيقة.\n80 − (5 + 10 + 25) − 15 = 25.\n\nيعني وفّرت ربع ساعة ويزيد، بس مش «ساعة وعشرة». والوعد اللي فلت مش بس وقت: ده عميل اتقاله حاجة غلط، وده بيتكتب في التقرير كغلطة فلتت."
+            },
+            {
+                type: 'story' as const,
+                track: 'service' as const,
+                title: '👀 حسبة منى الحقيقية، خطوة خطوة',
+                content: '📊 الأرقام من حكاية الدرس، مرسومة خطوة خطوة. دوس على الصورة عشان تقلّب.',
+                frames: [
+                    { src: '/assets/content/stories/level-5/5-1-mona/1.webp', caption: 'منى قالت للمشرف: «بقيت برد على 20 شكوى في 10 دقايق، بدل 80». بس الـ 10 دي وقت **التشغيل** بس.' },
+                    { src: '/assets/content/stories/level-5/5-1-mona/2.webp', caption: 'زوّدت التحضير: 5 دقايق.' },
+                    { src: '/assets/content/stories/level-5/5-1-mona/3.webp', caption: 'وزوّدت المراجعة والتصليح: 25 دقيقة.' },
+                    { src: '/assets/content/stories/level-5/5-1-mona/4.webp', caption: 'ورد فيه وعد غلط فلت منها، والمشرف قعد 15 دقيقة يصلّحه مع العميل. دي بتتخصم، وبتتكتب كغلطة فلتت.' },
+                    { src: '/assets/content/stories/level-5/5-1-mona/5.webp', caption: 'التوفير الصافي: 80 − (5 + 10 + 25) − 15 = **25 دقيقة**. ربع ساعة ويزيد، مش «ساعة وعشرة».' }
+                ]
             },
             {
                 type: 'card' as const,
@@ -672,6 +699,15 @@ export const unit5Data: PageContent[] = [
                 content: "لاحظ: كل غلطة في الحكاية فوق بقى ليها سطر. وفيه رقم نسخة وتاريخ مراجعة، عشان القواعد بتتغيّر زي الأدوات."
             },
             {
+                type: 'story' as const,
+                title: '👀 اتفرج: موقف حقيقي قدام القواعد',
+                content: STORY_NOTE,
+                frames: [
+                    { src: '/assets/content/stories/level-5/5-6/1.webp', caption: 'لزقنا قواعد الفريق، وسألنا: «يارا عايزة تلزق شيت المرتبات بالأسامي في حسابها الشخصي. مسموح؟». الأداة: لأ، القاعدتين 1 و2، ومقتبسة السطرين ✓', box: { x: 2, y: 9.4, w: 95.9, h: 42 } },
+                    { src: '/assets/content/stories/level-5/5-6/2.webp', caption: 'وقالت السبب والبديل: حساب الشركة، ومن غير الأسامي والمرتبات ✓. ودي فايدة القواعد المكتوبة: أي حد في الفريق يتأكد في دقيقة، بدل «أنا فاكر إن…».', box: { x: 2, y: 51.3, w: 95.9, h: 48.1 } }
+                ]
+            },
+            {
                 type: 'grade' as const,
                 rubric: 'l5-rules',
                 title: 'المستر بيصحّح قواعد فريقك',
@@ -753,6 +789,15 @@ export const unit5Data: PageContent[] = [
 2. وبعدين اعمل الحالة دي بالشنطة بس:
 [حالة من ورقة الاختبار]`,
                 content: "ابعته في **أداة تانية** غير اللي بتشتغل عليها (أو لزميل حقيقي، وده أحسن). كده بتختبر إن الشنطة نفسها كفاية، مش ذاكرة أداتك.\n\nقبل ما تبعت، توقّع: هيسأل عن إيه؟\n\n🔎 الحالة طلعت زي الإجابة الصح في ورقة الاختبار؟ وكل سؤال سأله: ده جزء ناقص، زوّده في الشنطة."
+            },
+            {
+                type: 'story' as const,
+                title: '👀 ده اللي طلع لما جرّبناه بشنطة أحمد',
+                content: STORY_NOTE,
+                frames: [
+                    { src: '/assets/content/stories/level-5/5-7/1.webp', caption: 'جرّبنا «اختبار الزميل الجديد» في محادثة مؤقتة من غير أي ذاكرة: الدليل v2 والقايمة بس، وحالة C‑327. النتيجة: «المبلغ مش زي القايمة» ✓. يعني الشنطة كفاية للحالة دي.', box: { x: 2, y: 39.5, w: 95.9, h: 60.5 } },
+                    { src: '/assets/content/stories/level-5/5-7/2.webp', caption: 'وقبلها كتب اللي محتاج يتأكد منه، زي إن قرار السداد مش عنده، عند المدير المالي ✓. وكل سؤال يسأله الزميل، إجابته تتزوّد في الشنطة.', box: { x: 2, y: 18.3, w: 95.9, h: 18.7 } }
+                ]
             },
             {
                 type: 'quiz' as const,

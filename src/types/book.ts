@@ -13,7 +13,7 @@ export interface PageContent {
         placement?: 'hero' | 'inline';
     };
     contentBlocks: {
-        type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive' | 'audio' | 'flashcards' | 'quiz' | 'confidence' | 'checklist' | 'answer' | 'grade' | 'save' | 'bag';
+        type: 'text' | 'code' | 'card' | 'image' | 'video' | 'interactive' | 'audio' | 'flashcards' | 'quiz' | 'confidence' | 'checklist' | 'answer' | 'grade' | 'save' | 'bag' | 'story';
         title?: string;
         content: string;
         code?: string;
@@ -40,6 +40,8 @@ export interface PageContent {
         audioUrl?: string;
         /** Audio only: show a download link (practice voice notes the learner sends to their own tool). */
         download?: boolean;
+        // For type: 'story' — real screenshots tapped through one at a time; box = the part to look at, in percent of the frame.
+        frames?: { src: string; caption: string; box?: { x: number; y: number; w: number; h: number } }[];
         // For type: 'flashcards' — each item is one card: title = front, content = back.
         // For type: 'answer' — title = the question, accept = accepted answers, hint after a miss, content = explanation.
         accept?: string[];

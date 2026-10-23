@@ -61,6 +61,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion'
 import NarratedVideo from '@/components/reading/NarratedVideo'
 import AudioBlock from '@/components/reading/AudioBlock'
 import FlashcardDeck from '@/components/reading/FlashcardDeck'
+import StoryBlock from '@/components/reading/StoryBlock'
 import QuizBlock from '@/components/reading/QuizBlock'
 import ConfidenceCheck from '@/components/reading/ConfidenceCheck'
 import ChecklistBlock from '@/components/reading/ChecklistBlock'
@@ -1067,6 +1068,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                         )}
                                         {block.type === 'flashcards' && block.items && (
                                             <FlashcardDeck title={block.title} cards={block.items} />
+                                        )}
+                                        {block.type === 'story' && block.frames && (
+                                            <StoryBlock title={block.title} note={block.content || undefined} frames={block.frames} formatText={formatText} />
                                         )}
                                         {block.type === 'answer' && block.accept && block.title && (
                                             <AnswerCheck key={block.title} id={`${config.id}-${pageNum}-${index}`} question={block.title} accept={block.accept} hint={block.hint} explanation={block.content} formatText={formatText} />
