@@ -73,13 +73,6 @@ export default function LeaderboardPage() {
         }
     }
 
-    const getRankClass = (rank: number) => {
-        if (rank === 1) return 'rank-gold'
-        if (rank === 2) return 'rank-silver'
-        if (rank === 3) return 'rank-bronze'
-        return ''
-    }
-
     const getDisplayValue = (user: LeaderboardUser) => {
         switch (activeTab) {
             case 'points': return `${user.total_points.toLocaleString('ar-EG')} نقطة`

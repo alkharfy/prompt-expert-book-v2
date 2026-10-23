@@ -20,7 +20,7 @@ export default function RevealCard({ label, title, content, items, formatText }:
 
   return (
     <details
-      onToggle={event => setOpen((event.currentTarget as HTMLDetailsElement).open)}
+      onToggle={event => setOpen(event.currentTarget.open)}
       style={{
         border: '1px solid rgba(0, 212, 255, 0.35)',
         borderRadius: 14,

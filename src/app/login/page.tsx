@@ -13,28 +13,16 @@ import type { DeviceDisplayInfo } from '@/lib/auth_system'
 import { auth, signInWithEmailAndPassword } from '@/lib/firebase_client'
 import { trackLogin } from '@/lib/analytics'
 import { onboardingUrlFor } from '@/lib/signup-redirect'
+import { getSafeRedirectPath } from '@/lib/safe-redirect'
 import '@/app/auth.css'
 
-// التحقق من أن المسار آمن (داخلي فقط) لمنع Open Redirect
-function getSafeRedirectPath(path: string | null): string {
-    if (!path || typeof path !== 'string') return '/toc'
-    const trimmed = path.trim()
-    // منع Open Redirect: يجب أن يكون المسار نسبياً وليس URL خارجي
-    if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('://')) {
-        return '/toc'
-    }
-    // التحقق من المسارات المسموحة فقط
-    const allowedPrefixes = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard', '/billing/admin', '/payment', '/onboarding', '/my-plan']
-    if (!allowedPrefixes.some(prefix => trimmed.startsWith(prefix))) {
-        return '/toc'
-    }
-    return trimmed
-}
+// Where ?next= may send the visitor after this step (see lib/safe-redirect).
+const LOGIN_REDIRECT_PREFIXES = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard', '/billing/admin', '/payment', '/onboarding', '/my-plan']
 
 function LoginContent() {
     const searchParams = useSearchParams()
     // استخدام التحقق الآمن من المسار
-    const nextPath = useMemo(() => getSafeRedirectPath(searchParams.get('next')), [searchParams])
+    const nextPath = useMemo(() => getSafeRedirectPath(searchParams.get('next'), LOGIN_REDIRECT_PREFIXES), [searchParams])
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')

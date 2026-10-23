@@ -1,5 +1,4 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Database } from './database.types'
 
 // متغيرات Supabase - يجب تعيينها في .env.local
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

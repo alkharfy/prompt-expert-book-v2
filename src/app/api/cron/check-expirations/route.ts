@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isCronAuthorized } from '@/lib/cron-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from '@/lib/logger'
-import crypto from 'crypto'
 
 /**
  * Auto-Expiry Cron Job — Stage 5
@@ -23,26 +23,9 @@ import crypto from 'crypto'
 export async function GET(request: NextRequest) {
     try {
         // 1. SECURITY: Verify CRON_SECRET with timing-safe comparison
-        const authHeader = request.headers.get('authorization')
-        const cronSecret = process.env.CRON_SECRET
-
-        if (!cronSecret || !authHeader) {
+        if (!isCronAuthorized(request)) {
             dbLogger.warn('[Cron] Unauthorized access attempt to check-expirations')
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
-        }
-
-        const expectedHeader = `Bearer ${cronSecret}`
-        const headerBuf = Buffer.from(authHeader)
-        const expectedBuf = Buffer.from(expectedHeader)
-        if (headerBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(headerBuf, expectedBuf)) {
-            dbLogger.warn('[Cron] Unauthorized access attempt to check-expirations')
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            )
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         // 2. إنشاء admin client

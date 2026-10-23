@@ -5,10 +5,6 @@ import { cookies } from 'next/headers'
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import { SITE_URL } from '@/lib/config'
 
-function getSupabase() {
-    return getSupabaseAdmin()
-}
-
 async function getUserIdFromCookies(): Promise<string | null> {
     const cookieStore = await cookies()
     const userId = cookieStore.get('ebook_user_id')?.value
@@ -16,7 +12,7 @@ async function getUserIdFromCookies(): Promise<string | null> {
 
     if (!userId || !sessionToken) return null
 
-    const supabase = getSupabase()
+    const supabase = getSupabaseAdmin()
     const { data: session } = await supabase
         .from('sessions')
         .select('user_id')
@@ -52,7 +48,7 @@ export async function GET() {
             )
         }
 
-        const supabase = getSupabase()
+        const supabase = getSupabaseAdmin()
 
         // Get user info
         const { data: user, error: userError } = await (supabase as any)
@@ -185,7 +181,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const supabase = getSupabase()
+        const supabase = getSupabaseAdmin()
 
         // Find the referrer by referral_code
         const { data: referrer } = await supabase

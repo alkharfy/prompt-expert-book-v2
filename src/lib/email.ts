@@ -5,6 +5,7 @@ import 'server-only'
 import { Resend } from 'resend'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from './logger'
+import { escapeHtml } from './sanitize'
 import { SITE_URL, SITE_DOMAIN, EMAIL_FROM_DEFAULT } from '@/lib/config'
 import { liveStreak } from '@/lib/streak'
 
@@ -23,22 +24,6 @@ function getResend(): Resend {
 const FROM_EMAIL = EMAIL_FROM_DEFAULT
 const APP_URL = SITE_URL
 
-/**
- * SECURITY: Escape HTML special characters to prevent injection in email templates
- */
-function escapeHtml(text: string): string {
-    return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-}
-
-function getServiceClient() {
-    return getSupabaseAdmin()
-}
-
 // =====================================================
 // Types
 // =====================================================
@@ -52,14 +37,6 @@ export interface UserEmailInfo {
     total_points?: number
     chapters_completed?: number
     last_activity_date?: string | null
-}
-
-export interface MilestoneInfo {
-    type: 'chapter' | 'achievement' | 'level' | 'certificate'
-    title: string
-    description: string
-    icon: string
-    points?: number
 }
 
 // =====================================================
@@ -200,31 +177,6 @@ export async function sendWeeklyRecap(
 }
 
 /**
- * إيميل تهنئة بإنجاز — يُرسَل عند إكمال فصل / إنجاز / مستوى جديد
- */
-export async function sendMilestoneEmail(
-    user: UserEmailInfo, 
-    milestone: MilestoneInfo,
-    unsubscribeToken: string
-): Promise<boolean> {
-    const subject = `🏆 مبروك! ${milestone.title}`
-    const content = `
-        <div class="card">
-            <span class="emoji-large">${milestone.icon}</span>
-            <h2>مبروك يا ${escapeHtml(user.full_name)}! 🎉</h2>
-            <p style="font-size: 18px; text-align: center; color: #FF6B35;">${milestone.title}</p>
-            <p style="text-align: center;">${milestone.description}</p>
-            ${milestone.points ? `<p style="text-align: center; font-size: 20px; color: #FF6B35;">+${milestone.points} نقطة ⭐</p>` : ''}
-            <hr class="divider">
-            <div style="text-align: center;">
-                <a href="${APP_URL}/achievements" class="btn">شوف إنجازاتك ←</a>
-            </div>
-        </div>`
-    
-    return await sendEmail(user, subject, content, 'milestone', unsubscribeToken)
-}
-
-/**
  * إيميل ترحيب — يُرسَل بعد التسجيل
  */
 export async function sendWelcomeEmail(user: UserEmailInfo, unsubscribeToken: string): Promise<boolean> {
@@ -249,107 +201,6 @@ export async function sendWelcomeEmail(user: UserEmailInfo, unsubscribeToken: st
     return await sendEmail(user, subject, content, 'welcome', unsubscribeToken)
 }
 
-/**
- * تذكير يومي بخطة التعلم — يُرسَل صباحاً لأصحاب الخطة الزمنية
- */
-export async function sendPlanDailyReminder(
-    user: UserEmailInfo,
-    planInfo: { dayNumber: number; totalDays: number; readingTask: string; exerciseTask?: string },
-    unsubscribeToken: string
-): Promise<boolean> {
-    const progressPercent = Math.round((planInfo.dayNumber / planInfo.totalDays) * 100)
-    const subject = `📅 يوم ${planInfo.dayNumber} — مهمتك اليوم جاهزة!`
-    const content = `
-        <div class="card">
-            <span class="emoji-large">📅</span>
-            <h2>يوم ${planInfo.dayNumber} من ${planInfo.totalDays}</h2>
-            <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 4px; margin: 16px 0;">
-                <div style="background: linear-gradient(90deg, #FF6B35, #ff8f5e); height: 8px; border-radius: 8px; width: ${progressPercent}%;"></div>
-            </div>
-            <p style="text-align: center; color: #FF6B35; font-size: 14px;">${progressPercent}% مكتمل</p>
-
-            <p>يا <strong>${escapeHtml(user.full_name)}</strong>، مهامك اليوم:</p>
-            <p>📖 <strong>${escapeHtml(planInfo.readingTask)}</strong></p>
-            ${planInfo.exerciseTask ? `<p>✏️ <strong>${escapeHtml(planInfo.exerciseTask)}</strong></p>` : ''}
-            <hr class="divider">
-            <div style="text-align: center;">
-                <a href="${APP_URL}/my-plan" class="btn">افتح خطتك ←</a>
-            </div>
-        </div>`
-    
-    return await sendEmail(user, subject, content, 'plan_daily', unsubscribeToken)
-}
-
-/**
- * تقرير أسبوعي للخطة — يُرسَل مع الملخص الأسبوعي
- */
-export async function sendPlanWeeklyReport(
-    user: UserEmailInfo,
-    planStats: { completedDays: number; totalDays: number; daysThisWeek: number; progressPercent: number },
-    unsubscribeToken: string
-): Promise<boolean> {
-    const subject = `📊 تقرير خطتك — أنجزت ${planStats.daysThisWeek}/7 أيام هذا الأسبوع`
-    const emoji = planStats.daysThisWeek >= 5 ? '🏆' : planStats.daysThisWeek >= 3 ? '💪' : '🌱'
-    const message = planStats.daysThisWeek >= 5
-        ? 'أداء ممتاز! استمر كده 🔥'
-        : planStats.daysThisWeek >= 3
-        ? 'أداء كويس! حاول تزود يوم الأسبوع الجاي'
-        : 'اشتقنالك! جهزنالك ملخص اللي فاتك'
-    
-    const content = `
-        <div class="card">
-            <span class="emoji-large">${emoji}</span>
-            <h2>تقرير خطتك الأسبوعي</h2>
-            <p>يا <strong>${escapeHtml(user.full_name)}</strong>،</p>
-            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                <tr>
-                    <td style="text-align: center; padding: 12px;">
-                        <div style="font-size: 28px; font-weight: bold; color: #FF6B35;">${planStats.daysThisWeek}/7</div>
-                        <div style="font-size: 12px; color: #888;">📅 أيام هذا الأسبوع</div>
-                    </td>
-                    <td style="text-align: center; padding: 12px;">
-                        <div style="font-size: 28px; font-weight: bold; color: #FF6B35;">${planStats.completedDays}/${planStats.totalDays}</div>
-                        <div style="font-size: 12px; color: #888;">✅ إجمالي التقدم</div>
-                    </td>
-                    <td style="text-align: center; padding: 12px;">
-                        <div style="font-size: 28px; font-weight: bold; color: #FF6B35;">${planStats.progressPercent}%</div>
-                        <div style="font-size: 12px; color: #888;">📈 مكتمل</div>
-                    </td>
-                </tr>
-            </table>
-            <p style="text-align: center;">${message}</p>
-            <hr class="divider">
-            <div style="text-align: center;">
-                <a href="${APP_URL}/my-plan" class="btn">شوف خطتك ←</a>
-            </div>
-        </div>`
-    
-    return await sendEmail(user, subject, content, 'plan_weekly', unsubscribeToken)
-}
-
-/**
- * إيميل إنجاز الخطة — يُرسَل عند إكمال كل المهام
- */
-export async function sendPlanCompletionEmail(
-    user: UserEmailInfo,
-    unsubscribeToken: string
-): Promise<boolean> {
-    const subject = `🎉 مبروك! أنهيت خطة التعلم بتاعتك!`
-    const content = `
-        <div class="card">
-            <span class="emoji-large">🎉</span>
-            <h2>مبروك يا ${escapeHtml(user.full_name)}!</h2>
-            <p style="font-size: 18px; text-align: center; color: #FF6B35;">أنهيت خطة التعلم بتاعتك بنجاح!</p>
-            <p style="text-align: center;">أنت من القليلين اللي خلّصوا الخطة كاملة. افتخر بإنجازك ده وشاركه مع أصحابك!</p>
-            <hr class="divider">
-            <div style="text-align: center;">
-                <a href="${APP_URL}/certificate" class="btn">خد شهادتك ←</a>
-            </div>
-        </div>`
-    
-    return await sendEmail(user, subject, content, 'plan_completion', unsubscribeToken)
-}
-
 // =====================================================
 // Core Helper — Send Email via Resend + Log
 // =====================================================
@@ -361,7 +212,7 @@ async function sendEmail(
     emailType: string,
     unsubscribeToken: string
 ): Promise<boolean> {
-    const supabase = getServiceClient()
+    const supabase = getSupabaseAdmin()
     const fullHtml = baseLayout(htmlContent, unsubscribeToken, emailType === 'streak_reminder' ? 'streak' : emailType === 'mission_reminder' ? 'missions' : emailType === 'weekly_recap' ? 'recap' : 'all')
     
     try {
@@ -422,7 +273,7 @@ async function sendEmail(
 // =====================================================
 
 export async function ensureEmailPreferences(userId: string): Promise<void> {
-    const supabase = getServiceClient()
+    const supabase = getSupabaseAdmin()
     const { data } = await supabase
         .from('email_preferences')
         .select('id')
@@ -439,7 +290,7 @@ export async function ensureEmailPreferences(userId: string): Promise<void> {
 // =====================================================
 
 export async function getWeeklyStats(userId: string): Promise<{ pages: number; exercises: number; points: number; streak: number }> {
-    const supabase = getServiceClient()
+    const supabase = getSupabaseAdmin()
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
     const weekAgoStr = oneWeekAgo.toISOString()

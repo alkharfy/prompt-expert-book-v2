@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { hashPassword } from '@/lib/password'
 import { verifyFirebaseToken } from '@/lib/firebase_admin'
 import { authLogger } from '@/lib/logger'
-import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit'
+import { checkRateLimit, getClientIP } from '@/lib/rate-limit'
 
 /**
  * POST /api/auth/sync-password

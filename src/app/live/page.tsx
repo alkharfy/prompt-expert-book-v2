@@ -36,6 +36,13 @@ export default function LivePage() {
     const ladder = next
         ? `السعر ده لحد ${cairoDayLabel(new Date(phaseEndsAt!.getTime() - 1))}، وبعدها ${arabicDigits(next.price)} جنيه.`
         : 'ده آخر سعر للدفعة دي، والحجز بيقفل أول ما اليوم الأول يبدأ.'
+    const priceTag = (
+        <div>
+            <span className="live-chip">{phase.label}</span>
+            <p className="live-price-num"><b>{price}</b> جنيه</p>
+            <p className="live-price-note">{ladder}</p>
+        </div>
+    )
 
     return (
         <>
@@ -61,11 +68,7 @@ export default function LivePage() {
                 </section>
 
                 <section className="live-price" aria-label="السعر">
-                    <div>
-                        <span className="live-chip">{phase.label}</span>
-                        <p className="live-price-num"><b>{price}</b> جنيه</p>
-                        <p className="live-price-note">{ladder}</p>
-                    </div>
+                    {priceTag}
                     <Cta />
                 </section>
 
@@ -121,11 +124,7 @@ export default function LivePage() {
                         {LIVE_INCLUDES.map(x => <li key={x.title}><b>{x.title}</b><span>{x.text}</span></li>)}
                     </ul>
                     <div className="live-price center">
-                        <div>
-                            <span className="live-chip">{phase.label}</span>
-                            <p className="live-price-num"><b>{price}</b> جنيه</p>
-                            <p className="live-price-note">{ladder}</p>
-                        </div>
+                        {priceTag}
                         <Cta />
                     </div>
                 </section>

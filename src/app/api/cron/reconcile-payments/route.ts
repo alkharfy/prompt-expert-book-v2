@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { isCronAuthorized } from '@/lib/cron-auth'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from '@/lib/logger'
 import { verifyPaymentSession } from '@/lib/kashier'
@@ -26,15 +26,7 @@ import { alertMoneyPath } from '@/lib/alert'
  */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET
-    if (!cronSecret || !authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    const expected = `Bearer ${cronSecret}`
-    const a = Buffer.from(authHeader)
-    const b = Buffer.from(expected)
-    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    if (!isCronAuthorized(request)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

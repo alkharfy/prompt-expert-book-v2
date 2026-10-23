@@ -37,39 +37,3 @@ export async function getAuthenticatedUser(_options?: { skipActiveCheck?: boolea
 
     return userId
 }
-
-/**
- * التحقق من أن المستخدم لديه اشتراك نشط.
- * يُستخدم في API routes المدفوعة لمنع الوصول بدون اشتراك.
- * 
- * @param userId - معرّف المستخدم
- * @returns true إذا كان لديه اشتراك نشط
- */
-export async function hasActiveSubscription(userId: string): Promise<boolean> {
-    const supabase = getSupabaseAdmin()
-
-    // Strategy 1: Check subscriptions table for active subscription
-    const { data: subscription } = await (supabase as any)
-        .from('subscriptions')
-        .select('id, expires_at')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .maybeSingle()
-
-    if (subscription && subscription.expires_at && new Date(subscription.expires_at) > new Date()) {
-        return true
-    }
-
-    // Strategy 2: Check users table for current_plan with valid expiry
-    const { data: user } = await (supabase as any)
-        .from('users')
-        .select('current_plan, plan_expires_at')
-        .eq('id', userId)
-        .maybeSingle()
-
-    if (user && user.current_plan && user.plan_expires_at && new Date(user.plan_expires_at) > new Date()) {
-        return true
-    }
-
-    return false
-}

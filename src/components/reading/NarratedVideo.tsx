@@ -53,12 +53,10 @@ export default function NarratedVideo({ src, poster, title, next, note }: Narrat
                 }}
             />
             <p style={{ color: '#9a9a9a', fontSize: '0.85rem', textAlign: 'center', margin: '8px 0 0' }}>
-                {note && next ? (
-                    <>{note} شفته؟ <a href={`#${next}`} style={{ color: '#FF6B35' }}>انزل على «يلا نجرّب» على طول 👇</a></>
-                ) : note ? note : next ? (
-                    <>🔊 بالصوت. شفته؟ <a href={`#${next}`} style={{ color: '#FF6B35' }}>انزل على «يلا نجرّب» على طول 👇</a></>
+                {next ? (
+                    <>{note || '🔊 بالصوت.'} شفته؟ <a href={`#${next}`} style={{ color: '#FF6B35' }}>انزل على «يلا نجرّب» على طول 👇</a></>
                 ) : (
-                    '🔊 بالصوت. ومش عايز تتفرج؟ نفس الكلام مكتوب تحت.'
+                    note || '🔊 بالصوت. ومش عايز تتفرج؟ نفس الكلام مكتوب تحت.'
                 )}
             </p>
         </figure>

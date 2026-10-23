@@ -92,35 +92,6 @@ export function isSectionInPath(
     return LEARNING_PATHS[pathId].sections.includes(sectionId)
 }
 
-/** Map chapter index (0-based, in the old book chapter order) to section id */
-export const CHAPTER_TO_SECTION: Record<number, string> = {
-    0: 'intro',
-    1: 'section-1',
-    2: 'section-2',
-    3: 'section-3',
-    4: 'section-4',
-    5: 'section-5',
-    6: 'section-6',
-    7: 'section-7',
-    8: 'section-8',
-    9: 'section-9',
-    10: 'section-10',
-    11: 'library',
-    12: 'appendix',
-}
-
-/** Check if a roadmap chapter index is included in a path */
-export function isChapterInPath(
-    chapterIndex: number,
-    pathId: LearningPathId,
-): boolean {
-    const sectionId = CHAPTER_TO_SECTION[chapterIndex]
-    if (!sectionId) {
-        return false
-    }
-    return isSectionInPath(sectionId, pathId)
-}
-
 /** Reading resume position; visiting a page does not prove earlier pages were completed. */
 export function getPathCompletion(
     currentPage: number,

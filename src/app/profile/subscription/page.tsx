@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import { fetchPricingPlans } from '@/lib/pricing'
@@ -28,7 +27,6 @@ const PLAN_NAMES: Record<string, string> = {
 
 
 export default function SubscriptionPage() {
-    const router = useRouter()
     const { currentPlan, expiresAt, status, features, isLoading: subLoading } = useSubscription()
     const [planPrices, setPlanPrices] = useState<Record<string, number>>({})
     useEffect(() => {

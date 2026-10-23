@@ -9,10 +9,6 @@ import { cookies } from 'next/headers'
  * DELETE /api/auth/devices — Remove a specific device
  */
 
-function getSupabase() {
-    return getSupabaseAdmin()
-}
-
 async function getUserIdFromCookies(): Promise<string | null> {
     const cookieStore = await cookies()
     const userId = cookieStore.get('ebook_user_id')?.value
@@ -21,7 +17,7 @@ async function getUserIdFromCookies(): Promise<string | null> {
     if (!userId || !sessionToken) return null
 
     // Verify session is valid
-    const supabase = getSupabase()
+    const supabase = getSupabaseAdmin()
     const { data: session } = await supabase
         .from('sessions')
         .select('user_id')
@@ -46,7 +42,7 @@ export async function GET() {
             )
         }
 
-        const supabase = getSupabase()
+        const supabase = getSupabaseAdmin()
         const cookieStore = await cookies()
         const currentDeviceId = cookieStore.get('ebook_device_id')?.value || ''
 
@@ -153,7 +149,7 @@ export async function DELETE(request: NextRequest) {
             )
         }
 
-        const supabase = getSupabase()
+        const supabase = getSupabaseAdmin()
 
         // Delete device
         const { error: deviceError } = await supabase

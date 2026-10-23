@@ -25,10 +25,6 @@ export const COOKIE_SAME_SITE = 'Lax' as const
 // Intro slots 6 + main chapter slots 176 + library 12 + appendix 20 + glossary 8 = 222.
 export const TOTAL_BOOK_PAGES = 222
 
-// Total main chapters (excluding Glossary which is bonus content)
-// Intro + S1-S10 + Library + Appendix = 13 chapters
-export const TOTAL_CHAPTERS = 13
-
 // ───────────────────────────────────────────────────────────────────────────
 // Canonical site identity (WS5) — single source of truth for the production
 // domain, support email and sender. Every URL the site emits is built from this.

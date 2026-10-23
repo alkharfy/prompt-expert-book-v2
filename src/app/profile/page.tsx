@@ -181,21 +181,6 @@ export default function ProfilePage() {
         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}`, '_blank')
     }
 
-    const loadDevices = async () => {
-        setDevicesLoading(true)
-        try {
-            const res = await fetch('/api/auth/devices')
-            const data = await res.json()
-            if (data.ok) {
-                setDevices(data.devices || [])
-                setMaxDevices(data.maxDevices || 3)
-            }
-        } catch {
-            // Silent fail
-        }
-        setDevicesLoading(false)
-    }
-
     const removeDevice = async (deviceId: string) => {
         setDeviceRemoving(deviceId)
         try {

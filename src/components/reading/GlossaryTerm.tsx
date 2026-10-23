@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { getGlossaryTerm, GlossaryTerm as GlossaryTermType } from '@/data/glossaryData'
+import { getGlossaryTerm } from '@/data/glossaryData'
 import GlossaryModal from './GlossaryModal'
 
 interface GlossaryTermProps {
@@ -91,41 +91,6 @@ export default function GlossaryTerm({ termId, children, displayText }: Glossary
             )}
         </>
     );
-}
-
-/**
- * Hook للحصول على مصطلح وفتح المودال برمجياً
- */
-export function useGlossary() {
-    const [activeTerm, setActiveTerm] = useState<GlossaryTermType | null>(null);
-    const [isOpen, setIsOpen] = useState(false);
-
-    const openTerm = (termId: string) => {
-        const term = getGlossaryTerm(termId);
-        if (term) {
-            setActiveTerm(term);
-            setIsOpen(true);
-        }
-    };
-
-    const closeTerm = () => {
-        setIsOpen(false);
-        setTimeout(() => setActiveTerm(null), 200);
-    };
-
-    return {
-        activeTerm,
-        isOpen,
-        openTerm,
-        closeTerm,
-        GlossaryModalComponent: () => (
-            <GlossaryModal
-                term={activeTerm}
-                isOpen={isOpen}
-                onClose={closeTerm}
-            />
-        )
-    };
 }
 
 /**

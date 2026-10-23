@@ -7,7 +7,7 @@
  *   trackMetaEvent('ViewContent', { content_name: 'PromptMaster Book' })
  */
 
-import { META_PIXEL_ID, purchaseEventId } from '@/lib/tracking-config'
+import { purchaseEventId } from '@/lib/tracking-config'
 
 declare global {
   interface Window {
@@ -15,8 +15,6 @@ declare global {
     _fbq?: (...args: unknown[]) => void
   }
 }
-
-const PIXEL_ID = META_PIXEL_ID
 
 // ── Core ────────────────────────────────────────
 
@@ -31,13 +29,6 @@ export function trackMetaEvent(eventName: string, params?: Record<string, unknow
 export function trackMetaEventWithId(eventName: string, eventId: string, params?: Record<string, unknown>) {
   if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
     window.fbq('track', eventName, params, { eventID: eventId })
-  }
-}
-
-/** Track a PageView — called on initial load and on SPA route changes */
-export function trackPageView() {
-  if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
-    window.fbq('track', 'PageView')
   }
 }
 
@@ -127,23 +118,3 @@ export function trackSearch(searchString: string) {
   })
 }
 
-// ── Helpers ─────────────────────────────────────
-
-/** Get fbp cookie value for CAPI */
-export function getFbpCookie(): string | null {
-  if (typeof document === 'undefined') return null
-  const match = document.cookie.match(/(?:^|;\s*)_fbp=([^;]*)/)
-  return match ? decodeURIComponent(match[1]) : null
-}
-
-/** Get fbc cookie value for CAPI */
-export function getFbcCookie(): string | null {
-  if (typeof document === 'undefined') return null
-  const match = document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/)
-  return match ? decodeURIComponent(match[1]) : null
-}
-
-/** Get the Pixel ID */
-export function getPixelId(): string {
-  return PIXEL_ID
-}

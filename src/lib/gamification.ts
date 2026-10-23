@@ -18,76 +18,6 @@ type UpsertTable = {
 }
 
 /**
- * تسجيل إكمال التمرين بشكل ذري (atomic) لمنع race condition
- * يستخدم INSERT مع ON CONFLICT DO NOTHING ثم يتحقق من عدد الصفوف المتأثرة
- * إذا لم يتم إدراج صف جديد، فالتمرين مُسجل مسبقاً
- * 
- * @returns true إذا تم تسجيل التمرين بنجاح (أي أنه جديد)
- * @returns false إذا كان التمرين مُسجلاً مسبقاً
- */
-async function tryRecordExerciseCompletion(
-    userId: string,
-    exerciseId: string,
-    exerciseType: string,
-    pointsEarned: number
-): Promise<boolean> {
-    try {
-        // محاولة إدراج سجل جديد - إذا كان موجوداً مسبقاً سيفشل بسبب unique constraint
-        // ونستخدم returning لمعرفة إذا تم الإدراج فعلاً
-        const { data, error } = await (supabase
-            .from('exercise_progress') as unknown as {
-                insert: (data: unknown) => {
-                    select: (columns: string) => Promise<{
-                        data: { id: string }[] | null;
-                        error: { code?: string; message?: string } | null
-                    }>
-                }
-            })
-            .insert({
-                user_id: userId,
-                exercise_id: exerciseId,
-                exercise_type: exerciseType,
-                is_completed: true,
-                points_earned: pointsEarned,
-                completed_at: new Date().toISOString()
-            })
-            .select('id')
-
-        // إذا كان هناك خطأ بسبب unique constraint (كود 23505)
-        // فهذا يعني أن التمرين مُسجل مسبقاً
-        if (error) {
-            if (error.code === '23505') {
-                dbLogger.debug(`Exercise ${exerciseId} already recorded (conflict)`)
-                return false
-            }
-            dbLogger.error('Error recording exercise completion', error)
-            return false
-        }
-
-        // تم الإدراج بنجاح - التمرين جديد
-        return data !== null && data.length > 0
-    } catch (err) {
-        dbLogger.error('Exception in tryRecordExerciseCompletion', err)
-        return false
-    }
-}
-
-/**
- * التحقق من أن التمرين لم يُسجل نقاطه مسبقاً (للاستخدام في حالات خاصة فقط)
- * @deprecated استخدم tryRecordExerciseCompletion للعمليات الذرية
- */
-async function isExerciseAlreadyRecorded(userId: string, exerciseId: string): Promise<boolean> {
-    const { data } = await supabase
-        .from('exercise_progress')
-        .select('is_completed, points_earned')
-        .eq('user_id', userId)
-        .eq('exercise_id', exerciseId)
-        .maybeSingle() as { data: { is_completed: boolean; points_earned: number } | null; error: unknown }
-
-    return data?.is_completed === true && (data?.points_earned || 0) > 0
-}
-
-/**
  * تحديث إحصائيات التمارين للمستخدم
  */
 export async function updateExerciseStats(
@@ -388,62 +318,6 @@ export async function recordNoteCreation(
     } catch (error) {
         dbLogger.error('Error in recordNoteCreation', error)
         return { pointsAwarded: 0, dailyLimitReached: false }
-    }
-}
-
-/**
- * تسجيل إكمال فصل ومشاهدة الملخص — 15 نقطة لكل ملخص (مرة واحدة لكل فصل)
- */
-export async function recordChapterCompletion(
-    userId: string,
-    sectionId: string,
-    db: GamificationDb = supabase
-): Promise<{ pointsAwarded: number; alreadyViewed: boolean }> {
-    try {
-        // التحقق إن المستخدم ما شاف الملخص قبل كده
-        const actionType = `recap_viewed_${sectionId}`
-        const { data: existing } = await db
-            .from('points_history')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('action_type', actionType)
-            .maybeSingle() as { data: { id: string } | null }
-
-        if (existing) {
-            return { pointsAwarded: 0, alreadyViewed: true }
-        }
-
-        // منح 15 نقطة
-        await updateGamification(userId, 15, actionType, db)
-        dbLogger.info(`User ${userId} viewed recap for ${sectionId} (+15 pts)`)
-
-        // التحقق من مشاهدة كل الملخصات (إنجاز "الملخّص")
-        const { data: allRecaps } = await db
-            .from('points_history')
-            .select('action_type')
-            .eq('user_id', userId)
-            .like('action_type', 'recap_viewed_%') as { data: { action_type: string }[] | null }
-
-        const viewedCount = allRecaps?.length || 0
-        if (viewedCount >= 10) {
-            // تحقق إنه لم يحصل على الإنجاز من قبل
-            const { data: existingAch } = await db
-                .from('points_history')
-                .select('id')
-                .eq('user_id', userId)
-                .eq('action_type', 'achievement_all_recaps')
-                .maybeSingle() as { data: { id: string } | null }
-
-            if (!existingAch) {
-                await updateGamification(userId, 100, 'achievement_all_recaps', db)
-                dbLogger.info(`User ${userId} earned achievement: all_recaps (100 pts)`)
-            }
-        }
-
-        return { pointsAwarded: 15, alreadyViewed: false }
-    } catch (error) {
-        dbLogger.error('Error in recordChapterCompletion', error)
-        return { pointsAwarded: 0, alreadyViewed: false }
     }
 }
 

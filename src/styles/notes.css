@@ -94,67 +94,6 @@
     border-left: 1px solid rgba(255, 107, 53, 0.3);
 }
 
-/* ============= Highlight Tooltip ============= */
-.highlight-tooltip-content {
-    padding: 12px 16px;
-    background: rgba(26, 26, 26, 0.98);
-    border: 1px solid rgba(255, 107, 53, 0.25);
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
-    max-width: 300px;
-    min-width: 180px;
-}
-
-.highlight-tooltip-note {
-    color: #d0d0d0;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    margin: 0 0 10px 0;
-    word-break: break-word;
-}
-
-.highlight-tooltip-empty {
-    color: #707070;
-    font-size: 0.85rem;
-    margin: 0 0 10px 0;
-    font-style: italic;
-}
-
-.highlight-tooltip-actions {
-    display: flex;
-    gap: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 8px;
-}
-
-.highlight-tooltip-btn {
-    background: none;
-    border: none;
-    font-size: 0.8rem;
-    cursor: pointer;
-    padding: 4px 10px;
-    border-radius: 8px;
-    transition: background 0.15s;
-    font-family: var(--font-tajawal), sans-serif;
-}
-
-.highlight-tooltip-edit {
-    color: #e0e0e0;
-}
-
-.highlight-tooltip-edit:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.highlight-tooltip-delete {
-    color: #ef5350;
-}
-
-.highlight-tooltip-delete:hover {
-    background: rgba(239, 83, 80, 0.15);
-}
-
 /* ============= Text Selection Styling ============= */
 
 ::selection {

@@ -26,19 +26,6 @@ interface UserStats {
   certificateIssued?: boolean;
 }
 
-interface Achievement {
-  id: string;
-  icon: string;
-  title: string;
-  description: string;
-  category: 'reading' | 'exercises' | 'streak' | 'special' | 'missions' | 'notes' | 'social';
-  points: number;
-  requirement: number;
-  currentProgress: number;
-  isUnlocked: boolean;
-  unlockedAt?: Date;
-}
-
 interface UserAchievement extends AchievementDefinition {
   currentProgress: number;
   isUnlocked: boolean;

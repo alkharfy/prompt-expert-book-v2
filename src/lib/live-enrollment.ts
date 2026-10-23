@@ -3,8 +3,6 @@ import { dbLogger } from '@/lib/logger'
 import { alertMoneyPath } from '@/lib/alert'
 import { parseLiveOrderNotes } from '@/lib/live'
 
-export { LIVE_PLAN_ID } from '@/lib/live'
-
 export interface LivePaymentRow {
   user_id: string
   amount: number | string

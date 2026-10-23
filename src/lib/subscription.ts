@@ -146,36 +146,3 @@ export async function userHasFeature(userId: string, feature: FeatureKey): Promi
     }
 }
 
-/**
- * التحقق من أن المستخدم لديه اشتراك نشط (أي باقة).
- * يجمع بين فحص الحالة وتاريخ الانتهاء.
- * 
- * @param userId - معرّف المستخدم (UUID)
- * @returns true إذا كان الاشتراك نشطاً وغير منتهي
- * 
- * @example
- * ```ts
- * const active = await hasActiveSubscription('user-uuid')
- * if (!active) {
- *   // توجيه المستخدم لصفحة الدفع
- * }
- * ```
- */
-export async function hasActiveSubscription(userId: string): Promise<boolean> {
-    try {
-        const plan = await getUserSubscription(userId)
-
-        if (!plan || !plan.expires_at) {
-            return false
-        }
-
-        // التحقق من أن الاشتراك لم ينتهِ بعد
-        const expiresAt = new Date(plan.expires_at)
-        const now = new Date()
-
-        return plan.status === 'active' && expiresAt > now
-    } catch (err) {
-        console.error('[subscription] Unexpected error in hasActiveSubscription:', err)
-        return false
-    }
-}

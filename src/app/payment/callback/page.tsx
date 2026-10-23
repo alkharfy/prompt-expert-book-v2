@@ -37,6 +37,43 @@ function CallbackContent() {
         const MAX_RETRIES = 4
         const RETRY_DELAYS = [0, 3000, 5000, 8000] // 0s, 3s, 5s, 8s
 
+        // Track the purchase and send the buyer on. A live-challenge seat is not course access,
+        // so it goes to its own page (the activate fallback only ever returns course payments).
+        // `paid` is the raw JSON from process-callback or activate.
+        const completePurchase = (paid: any) => {
+            const paidAmount = typeof paid.amount === 'number' ? paid.amount : undefined
+            const paidPlan = paid.planId || 'book'
+            const paidOrder = paid.orderId || merchantOrderId || sessionId || undefined
+            trackPurchase(paidAmount, paidOrder)
+            trackGA4Purchase(paidAmount, paidOrder)
+            trackPaymentCompleted(paidPlan, paidAmount ?? 0)
+            trackGoogleAdsConversion(paidAmount ?? 0, paidOrder)
+            trackFunnelStep('purchase_complete', 6)
+            const livePlan = paidPlan === LIVE_PLAN_ID
+            setIsLive(livePlan)
+            setStatus('success')
+            setTimeout(() => {
+                window.location.href = livePlan ? '/live/welcome' : '/toc'
+            }, 2500)
+        }
+
+        // Last resort on the final attempt: the webhook may have already processed the payment.
+        const tryActivateFallback = async (): Promise<boolean> => {
+            try {
+                const activateRes = await fetch('/api/payment/activate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                })
+                const activateData = await activateRes.json()
+                if (activateData.success && activateData.hasPaid) {
+                    completePurchase(activateData)
+                    return true
+                }
+            } catch { /* activate also failed */ }
+            return false
+        }
+
         for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
             if (attempt > 0) {
                 await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[attempt]))
@@ -57,79 +94,21 @@ function CallbackContent() {
                 const data = await response.json()
 
                 if (data.success) {
-                    const paidAmount = typeof data.amount === 'number' ? data.amount : undefined
-                    const paidPlan = data.planId || 'book'
-                    const paidOrder = data.orderId || merchantOrderId || sessionId || undefined
-                    trackPurchase(paidAmount, paidOrder)
-                    trackGA4Purchase(paidAmount, paidOrder)
-                    trackPaymentCompleted(paidPlan, paidAmount ?? 0)
-                    trackGoogleAdsConversion(paidAmount ?? 0, paidOrder)
-                    trackFunnelStep('purchase_complete', 6)
-                    setIsLive(paidPlan === LIVE_PLAN_ID)
-                    setStatus('success')
-                    setTimeout(() => {
-                        // A live-challenge seat is not course access: send them to its own page.
-                        window.location.href = paidPlan === LIVE_PLAN_ID ? '/live/welcome' : '/toc'
-                    }, 2500)
+                    completePurchase(data)
                     return
                 }
 
                 // If last attempt via process-callback, try the activate endpoint
                 // (webhook may have already processed the payment)
                 if (attempt === MAX_RETRIES - 1) {
-                    try {
-                        const activateRes = await fetch('/api/payment/activate', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({})
-                        })
-                        const activateData = await activateRes.json()
-                        if (activateData.success && activateData.hasPaid) {
-                            const paidAmount = typeof activateData.amount === 'number' ? activateData.amount : undefined
-                            const paidPlan = activateData.planId || 'book'
-                            const paidOrder = activateData.orderId || merchantOrderId || sessionId || undefined
-                            trackPurchase(paidAmount, paidOrder)
-                            trackGA4Purchase(paidAmount, paidOrder)
-                            trackPaymentCompleted(paidPlan, paidAmount ?? 0)
-                            trackGoogleAdsConversion(paidAmount ?? 0, paidOrder)
-                            trackFunnelStep('purchase_complete', 6)
-                            setStatus('success')
-                            setTimeout(() => {
-                                window.location.href = '/toc'
-                            }, 2500)
-                            return
-                        }
-                    } catch { /* activate also failed */ }
+                    if (await tryActivateFallback()) return
 
                     setStatus('failed')
                     setError(data.error || 'لم يتم التحقق من الدفع — يرجى الانتظار دقيقة والضغط على إعادة التحقق')
                 }
             } catch {
                 if (attempt === MAX_RETRIES - 1) {
-                    // Last resort: try activate endpoint
-                    try {
-                        const activateRes = await fetch('/api/payment/activate', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({})
-                        })
-                        const activateData = await activateRes.json()
-                        if (activateData.success && activateData.hasPaid) {
-                            const paidAmount = typeof activateData.amount === 'number' ? activateData.amount : undefined
-                            const paidPlan = activateData.planId || 'book'
-                            const paidOrder = activateData.orderId || merchantOrderId || sessionId || undefined
-                            trackPurchase(paidAmount, paidOrder)
-                            trackGA4Purchase(paidAmount, paidOrder)
-                            trackPaymentCompleted(paidPlan, paidAmount ?? 0)
-                            trackGoogleAdsConversion(paidAmount ?? 0, paidOrder)
-                            trackFunnelStep('purchase_complete', 6)
-                            setStatus('success')
-                            setTimeout(() => {
-                                window.location.href = '/toc'
-                            }, 2500)
-                            return
-                        }
-                    } catch { /* ignore */ }
+                    if (await tryActivateFallback()) return
 
                     setStatus('failed')
                     setError('حدث خطأ في التحقق من الدفع')

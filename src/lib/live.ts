@@ -60,8 +60,8 @@ export interface LiveCohort {
 
 /** `month` is 0-based and may overflow into the next year. */
 function cohortOf(year: number, month: number): LiveCohort {
-    const startsAt = cairoTime(year, month, LIVE_START_DAY, LIVE_START_HOUR)
     const sessions = Array.from({ length: LIVE_DAYS }, (_, i) => cairoTime(year, month, LIVE_START_DAY + i, LIVE_START_HOUR))
+    const startsAt = sessions[0]
     const ym = cairoYearMonth(startsAt)
     return { id: `${ym.year}-${String(ym.month + 1).padStart(2, '0')}`, startsAt, sessions }
 }
@@ -82,7 +82,7 @@ export function cohortById(id: unknown): LiveCohort | null {
 
 /** True from day 1's start until the last session ends. */
 export function cohortIsRunning(cohort: LiveCohort, now: Date = new Date()): boolean {
-    const end = cohort.sessions[cohort.sessions.length - 1].getTime() + LIVE_SESSION_HOURS * 3600000
+    const end = cohort.sessions.at(-1)!.getTime() + LIVE_SESSION_HOURS * 3600000
     return now.getTime() >= cohort.startsAt.getTime() && now.getTime() < end
 }
 
@@ -97,10 +97,8 @@ export interface LivePricing {
 export function livePricing(now: Date = new Date()): LivePricing {
     const cohort = currentCohort(now)
     const { year, month } = cairoYearMonth(cohort.startsAt)
-    let index = 0
-    LIVE_PHASES.forEach((p, i) => {
-        if (p.fromDay !== null && now.getTime() >= cairoTime(year, month, p.fromDay).getTime()) index = i
-    })
+    // The latest phase that has started; early (fromDay null) is always open.
+    const index = LIVE_PHASES.findLastIndex(p => p.fromDay === null || now.getTime() >= cairoTime(year, month, p.fromDay).getTime())
     const next = LIVE_PHASES[index + 1] ?? null
     return {
         cohort,
@@ -119,7 +117,7 @@ export function arabicDigits(value: number | string): string {
 export function cohortDatesLabel(cohort: LiveCohort): string {
     const day = (d: Date) => new Intl.DateTimeFormat('ar-EG', { timeZone: LIVE_TIME_ZONE, day: 'numeric' }).format(d)
     const month = new Intl.DateTimeFormat('ar-EG', { timeZone: LIVE_TIME_ZONE, month: 'long' }).format(cohort.startsAt)
-    return `من ${day(cohort.sessions[0])} لـ ${day(cohort.sessions[cohort.sessions.length - 1])} ${month}`
+    return `من ${day(cohort.sessions[0])} لـ ${day(cohort.sessions.at(-1)!)} ${month}`
 }
 
 /** "من ٨ لـ ١٠ بالليل" — the session hours, from LIVE_START_HOUR and LIVE_SESSION_HOURS. */

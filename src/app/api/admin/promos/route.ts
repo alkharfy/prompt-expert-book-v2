@@ -1,24 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
-import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { dbLogger } from '@/lib/logger'
-
-/**
- * Unified admin verification — uses cookie-based auth (consistent with other admin routes)
- */
-async function verifyAdmin() {
-    const userId = await getAuthenticatedUser()
-    if (!userId) return null
-
-    const supabase = getSupabaseAdmin()
-    const { data: user } = await supabase
-        .from('users')
-        .select('is_admin')
-        .eq('id', userId)
-        .single() as { data: { is_admin: boolean } | null }
-
-    return user?.is_admin ? userId : null
-}
+import { verifyAdmin } from '@/lib/admin-auth'
 
 /**
  * GET /api/admin/promos - Get all promo codes

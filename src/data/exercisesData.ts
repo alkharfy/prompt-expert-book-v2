@@ -26,7 +26,6 @@ interface FillBlankData {
     points: number
 }
 
-import { PageContent } from '@/types/book';
 interface PromptBuilderData {
     type: 'prompt_builder'
     exerciseId: string

@@ -51,11 +51,6 @@ export function trackPaymentPageView(plan?: string) {
   trackEvent('payment_page_view', { plan })
 }
 
-/** User selected a plan */
-export function trackPlanSelected(plan: string, price: number) {
-  trackEvent('plan_selected', { plan, price, currency: 'EGP' })
-}
-
 /** User applied a promo code */
 export function trackPromoApplied(code: string, discount: number) {
   trackEvent('promo_applied', { code, discount })
@@ -165,16 +160,6 @@ export function trackPromoCodeUsed(code: string, discountValue: number) {
   })
 }
 
-/** Track when the promo card is rendered/seen (impression). */
-export function trackPromoViewed(planId: string, finalPrice: number, discountPct: number) {
-  trackEvent('promo_viewed', {
-    plan_id: planId,
-    final_price: finalPrice,
-    discount_pct: discountPct,
-    currency: 'EGP',
-  })
-}
-
 /** Fire a Google Ads conversion event after a verified purchase. */
 export function trackGoogleAdsConversion(amount: number, orderId?: string) {
   if (typeof window === 'undefined' || !window.gtag) return
@@ -212,24 +197,9 @@ export function trackTryCopy(profession: string) {
   trackEvent('try_copy', { profession })
 }
 
-/** User completed an exercise */
-export function trackExerciseCompleted(exerciseId: string, type: string) {
-  trackEvent('exercise_completed', { exercise_id: exerciseId, type })
-}
-
-/** User completed a chapter */
-export function trackChapterCompleted(section: string, pages: number) {
-  trackEvent('chapter_completed', { section, pages })
-}
-
 /** User shared a referral link */
 export function trackReferralShared(method: string) {
   trackEvent('referral_shared', { method })
-}
-
-/** User clicked a resource */
-export function trackResourceClicked(resourceId: string, category: string) {
-  trackEvent('resource_clicked', { resource_id: resourceId, category })
 }
 
 /** Guest user reading content (not registered) */

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import AuthCard from '@/components/auth/AuthCard'
 import AuthInput from '@/components/auth/AuthInput'
@@ -10,7 +9,6 @@ import { authSystem } from '@/lib/auth_system'
 import '@/app/auth.css'
 
 export default function ForgotPasswordPage() {
-    const router = useRouter()
     const [email, setEmail] = useState('')
     const [status, setStatus] = useState<{ type: 'error' | 'success', message: string } | null>(null)
     const [isLoading, setIsLoading] = useState(false)

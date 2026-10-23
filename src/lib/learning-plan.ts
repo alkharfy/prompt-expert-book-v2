@@ -384,34 +384,3 @@ export async function updateTaskStatus(
     return { ok: false }
   }
 }
-
-export async function getPlanTasksForMissions(userId: string): Promise<PlanTask[]> {
-  const supabase = getSupabaseAdmin()
-  const today = new Date().toISOString().split('T')[0]
-
-  try {
-    const { data } = await supabase
-      .from('learning_plan_tasks')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('task_date', today)
-      .eq('status', 'pending')
-      .in('task_type', ['reading', 'exercise'])
-
-    return (data || []).map((t: Record<string, unknown>) => ({
-      taskDate: t.task_date as string,
-      taskType: t.task_type as PlanTask['taskType'],
-      sectionId: t.section_id as string | undefined,
-      startPage: t.start_page as number | undefined,
-      endPage: t.end_page as number | undefined,
-      exerciseId: t.exercise_id as string | undefined,
-      titleAr: t.title_ar as string,
-      descriptionAr: t.description_ar as string | undefined,
-      dayNumber: t.day_number as number,
-      estimatedMinutes: t.estimated_minutes as number,
-    }))
-  } catch (error) {
-    dbLogger.error('Error in getPlanTasksForMissions', error)
-    return []
-  }
-}

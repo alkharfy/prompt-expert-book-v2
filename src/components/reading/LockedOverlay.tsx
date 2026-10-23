@@ -23,6 +23,7 @@ import { trackPaywallHit } from '@/lib/analytics'
 import { SECTION_REGISTRY } from '@/config/sections'
 import { PRODUCT_STATS, planLabel } from '@/lib/pricing'
 import { REFUND_GUARANTEE_TEXT } from '@/lib/config'
+import { getSafeRedirectPath } from '@/lib/safe-redirect'
 
 interface LockedOverlayProps {
     isOpen: boolean
@@ -33,19 +34,8 @@ interface LockedOverlayProps {
     requiredFeature?: string
 }
 
-// التحقق من أن المسار آمن (داخلي فقط)
-function getSafeRedirectPath(path: string): string {
-    if (!path || typeof path !== 'string') return '/toc'
-    const trimmed = path.trim()
-    if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('://')) {
-        return '/toc'
-    }
-    const allowedPrefixes = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard']
-    if (!allowedPrefixes.some(prefix => trimmed.startsWith(prefix))) {
-        return '/toc'
-    }
-    return trimmed
-}
+// Where ?next= may send the visitor after this step (see lib/safe-redirect).
+const LOCKED_REDIRECT_PREFIXES = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard']
 
 /** فهرس فصول الكتاب للعرض في Paywall */
 const FIRST_CHAPTER = SECTION_REGISTRY.find(section => section.id === 'section-1')!
@@ -137,7 +127,7 @@ export default function LockedOverlay({
     }, [isOpen, onClose, nextPath, currentPlan, subStatus, expiresAt, requiredFeature, hasFeature, subLoading])
 
     const handleAction = () => {
-        const safePath = getSafeRedirectPath(nextPath)
+        const safePath = getSafeRedirectPath(nextPath, LOCKED_REDIRECT_PREFIXES)
 
         // Identity comes from the httpOnly cookie — never put userId in the URL.
         if (status === 'unauthenticated') {

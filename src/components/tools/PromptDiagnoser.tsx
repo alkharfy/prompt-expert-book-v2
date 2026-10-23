@@ -24,7 +24,7 @@ interface DiagnosisResult {
 
 type Phase = 'admission' | 'diagnosing' | 'report'
 
-// Values must be MODEL_CONFIG keys in app/api/prompt-hospital/diagnose/route.ts.
+// Values must be MODEL_CONFIG keys in lib/ai-models.ts.
 // Only models with a working production key are listed (see ChatWindow.tsx).
 const MODEL_OPTIONS = [
     { value: 'gpt-oss-120b', label: 'GPT-OSS 120B (سريع)' },

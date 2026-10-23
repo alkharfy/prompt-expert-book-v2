@@ -8,6 +8,18 @@ import { apiLogger } from '@/lib/logger'
 // POST → Actually perform the unsubscribe
 // =====================================================
 
+/** The confirmation shown for each unsubscribe type (every type the POST switch accepts). */
+const UNSUBSCRIBE_MESSAGES: Record<string, string> = {
+    all: 'تم إلغاء كل الإيميلات بنجاح',
+    reduce: 'تم تقليل التكرار إلى مرة أسبوعياً',
+    streak: 'تم إلغاء إيميلات الـ Streak',
+    missions: 'تم إلغاء إيميلات المهام',
+    recap: 'تم إلغاء إيميلات الملخص الأسبوعي',
+    upgrade: 'تم إلغاء إيميلات الترقية',
+    cart_recovery: 'تم إلغاء إيميلات تذكير إكمال الاشتراك',
+    milestone: 'تم إلغاء إيميلات التهنئة',
+}
+
 /**
  * GET: Show a confirmation page instead of performing the write directly.
  * This prevents email link scanners/prefetchers from auto-unsubscribing users.
@@ -136,11 +148,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             ok: true,
             type,
-            message: type === 'all'
-                ? 'تم إلغاء كل الإيميلات بنجاح'
-                : type === 'reduce'
-                    ? 'تم تقليل التكرار إلى مرة أسبوعياً'
-                    : `تم إلغاء إيميلات ${type === 'streak' ? 'الـ Streak' : type === 'missions' ? 'المهام' : type === 'recap' ? 'الملخص الأسبوعي' : type === 'upgrade' ? 'الترقية' : type === 'cart_recovery' ? 'تذكير إكمال الاشتراك' : 'التهنئة'}`,
+            message: UNSUBSCRIBE_MESSAGES[type],
         })
     } catch (error) {
         apiLogger.error('Error in unsubscribe', error)

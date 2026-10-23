@@ -57,3 +57,35 @@ export function sanitizePassword(password: string): string {
     // SECURITY: لا نستخدم trim() لأنها تزيل المسافات من كلمة المرور بشكل صامت
     return password.slice(0, 128)
 }
+
+/**
+ * SECURITY: Escape HTML special characters before putting user text into an email template.
+ */
+export function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+}
+
+/**
+ * تنظيف نص الملاحظات والتظليلات من HTML/XSS قبل حفظه
+ */
+export function sanitizeNoteText(text: string): string {
+    if (!text || typeof text !== 'string') return ''
+    return text
+        .replace(/[<>'"]/g, '') // إزالة HTML tags وعلامات الاقتباس
+        .replace(/javascript\s*:/gi, '') // إزالة javascript: protocol (مع مسافات)
+        .replace(/vbscript\s*:/gi, '') // إزالة vbscript: protocol
+        .replace(/data\s*:/gi, '') // إزالة data: protocol
+        .replace(/on\w+\s*=/gi, '') // إزالة event handlers
+        .replace(/&lt;/gi, '') // إزالة encoded <
+        .replace(/&gt;/gi, '') // إزالة encoded >
+        .replace(/&#/g, '') // إزالة HTML numeric entities
+        .replace(/\\u00/gi, '') // إزالة unicode escapes
+        .replace(/expression\s*\(/gi, '') // إزالة CSS expression()
+        .replace(/url\s*\(/gi, '') // إزالة CSS url()
+        .trim()
+}

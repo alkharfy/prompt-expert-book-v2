@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { trackEvent } from '@/lib/analytics'
+import { toLatinDigits } from '@/lib/grader'
 
 interface AnswerCheckProps {
     id: string
@@ -16,16 +17,10 @@ interface AnswerCheckProps {
     formatText?: (text: string) => React.ReactNode
 }
 
-const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩'
-/** Some phone keyboards type the Persian forms (۴ ۵ ۶ look different from ٤ ٥ ٦). */
-const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹'
-
 /** «١٠» = «10» = « 10 » = «10٪»: what a reader types on an Arabic phone keyboard still matches. */
 export function normalizeAnswer(value: string): string {
-    return value
-        .trim()
-        .replace(/[٠-٩]/g, d => String(ARABIC_DIGITS.indexOf(d)))
-        .replace(/[۰-۹]/g, d => String(PERSIAN_DIGITS.indexOf(d)))
+    // Arabic and Persian digits (some phone keyboards type ۴ ۵ ۶ instead of ٤ ٥ ٦) become 0–9.
+    return toLatinDigits(value.trim())
         // A list of numbers typed as «1 و 3 و 4» reads the same as «1، 3، 4».
         .replace(/(\d)\s*و\s*(?=\d)/g, '$1')
         .replace(/٫/g, '.')

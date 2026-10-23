@@ -12,25 +12,15 @@ import { trackLead, trackCompleteRegistration } from '@/lib/meta-pixel'
 import { trackSignUp, trackFunnelStep } from '@/lib/analytics'
 import { leadEventId } from '@/lib/tracking-config'
 import { getSignupRedirect } from '@/lib/signup-redirect'
+import { getSafeRedirectPath } from '@/lib/safe-redirect'
 import '@/app/auth.css'
 
-// التحقق من أن المسار آمن (داخلي فقط) لمنع Open Redirect
-function getSafeRedirectPath(path: string | null): string {
-    if (!path || typeof path !== 'string') return '/toc'
-    const trimmed = path.trim()
-    if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('://')) {
-        return '/toc'
-    }
-    const allowedPrefixes = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard', '/community', '/onboarding', '/payment', '/my-plan']
-    if (!allowedPrefixes.some(prefix => trimmed.startsWith(prefix))) {
-        return '/toc'
-    }
-    return trimmed
-}
+// Where ?next= may send the visitor after this step (see lib/safe-redirect).
+const REGISTER_REDIRECT_PREFIXES = ['/read/', '/library/', '/toc', '/exercises', '/profile', '/achievements', '/tools', '/bookmarks', '/leaderboard', '/community', '/onboarding', '/payment', '/my-plan']
 
 function RegisterContent() {
     const searchParams = useSearchParams()
-    const nextPath = useMemo(() => getSafeRedirectPath(searchParams.get('next')), [searchParams])
+    const nextPath = useMemo(() => getSafeRedirectPath(searchParams.get('next'), REGISTER_REDIRECT_PREFIXES), [searchParams])
     // Buy-intent plan carried from a pricing/buy CTA (e.g. /register?plan=pro). Sanitized.
     const planParam = useMemo(() => (searchParams.get('plan') || '').replace(/[^a-z0-9_-]/gi, ''), [searchParams])
     const refCode = searchParams.get('ref') || ''

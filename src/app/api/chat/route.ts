@@ -6,44 +6,9 @@ import { retrieveContext, formatContextForPrompt } from '@/lib/chat-context'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { userHasFeature } from '@/lib/subscription'
 import { dbLogger } from '@/lib/logger'
+import { MODEL_CONFIG, openAICompatibleKey, validModels, type ModelConfig } from '@/lib/ai-models'
 
 export const dynamic = 'force-dynamic'
-
-// ===== Model Configuration =====
-
-type ModelProvider = 'openai' | 'google' | 'groq'
-
-interface ModelConfig {
-    provider: ModelProvider
-    apiModel: string
-    label: string
-    baseURL?: string
-}
-
-// Keep in sync with MODEL_OPTIONS in components/chat/ChatWindow.tsx and the
-// prompt-hospital route. Retired upstream (404) as of 2026-09: gemini-2.0-flash
-// (Google, 2026-06-01) and llama-3.3-70b-versatile (Groq, 2026-08-16).
-// Grok / DeepSeek need XAI_API_KEY / DEEPSEEK_API_KEY — re-add here and in the
-// UI option lists once those keys are set in Vercel.
-const MODEL_CONFIG: Record<string, ModelConfig> = {
-    'gpt-oss-120b': {
-        provider: 'groq',
-        apiModel: 'openai/gpt-oss-120b',
-        label: 'GPT-OSS 120B',
-    },
-    'gpt-6-luna': {
-        provider: 'openai',
-        apiModel: 'gpt-6-luna',
-        label: 'GPT-6 Luna',
-    },
-    'gemini-3.8-flash': {
-        provider: 'google',
-        apiModel: 'gemini-3.8-flash',
-        label: 'Gemini 3.8 Flash',
-    },
-}
-
-const validModels = Object.keys(MODEL_CONFIG) as [string, ...string[]]
 
 // ===== Request Validation =====
 
@@ -89,10 +54,6 @@ const SYSTEM_PROMPT_TEMPLATE = `إنت «المستر»، المدرّب في ك
 
 // ===== Supabase Helper =====
 
-function getSupabaseService() {
-    return getSupabaseAdmin()
-}
-
 async function saveChatMessage(
     userId: string,
     sessionId: string,
@@ -101,7 +62,7 @@ async function saveChatMessage(
     model: string | null
 ): Promise<void> {
     try {
-        const supabase = getSupabaseService()
+        const supabase = getSupabaseAdmin()
         if (!supabase) return
 
         await (supabase.from('chat_messages') as any).insert({
@@ -125,11 +86,7 @@ async function streamOpenAI(
 ): Promise<ReadableStream<Uint8Array>> {
     const { default: OpenAI } = await import('openai')
 
-    const apiKey = config.baseURL?.includes('deepseek')
-        ? process.env.DEEPSEEK_API_KEY
-        : config.baseURL
-        ? process.env.XAI_API_KEY
-        : process.env.OPENAI_API_KEY
+    const apiKey = openAICompatibleKey(config)
 
     if (!apiKey) {
         throw new Error(`API key not configured for ${config.label}`)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { isCronAuthorized } from '@/lib/cron-auth'
 import { processCartRecovery } from '@/lib/cart-recovery'
 
 // =====================================================
@@ -11,17 +11,7 @@ import { processCartRecovery } from '@/lib/cart-recovery'
 export async function GET(request: NextRequest) {
     try {
         // SECURITY: Verify cron secret with timing-safe comparison
-        const authHeader = request.headers.get('authorization')
-        const cronSecret = process.env.CRON_SECRET
-
-        if (!cronSecret || !authHeader) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
-
-        const expectedHeader = `Bearer ${cronSecret}`
-        const headerBuf = Buffer.from(authHeader)
-        const expectedBuf = Buffer.from(expectedHeader)
-        if (headerBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(headerBuf, expectedBuf)) {
+        if (!isCronAuthorized(request)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 

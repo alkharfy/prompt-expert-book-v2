@@ -163,13 +163,15 @@ export async function POST(request: NextRequest) {
         // 6b. Mark this user's open payment intents as completed so cart-recovery
         //     never re-emails a buyer (defense-in-depth; non-blocking).
         //     A live-challenge seat does not buy the course, so its intents stay open.
-        if (payment.plan_id !== LIVE_PLAN_ID) try {
-            await (supabase.from('payment_intents') as any)
-                .update({ completed: true })
-                .eq('user_id', userId)
-                .eq('completed', false)
-        } catch (intentErr) {
-            dbLogger.error('[process-callback] Failed to mark payment_intents completed (non-critical):', intentErr)
+        if (payment.plan_id !== LIVE_PLAN_ID) {
+            try {
+                await (supabase.from('payment_intents') as any)
+                    .update({ completed: true })
+                    .eq('user_id', userId)
+                    .eq('completed', false)
+            } catch (intentErr) {
+                dbLogger.error('[process-callback] Failed to mark payment_intents completed (non-critical):', intentErr)
+            }
         }
 
         // 7. Send Purchase event to Meta CAPI (server-side, real user IP/UA)

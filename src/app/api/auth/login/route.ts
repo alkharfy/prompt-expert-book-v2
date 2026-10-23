@@ -128,9 +128,6 @@ export async function POST(request: NextRequest) {
     })()
 
     // Try to find an existing device for this user:
-    // Support up to 3 devices per user
-    const MAX_DEVICES = 3
-    
     let { data: device } = await (supabase
       .from('devices') as any)
       .select('id, user_id, device_id, device_name, is_active, last_used')

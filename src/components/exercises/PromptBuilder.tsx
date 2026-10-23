@@ -150,12 +150,10 @@ export default function PromptBuilder({
         setValues(prev => ({ ...prev, [stepId]: value }))
     }
 
-    const buildPrompt = () => renderPromptTemplate(templateFormat, values)
-
     const handleSubmit = () => {
         if (isSubmitted) return
 
-        const prompt = buildPrompt()
+        const prompt = renderPromptTemplate(templateFormat, values)
         if (!allRequiredFilled || !isSubstantivePrompt(prompt, 60)) {
             setSaveError('اكتب تفاصيل مفيدة في الحقول المطلوبة وطلبًا واضحًا يحدد المهمة قبل إنشاء البرومبت.')
             return

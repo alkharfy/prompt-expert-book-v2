@@ -15,7 +15,7 @@ import ReadingPagination from '@/components/reading/ReadingPagination'
 import { completeChapterWithProgress } from '@/components/reading/completeChapterWithProgress'
 import { claimReadingReward } from '@/components/reading/claimReadingReward'
 import { markLessonDone } from '@/lib/lessonProgress'
-import { trackPaywallHit, trackGuestReading, trackTryCopy } from '@/lib/analytics'
+import { trackGuestReading, trackTryCopy } from '@/lib/analytics'
 import CopyButton from '@/components/reading/CopyButton'
 import BookmarkButton from '@/components/reading/BookmarkButton'
 import ScrollProgress from '@/components/reading/ScrollProgress'
@@ -25,7 +25,6 @@ import type { FontSize } from '@/components/reading/FontSizeControl'
 import StreakBanner from '@/components/gamification/StreakBanner'
 import TextHighlighter from '@/components/reading/TextHighlighter'
 import type { HighlightSelection } from '@/components/reading/TextHighlighter'
-import HighlightRenderer, { applyHighlights } from '@/components/reading/HighlightRenderer'
 import type { NoteData } from '@/components/reading/HighlightRenderer'
 import NotesSidebar from '@/components/reading/NotesSidebar'
 import DailyMissionsWidget from '@/components/missions/DailyMissionsWidget'
@@ -821,16 +820,6 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                                 onHighlight={handleHighlight}
                                 onAddNote={handleAddNotePopover}
                                 containerRef={contentContainerRef}
-                            />
-                        )}
-
-                        {/* HighlightRenderer — renders saved highlights tooltips */}
-                        {isAuthed && pageNotes.length > 0 && (
-                            <HighlightRenderer
-                                notes={pageNotes}
-                                onNoteClick={() => {}}
-                                onEditNote={handleEditNote}
-                                onDeleteNote={handleDeleteNote}
                             />
                         )}
 

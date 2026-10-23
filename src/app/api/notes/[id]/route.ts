@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { apiLogger } from '@/lib/logger'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
+import { sanitizeNoteText } from '@/lib/sanitize'
 
 // =====================================================
 // API: /api/notes/[id] — PUT (update) & DELETE
@@ -10,23 +11,6 @@ import { getAuthenticatedUser } from '@/lib/auth-middleware'
 
 const VALID_COLORS = ['orange', 'yellow', 'green', 'blue', 'purple'] as const
 const MAX_NOTE_TEXT = 2000
-
-function sanitizeText(text: string): string {
-    if (!text || typeof text !== 'string') return ''
-    return text
-        .replace(/[<>'"]/g, '') // إزالة HTML tags وعلامات الاقتباس
-        .replace(/javascript\s*:/gi, '') // إزالة javascript: protocol (مع مسافات)
-        .replace(/vbscript\s*:/gi, '') // إزالة vbscript: protocol
-        .replace(/data\s*:/gi, '') // إزالة data: protocol
-        .replace(/on\w+\s*=/gi, '') // إزالة event handlers
-        .replace(/&lt;/gi, '') // إزالة encoded <
-        .replace(/&gt;/gi, '') // إزالة encoded >
-        .replace(/&#/g, '') // إزالة HTML numeric entities
-        .replace(/\\u00/gi, '') // إزالة unicode escapes
-        .replace(/expression\s*\(/gi, '') // إزالة CSS expression()
-        .replace(/url\s*\(/gi, '') // إزالة CSS url()
-        .trim()
-}
 
 // PUT: تعديل ملاحظة
 export async function PUT(
@@ -95,7 +79,7 @@ export async function PUT(
                         { status: 400 }
                     )
                 }
-                updateData.note_text = sanitizeText(note_text)
+                updateData.note_text = sanitizeNoteText(note_text)
             }
         }
 

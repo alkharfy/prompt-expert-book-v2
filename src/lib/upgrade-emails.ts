@@ -5,18 +5,10 @@ import 'server-only'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { Resend } from 'resend'
 import { dbLogger } from './logger'
+import { escapeHtml } from './sanitize'
 import { SITE_URL, SITE_DOMAIN, EMAIL_FROM_DEFAULT } from '@/lib/config'
 const FROM_EMAIL = EMAIL_FROM_DEFAULT
 const APP_URL = SITE_URL
-
-function escapeHtml(text: string): string {
-    return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-}
 
 function wrapEmail(content: string, unsubscribeToken: string): string {
     const unsubscribeUrl = `${APP_URL}/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}&type=upgrade`

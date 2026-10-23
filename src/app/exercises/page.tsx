@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import Navigation from '@/components/Navigation'
 import QuizQuestion from '@/components/exercises/QuizQuestion'
 import FillInBlank from '@/components/exercises/FillInBlank'
@@ -102,8 +102,6 @@ export default function ExercisesPage() {
     }
 
     const renderExercise = (exercise: ExerciseData) => {
-        const isCompleted = completedExercises.has(exercise.exerciseId)
-
         switch (exercise.type) {
             case 'quiz':
                 return (

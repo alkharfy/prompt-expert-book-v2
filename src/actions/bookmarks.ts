@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { cookies } from 'next/headers'
 
 import { TOTAL_BOOK_PAGES } from '@/lib/config'
@@ -11,17 +11,6 @@ interface Bookmark {
     date: string
 }
 
-function getServiceClient() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-    if (!url || !serviceKey) {
-        throw new Error('Missing Supabase environment variables')
-    }
-
-    return createClient(url, serviceKey)
-}
-
 async function getUserId(): Promise<string | null> {
     const cookieStore = await cookies()
     const userId = cookieStore.get('ebook_user_id')?.value
@@ -30,7 +19,7 @@ async function getUserId(): Promise<string | null> {
     if (!userId || !sessionToken) return null
 
     // SECURITY: Verify session token to prevent IDOR via forged cookie
-    const supabase = getServiceClient()
+    const supabase = getSupabaseAdmin()
     const { data: session } = await supabase
         .from('sessions')
         .select('user_id')
@@ -49,7 +38,7 @@ export async function getBookmarks(): Promise<{ bookmarks: Bookmark[]; error?: s
             return { bookmarks: [], error: 'غير مصرح' }
         }
 
-        const supabase = getServiceClient()
+        const supabase = getSupabaseAdmin()
 
         const { data, error } = await supabase
             .from('reading_progress')
@@ -84,7 +73,7 @@ export async function toggleBookmark(
             return { success: false, isBookmarked: false, message: 'بيانات ناقصة' }
         }
 
-        const supabase = getServiceClient()
+        const supabase = getSupabaseAdmin()
 
         // Get current bookmarks
         const { data: currentData, error: fetchError } = await supabase

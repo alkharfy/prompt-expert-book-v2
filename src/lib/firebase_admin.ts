@@ -27,7 +27,6 @@ if (!admin.apps.length) {
 }
 
 export const adminAuth = admin.auth()
-export const adminApp = admin.app()
 
 /**
  * Verify Firebase ID token (for API routes and middleware)
@@ -83,20 +82,5 @@ export async function getFirebaseUserByUid(
     }
     console.error('getFirebaseUserByUid failed:', error)
     return null
-  }
-}
-
-/**
- * Delete Firebase user (for cleanup/admin operations)
- * @param uid - Firebase user ID to delete
- * @returns true if successful, false otherwise
- */
-export async function deleteFirebaseUser(uid: string): Promise<boolean> {
-  try {
-    await adminAuth.deleteUser(uid)
-    return true
-  } catch (error) {
-    console.error('Failed to delete Firebase user:', error)
-    return false
   }
 }

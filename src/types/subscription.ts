@@ -55,9 +55,6 @@ export const FEATURE_KEYS = [
     'ai_updates',
 ] as const
 
-/** مدة الاشتراك بالأيام */
-export const SUBSCRIPTION_DURATION_DAYS = 365
-
 /** How long one payment opens each plan. 'monthly' = 100 EGP for 30 days (owner decision 2026-10-18). */
 export const PLAN_DURATION_DAYS: Record<PlanId, number> = { monthly: 30, basic: 365, pro: 365, vip: 365 }
 

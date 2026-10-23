@@ -137,9 +137,6 @@ export default function SubscriptionGateModal({
 
   // Determine which plan the feature requires
   const featureInfo = feature ? FEATURE_INFO[feature] : null
-  const requiredPlan = feature
-    ? PLANS.find(p => p.featureKeys.includes(feature))
-    : null
 
   // Auto-select the cheapest plan that unlocks the feature
   useEffect(() => {

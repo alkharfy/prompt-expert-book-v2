@@ -2,7 +2,7 @@
 // Daily Missions Engine — المحرك الأساسي للمهام اليومية
 // =====================================================
 
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { dbLogger } from './logger'
 
 // ===== Types =====
@@ -54,15 +54,6 @@ const ACTION_TO_TEMPLATE_MAP: Record<string, string[]> = {
 // All-clear bonus points
 const ALL_CLEAR_BONUS = 50
 
-function getServiceClient() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!url || !serviceKey) {
-        throw new Error('Missing Supabase environment variables')
-    }
-    return createClient(url, serviceKey)
-}
-
 function getTodayDate(): string {
     return new Date().toISOString().split('T')[0]
 }
@@ -86,7 +77,7 @@ export async function generateDailyMissions(
     userLevel: number = 1,
     userPlan: string | null = null
 ): Promise<UserDailyMission[]> {
-    const supabase = getServiceClient()
+    const supabase = getSupabaseAdmin()
     const today = getTodayDate()
 
     try {
@@ -230,7 +221,7 @@ export async function updateMissionProgress(
     allClear: boolean
     totalPointsEarned: number
 }> {
-    const supabase = getServiceClient()
+    const supabase = getSupabaseAdmin()
     const today = getTodayDate()
     const result = {
         updatedMissions: [] as UserDailyMission[],
@@ -354,7 +345,7 @@ export async function updateMissionProgress(
  * انتهاء صلاحية مهام اليوم السابق غير المكتملة
  */
 export async function checkAndExpireMissions(userId?: string): Promise<void> {
-    const supabase = getServiceClient()
+    const supabase = getSupabaseAdmin()
     const today = getTodayDate()
 
     try {
@@ -382,7 +373,7 @@ export async function checkAndExpireMissions(userId?: string): Promise<void> {
  * فحص سلسلة الـ All Clear ومنح شارات/نقاط
  */
 async function checkAllClearStreak(userId: string): Promise<void> {
-    const supabase = getServiceClient()
+    const supabase = getSupabaseAdmin()
 
     try {
         // جلب آخر 30 يوم من المهام
@@ -494,7 +485,7 @@ async function checkAllClearStreak(userId: string): Promise<void> {
  * جلب مهام اليوم مع بيانات القوالب
  */
 export async function getTodayMissions(userId: string): Promise<UserDailyMission[]> {
-    const supabase = getServiceClient()
+    const supabase = getSupabaseAdmin()
     const today = getTodayDate()
 
     try {
@@ -524,37 +515,3 @@ export async function getTodayMissions(userId: string): Promise<UserDailyMission
 }
 
 // ===== Learning Plan Integration =====
-
-/**
- * جلب ملخص خطة اليوم من learning_plan_tasks — لعرضه في MissionsWidget
- * هذا لا يؤثر على المهام اليومية نفسها، بل يعرض اقتراحات من الخطة بجانبها
- */
-export async function getTodayPlanSuggestions(userId: string): Promise<{
-    hasPlan: boolean
-    readingTask: string | null
-    exerciseTask: string | null
-}> {
-    const supabase = getServiceClient()
-    const today = getTodayDate()
-
-    try {
-        const { data } = await supabase
-            .from('learning_plan_tasks')
-            .select('task_type, title_ar, status')
-            .eq('user_id', userId)
-            .eq('task_date', today)
-            .eq('status', 'pending')
-            .in('task_type', ['reading', 'exercise'])
-
-        if (!data || data.length === 0) return { hasPlan: false, readingTask: null, exerciseTask: null }
-
-        const tasks = data as { task_type: string; title_ar: string; status: string }[]
-        const readingTask = tasks.find(t => t.task_type === 'reading')?.title_ar || null
-        const exerciseTask = tasks.find(t => t.task_type === 'exercise')?.title_ar || null
-
-        return { hasPlan: true, readingTask, exerciseTask }
-    } catch (error) {
-        dbLogger.error('Error in getTodayPlanSuggestions', error)
-        return { hasPlan: false, readingTask: null, exerciseTask: null }
-    }
-}

@@ -70,30 +70,3 @@ export async function getAuthenticatedUserId(
     return null
   }
 }
-
-/**
- * Get authenticated user with full details
- * @param request - Next.js request object
- * @returns User object or null
- */
-export async function getAuthenticatedUser(
-  request: NextRequest
-): Promise<any | null> {
-  try {
-    const userId = await getAuthenticatedUserId(request)
-    if (!userId) return null
-
-    const supabase = getSupabaseAdmin()
-
-    const { data: user } = await supabase
-      .from('users')
-      .select('id, email, full_name, phone_number, is_verified, is_active, is_admin, current_plan, plan_expires_at, firebase_uid, referral_code, created_at, updated_at')
-      .eq('id', userId)
-      .single()
-
-    return user
-  } catch (error) {
-    console.error('Failed to get authenticated user:', error)
-    return null
-  }
-}

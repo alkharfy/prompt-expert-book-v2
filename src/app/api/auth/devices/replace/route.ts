@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import { authLogger } from '@/lib/logger'
 import { cookies } from 'next/headers'
 import { SESSION_DURATION_MS } from '@/lib/config'
-import { checkRateLimit, getClientIP, RATE_LIMITS } from '@/lib/rate-limit'
+import { checkRateLimit, getClientIP } from '@/lib/rate-limit'
 import bcrypt from 'bcryptjs'
 
 /**

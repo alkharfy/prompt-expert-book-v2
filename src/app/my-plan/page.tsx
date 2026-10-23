@@ -325,11 +325,7 @@ export default function MyPlanPage() {
                             {dateTasks.map(t => (
                               <div key={t.id} className={`plan-day-task ${t.status}`}>
                                 <span className="plan-day-task-icon">
-                                  {t.status === 'completed' ? '✅' :
-                                   t.status === 'skipped' ? '⏭️' :
-                                   t.taskType === 'reading' ? '📖' :
-                                   t.taskType === 'exercise' ? '✏️' :
-                                   t.taskType === 'review' ? '🔄' : '🎉'}
+                                  {taskIcon(t)}
                                 </span>
                                 <span className={`plan-day-task-title ${t.status}`}>{t.titleAr}</span>
                               </div>
@@ -360,6 +356,16 @@ export default function MyPlanPage() {
       <style jsx>{pageStyles}</style>
     </div>
   )
+}
+
+/** A finished or skipped task shows its status; otherwise its kind. */
+function taskIcon(task: DailyTask): string {
+  if (task.status === 'completed') return '✅'
+  if (task.status === 'skipped') return '⏭️'
+  if (task.taskType === 'reading') return '📖'
+  if (task.taskType === 'exercise') return '✏️'
+  if (task.taskType === 'review') return '🔄'
+  return '🎉'
 }
 
 function formatDate(dateStr: string): string {

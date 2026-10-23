@@ -18,7 +18,7 @@ interface Message {
 
 // ===== Constants =====
 
-// Values must be MODEL_CONFIG keys in app/api/chat/route.ts. Only models whose
+// Values must be MODEL_CONFIG keys in lib/ai-models.ts. Only models whose
 // production API key works are listed: 'gpt-6-luna' (OPENAI_API_KEY rejected)
 // and 'gemini-3.8-flash' (Google project denied) are configured server-side —
 // add them back here once those keys are fixed.

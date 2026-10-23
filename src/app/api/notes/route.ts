@@ -4,6 +4,7 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { apiLogger } from '@/lib/logger'
 import { recordNoteCreation } from '@/lib/gamification'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
+import { sanitizeNoteText } from '@/lib/sanitize'
 
 // =====================================================
 // API: /api/notes — GET (list) & POST (create)
@@ -13,26 +14,6 @@ const VALID_COLORS = ['orange', 'yellow', 'green', 'blue', 'purple'] as const
 const MAX_NOTE_TEXT = 2000
 const MAX_HIGHLIGHTED_TEXT = 1000
 const MAX_NOTES_PER_USER = 500
-
-/**
- * تنظيف النص من HTML/XSS
- */
-function sanitizeText(text: string): string {
-    if (!text || typeof text !== 'string') return ''
-    return text
-        .replace(/[<>'"]/g, '') // إزالة HTML tags وعلامات الاقتباس
-        .replace(/javascript\s*:/gi, '') // إزالة javascript: protocol (مع مسافات)
-        .replace(/vbscript\s*:/gi, '') // إزالة vbscript: protocol
-        .replace(/data\s*:/gi, '') // إزالة data: protocol
-        .replace(/on\w+\s*=/gi, '') // إزالة event handlers
-        .replace(/&lt;/gi, '') // إزالة encoded <
-        .replace(/&gt;/gi, '') // إزالة encoded >
-        .replace(/&#/g, '') // إزالة HTML numeric entities
-        .replace(/\\u00/gi, '') // إزالة unicode escapes
-        .replace(/expression\s*\(/gi, '') // إزالة CSS expression()
-        .replace(/url\s*\(/gi, '') // إزالة CSS url()
-        .trim()
-}
 
 // GET: جلب ملاحظات المستخدم
 export async function GET(request: NextRequest) {
@@ -166,7 +147,7 @@ export async function POST(request: NextRequest) {
                     { status: 400 }
                 )
             }
-            cleanHighlightedText = sanitizeText(highlighted_text)
+            cleanHighlightedText = sanitizeNoteText(highlighted_text)
         }
 
         // Validate & sanitize note_text
@@ -181,7 +162,7 @@ export async function POST(request: NextRequest) {
                     { status: 400 }
                 )
             }
-            cleanNoteText = sanitizeText(note_text)
+            cleanNoteText = sanitizeNoteText(note_text)
         }
 
         // Validate highlight_color
@@ -199,7 +180,7 @@ export async function POST(request: NextRequest) {
             .from('user_notes')
             .insert({
                 user_id: userId,
-                section_id: sanitizeText(section_id),
+                section_id: sanitizeNoteText(section_id),
                 page_number,
                 highlighted_text: cleanHighlightedText,
                 text_start_offset: startOffset,

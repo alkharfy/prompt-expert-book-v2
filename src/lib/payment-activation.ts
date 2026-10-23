@@ -3,7 +3,8 @@ import { dbLogger } from '@/lib/logger'
 import { alertMoneyPath } from '@/lib/alert'
 import { PLAN_ORDER } from '@/lib/pricing'
 import { PLAN_DURATION_DAYS, type PlanId } from '@/types/subscription'
-import { LIVE_PLAN_ID, activateLiveEnrollment } from '@/lib/live-enrollment'
+import { LIVE_PLAN_ID } from '@/lib/live'
+import { activateLiveEnrollment } from '@/lib/live-enrollment'
 
 // EGP tolerance for the amount guard (rounding / currency-minor differences).
 const AMOUNT_TOLERANCE = 0.01

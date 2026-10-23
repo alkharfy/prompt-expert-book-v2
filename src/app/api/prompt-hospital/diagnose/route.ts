@@ -4,27 +4,9 @@ import { checkRateLimitAsync, RATE_LIMITS } from '@/lib/rate-limit'
 import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { userHasFeature } from '@/lib/subscription'
 import { dbLogger } from '@/lib/logger'
+import { MODEL_CONFIG, openAICompatibleKey, validModels, type ModelConfig } from '@/lib/ai-models'
 
 export const dynamic = 'force-dynamic'
-
-// Model configuration (same as chat route)
-type ModelProvider = 'openai' | 'google' | 'groq'
-
-interface ModelConfig {
-    provider: ModelProvider
-    apiModel: string
-    label: string
-    baseURL?: string
-}
-
-// Same model set as app/api/chat/route.ts (see the retirement notes there).
-const MODEL_CONFIG: Record<string, ModelConfig> = {
-    'gpt-oss-120b': { provider: 'groq', apiModel: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B' },
-    'gpt-6-luna': { provider: 'openai', apiModel: 'gpt-6-luna', label: 'GPT-6 Luna' },
-    'gemini-3.8-flash': { provider: 'google', apiModel: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash' },
-}
-
-const validModels = Object.keys(MODEL_CONFIG) as [string, ...string[]]
 
 const DiagnoseRequestSchema = z.object({
     prompt: z.string().min(1).max(3000),
@@ -66,11 +48,7 @@ const HOSPITAL_SYSTEM_PROMPT = `أنت "طبيب البرومبتات" المت�
 async function callOpenAI(config: ModelConfig, prompt: string): Promise<string> {
     const { default: OpenAI } = await import('openai')
 
-    const apiKey = config.baseURL?.includes('deepseek')
-        ? process.env.DEEPSEEK_API_KEY
-        : config.baseURL
-        ? process.env.XAI_API_KEY
-        : process.env.OPENAI_API_KEY
+    const apiKey = openAICompatibleKey(config)
 
     if (!apiKey) throw new Error(`API key not configured for ${config.label}`)
 
