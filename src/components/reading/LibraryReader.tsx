@@ -82,7 +82,7 @@ export default function LibraryReader({ data, initialHasAccess = false, initialA
         if (!isFirstPage) {
             router.push(`/library/${pageNum - 1}`)
         } else {
-            router.push('/read/section-10/17')
+            router.push('/toc')
         }
     }
 

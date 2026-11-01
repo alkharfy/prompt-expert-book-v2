@@ -71,7 +71,7 @@ export default function DailyTaskCard({ dayNumber, totalDays, progressPercent, t
           <ul>
             <li>اقرأ صفحة واحدة على الأقل يومياً</li>
             <li>حافظ على سلسلة القراءة بتاعتك 🔥</li>
-            <li>حل تمرين واحد بعد كل فصل</li>
+            <li>حل تمارين الدرس جوه الدرس نفسه</li>
           </ul>
           <Link href="/toc" className="dtc-action-btn dtc-primary">
             أكمل القراءة ←

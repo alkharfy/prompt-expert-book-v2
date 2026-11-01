@@ -6,14 +6,13 @@ import { unit1Data } from '@/data/unit1Data'
 import { introData } from '@/data/introData'
 
 describe('«إنت هنا» course map', () => {
-  it('puts the intro, Level 1, Level 2 and the rest of the book on their own stops', () => {
+  it('puts the intro and each of the five levels on its own stop', () => {
     expect(stationFor('intro')).toBe('intro')
     expect(stationFor('section-1')).toBe('level-1')
     expect(stationFor('section-2')).toBe('level-2')
     expect(stationFor('section-3')).toBe('level-3')
     expect(stationFor('section-4')).toBe('level-4')
     expect(stationFor('section-5')).toBe('level-5')
-    for (const id of ['section-6', 'section-10']) expect(stationFor(id)).toBe('book')
   })
 
   it('ticks only the stops the reader finished, not every stop behind them', () => {

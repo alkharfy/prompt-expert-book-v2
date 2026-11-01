@@ -18,7 +18,8 @@ export interface ChallengeDay {
     badge: string;
     badgeEmoji: string;
     hint: string;
-    relatedUnit: number;
+    /** Where the day is taught now (the old book chapters were removed on 2026-11-01). */
+    related: { href: string; label: string };
 }
 
 export const challengeDays: ChallengeDay[] = [
@@ -34,7 +35,7 @@ export const challengeDays: ChallengeDay[] = [
         badge: 'البداية',
         badgeEmoji: '🌱',
         hint: 'المفتاح: كن محدداً جداً في الهدف والمخرج. "اكتبلي حاجة عن التسويق" ≠ "اكتبلي 5 نصائح تسويقية لمتجر ملابس أونلاين على Instagram بأسلوب مرح"',
-        relatedUnit: 3
+        related: { href: '/read/section-1/3', label: 'المستوى 1: ليه رده دايماً عام؟' }
     },
     {
         day: 2,
@@ -48,7 +49,7 @@ export const challengeDays: ChallengeDay[] = [
         badge: 'الكاتب',
         badgeEmoji: '📝',
         hint: 'حدد الجمهور المستهدف في البرومبت. بوست لطالب جامعي يختلف تماماً عن بوست لصاحب بيزنس.',
-        relatedUnit: 9
+        related: { href: '/workshops/ad-script', label: 'ورشة سكريبت الإعلان' }
     },
     {
         day: 3,
@@ -62,7 +63,7 @@ export const challengeDays: ChallengeDay[] = [
         badge: 'المصمم',
         badgeEmoji: '🎨',
         hint: 'Ideogram و GPT Image الأفضل للنص العربي في الصور. ChatGPT و Gemini الأسهل للمبتدئين.',
-        relatedUnit: 6
+        related: { href: '/workshops/images', label: 'ورشة الصور' }
     },
     {
         day: 4,
@@ -76,7 +77,7 @@ export const challengeDays: ChallengeDay[] = [
         badge: 'المحلل',
         badgeEmoji: '📊',
         hint: 'لو مش عارف تلاقي بيانات: جرب تعمل جدول بمصاريفك الشهرية وحمّله.',
-        relatedUnit: 9
+        related: { href: '/read/section-2/3', label: 'المستوى 2: بتنقل الأرقام من الشات للشيت بإيدك؟' }
     },
     {
         day: 5,
@@ -90,7 +91,7 @@ export const challengeDays: ChallengeDay[] = [
         badge: 'المحترف',
         badgeEmoji: '⛓️',
         hint: 'مفتاح Prompt Chaining: كل prompt يبني على نتيجة اللي قبله. خذ output الأول واستخدمه كـ input للثاني.',
-        relatedUnit: 4
+        related: { href: '/read/section-2/8', label: 'المستوى 2: شغلانة كبيرة ومش عارف تبدأ منين؟' }
     },
     {
         day: 6,
@@ -104,7 +105,7 @@ export const challengeDays: ChallengeDay[] = [
         badge: 'الباحث',
         badgeEmoji: '🔍',
         hint: 'Perplexity هو الأفضل للبحث — لأنه بيوفر مصادر مباشرة. Claude مع Extended Thinking ممتاز للتحليل العميق.',
-        relatedUnit: 7
+        related: { href: '/read/section-4/2', label: 'المستوى 4: بحث في 10 دقايق… بس مين راجع المصادر؟' }
     },
     {
         day: 7,
@@ -118,7 +119,7 @@ export const challengeDays: ChallengeDay[] = [
         badge: 'رائد الأعمال',
         badgeEmoji: '🏆',
         hint: 'أول عرض مش لازم يكون مثالي. المهم تبدأ — هتتحسن مع كل عميل.',
-        relatedUnit: 10
+        related: { href: '/workshops', label: 'الورش' }
     }
 ];
 

@@ -161,10 +161,8 @@ export default function Navigation() {
         const fetchProgress = async () => {
             const data = await authSystem.getDetailedProgress()
             if (data) {
-                const TOTAL_CHAPTERS = 10
-                const percentage = Math.min((data.completedChapters.length / TOTAL_CHAPTERS) * 100, 100)
-                 
-                setReadingProgress(Math.round(percentage))
+                // Finished levels out of five; the intro, library and appendix markers don't count.
+                setReadingProgress(data.percentage)
             }
         }
         fetchProgress()

@@ -30,16 +30,16 @@ export const AI56_FINAL_PRICE = 5
 /** Canonical product stats — verified against the actual data files. */
 export const PRODUCT_STATS = {
   templates: 95,      // libraryData cards
-  exercises: 45,      // interactive exercisesData entries
+  exercises: 62,      // exercises inside the intro and the five levels' lessons (fewer-track count, see EXERCISE_COUNTS_BY_SECTION)
   readingPages: BOOK_PAGES_DISPLAY, // Real pages, including all references.
-  chapters: 10,
+  chapters: 5,
   freePages: SECTION_REGISTRY.reduce((total, section) => total
     + (section.id === 'intro' ? section.pageCount : Math.min(section.freePageLimit, section.pageCount)), 0),
 } as const
 
 /** «المستر بيصحّح» checks per subscriber per 24 hours, shared by every exercise; src/app/api/grade enforces this same constant.
- *  30 since 2026-10-22 (owner): a guided project grades each step, and one hard question can take several tries. */
-export const GRADER_DAILY_LIMIT = 30
+ *  10 since 2026-11-01 (owner: 30 was too many; it was 30 from 2026-10-22 for the guided project). */
+export const GRADER_DAILY_LIMIT = 10
 
 /** The monthly price said in copy (hero, FAQ, buttons). Change it together with the plans row (admin) and the migration. */
 export const MONTHLY_PRICE_EGP = 100

@@ -18,7 +18,7 @@ interface CertificateResult {
 /**
  * إنشاء أو جلب شهادة المستخدم
  * - لو الشهادة موجودة: يرجع سجل إصدارها كما هو
- * - إصدار جديد: ميزة الشهادة + اسم ثلاثي + سجل إتمام الفصول الأساسية كلها
+ * - إصدار جديد: ميزة الشهادة + اسم ثلاثي + سجل إتمام المستويات الخمسة كلها
  * - الشهادات السابقة وثائق تاريخية تبقى متاحة وفق متطلبات إصدارها
  * - الشهادة إتمام قراءة ذاتي؛ ليست اعتماداً مهنياً أو اختبار مهارة
  * - مستخدم واحد = شهادة واحدة فقط (محمي من السيرفر)
@@ -83,7 +83,7 @@ export async function getOrCreateCertificate(): Promise<CertificateResult> {
         if (progressError) return { success: false, error: 'تعذّر التحقق من سجل القراءة' }
         const completion = getMainChapterCompletion(progressData?.completed_chapters)
         if (!completion.eligible) {
-            return { success: false, error: `سجّل إتمام قراءة الفصول الأساسية ${CERTIFICATE_CHAPTER_COUNT} كلها للحصول على الشهادة` }
+            return { success: false, error: `سجّل إتمام المستويات الـ ${CERTIFICATE_CHAPTER_COUNT} كلها للحصول على الشهادة` }
         }
 
         // 5. إنشاء شهادة جديدة (أول مرة فقط)

@@ -12,6 +12,8 @@ interface ReadingPaginationProps {
     isNextLocked: boolean
     onLockedClick: () => void
     isBookEnd?: boolean // True only on last page of Appendix
+    /** Label of «next» on the last page (the levels say «المستوى التالي», Level 5 ends the course). */
+    lastLabel?: string
     isNextBusy?: boolean
 }
 
@@ -25,6 +27,7 @@ export default function ReadingPagination({
     isNextLocked,
     onLockedClick,
     isBookEnd = false,
+    lastLabel = 'الفصل التالي',
     isNextBusy = false,
 }: ReadingPaginationProps) {
 
@@ -36,7 +39,7 @@ export default function ReadingPagination({
         }
     }
 
-    const nextLabel = isBookEnd ? 'عودة للفهرس' : (isLast ? 'الفصل التالي' : 'التالي')
+    const nextLabel = isBookEnd ? 'عودة للفهرس' : (isLast ? lastLabel : 'التالي')
 
     return (
         <nav className="reading-nav-container" aria-label="التنقل بين الصفحات">

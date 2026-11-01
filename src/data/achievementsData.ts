@@ -49,7 +49,7 @@ export const achievementsData: AchievementDefinition[] = [
     id: 'full_book',
     icon: '🎓',
     title: 'خريج',
-    description: 'سجّل إتمام قراءة الفصول الأساسية العشرة',
+    description: 'سجّل إتمام المستويات الخمسة',
     category: 'reading',
     points: 500,
     requirement: 10,

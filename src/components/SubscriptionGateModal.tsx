@@ -61,7 +61,7 @@ const FEATURE_INFO: Record<string, { name: string; icon: string; description: st
   certificate: {
     name: 'شهادة الإتمام',
     icon: '📜',
-    description: 'شهادة من PromptMaster لما تخلّص الفصول الأساسية',
+    description: 'شهادة من PromptMaster لما تخلّص المستويات الخمسة',
   },
   leaderboard: {
     name: 'ترتيب المتعلمين',

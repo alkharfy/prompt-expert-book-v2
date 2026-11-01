@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { authSystem } from '@/lib/auth_system'
+import Navigation from '@/components/Navigation'
 import DailyTaskCard from '@/components/plan/DailyTaskCard'
 import { useSubscription } from '@/context/SubscriptionContext'
 import type { DailyMinutes } from '@/types/learning'
@@ -176,6 +177,8 @@ export default function MyPlanPage() {
 
   if (isLoading) {
     return (
+      <>
+      <Navigation />
       <div className="plan-page">
         <div className="plan-loading">
           <div className="plan-spinner" />
@@ -183,6 +186,7 @@ export default function MyPlanPage() {
         </div>
         <style jsx>{pageStyles}</style>
       </div>
+      </>
     )
   }
 
@@ -200,6 +204,8 @@ export default function MyPlanPage() {
   }
 
   return (
+    <>
+    <Navigation />
     <div className="plan-page">
       <motion.div
         className="plan-container"
@@ -224,7 +230,7 @@ export default function MyPlanPage() {
           <div className="plan-empty">
             <div className="plan-empty-icon">🗺️</div>
             <h2>لسه ما عندكش خطة!</h2>
-            <p>قد إيه وقتك في اليوم للكتاب؟ اختار، ونعملك خطة يوم بيوم على طول.</p>
+            <p>قد إيه وقتك في اليوم للكورس؟ اختار، ونعملك خطة يوم بيوم على طول.</p>
             <div className="plan-minutes">
               {MINUTE_CHOICES.map(choice => (
                 <button
@@ -251,7 +257,7 @@ export default function MyPlanPage() {
               <div className="plan-upgrade">
                 <span>🎉 اشتراكك شغال — خطتك لسه على الجزء المجاني بس.</span>
                 <button className="plan-regen-btn" onClick={() => generatePlan()} disabled={generating}>
-                  {generating ? 'بنحدّثها...' : 'حدّثها لباقي الكتاب'}
+                  {generating ? 'بنحدّثها...' : 'حدّثها لباقي الكورس'}
                 </button>
               </div>
             )}
@@ -355,6 +361,7 @@ export default function MyPlanPage() {
       </motion.div>
       <style jsx>{pageStyles}</style>
     </div>
+    </>
   )
 }
 

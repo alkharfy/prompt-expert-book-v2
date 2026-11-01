@@ -12,6 +12,7 @@ const { router, request, currentUser, hasFeature } = vi.hoisted(() => ({
 
 // The page depends on router identity; use one instance instead of the setup mock's fresh object.
 vi.mock('next/navigation', () => ({ useRouter: () => router }))
+vi.mock('@/components/Navigation', () => ({ default: () => null }))
 vi.mock('@/lib/auth_system', () => ({ authSystem: { getCurrentUserId: currentUser } }))
 vi.mock('@/context/SubscriptionContext', () => ({ useSubscription: () => ({ hasFeature }) }))
 vi.mock('framer-motion', async () => {
@@ -103,7 +104,7 @@ describe('MyPlanPage creates and extends plans sized by daily minutes', () => {
       .mockResolvedValueOnce(response({ ok: true }))
       .mockResolvedValueOnce(response({ plan: { ...plan, summary: { ...summary, learningPath: 'comprehensive' } } }))
     render(<MyPlanPage />)
-    fireEvent.click(await screen.findByRole('button', { name: 'حدّثها لباقي الكتاب' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'حدّثها لباقي الكورس' }))
 
     expect(await screen.findByText('🏆 المسار الشامل')).toBeInTheDocument()
     expect(hasFeature).toHaveBeenCalledWith('reading')
@@ -111,7 +112,7 @@ describe('MyPlanPage creates and extends plans sized by daily minutes', () => {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
     })
     expect(request.mock.calls.map(([, options]) => options?.method || 'GET')).toEqual(['GET', 'POST', 'GET'])
-    expect(screen.queryByRole('button', { name: 'حدّثها لباقي الكتاب' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'حدّثها لباقي الكورس' })).not.toBeInTheDocument()
   })
 
   it('hides extension of a free plan without full reading access', async () => {
@@ -120,7 +121,7 @@ describe('MyPlanPage creates and extends plans sized by daily minutes', () => {
 
     expect(await screen.findByText('🆓 الجزء المجاني')).toBeInTheDocument()
     expect(hasFeature).toHaveBeenCalledWith('reading')
-    expect(screen.queryByRole('button', { name: 'حدّثها لباقي الكتاب' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'حدّثها لباقي الكورس' })).not.toBeInTheDocument()
     expect(request).toHaveBeenCalledTimes(1)
   })
 

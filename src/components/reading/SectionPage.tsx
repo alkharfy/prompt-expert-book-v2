@@ -42,14 +42,6 @@ import type { SectionConfig } from '@/config/sections'
 import { getLearningReadingUrl } from '@/config/learningCatalog'
 import type { PageContent } from '@/data/bookData'
 
-// Running Project banner mapping: sectionNumber → phase info
-const RUNNING_PROJECT_PHASES: Record<number, { phase: number; label: string }> = {
-    4: { phase: 3, label: 'المرحلة 3: تصميم تدفقات المستخدم' },
-    5: { phase: 4, label: 'المرحلة 4: هيكل الصفحات والـ Wireframe' },
-    6: { phase: 5, label: 'المرحلة 5: كتابة نصوص الواجهة (Microcopy)' },
-    8: { phase: 6, label: 'المرحلة 6: اختبار الجودة وحالات الحافة' },
-    10: { phase: 7, label: 'المرحلة 7: تحويل المشروع لـ AI Agent' },
-}
 import {
     formatDialogue,
     formatEnhancedText,
@@ -643,7 +635,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
     }
 
     const mapAtBottom = config.id === 'intro'
-    const courseMap = <CourseMap sectionId={config.id} chapterLabel={config.chapterLabel} pageNum={pageNum} pageCount={totalPages} pages={data} completedChapters={completedChapters} />
+    const courseMap = <CourseMap sectionId={config.id} pageNum={pageNum} pageCount={totalPages} pages={data} completedChapters={completedChapters} />
 
     const hasPageImage = currentPage.image || currentPage.contentBlocks.some((b) => b.type === 'image')
 
@@ -1412,34 +1404,14 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                         <SpecializationExamples sectionId={config.id} />
                     )}
 
-                    {/* Running Project Banner - shows on last page of relevant sections */}
-                    {isLastPage && RUNNING_PROJECT_PHASES[config.sectionNumber] && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="running-project-chapter-banner"
-                        >
-                            <div className="rpcb-icon">🚀</div>
-                            <div className="rpcb-content">
-                                <div className="rpcb-title">المشروع الممتد</div>
-                                <div className="rpcb-desc">
-                                    أكملت هذا الفصل! عندك مرحلة مرتبطة في المشروع الممتد:
-                                    <strong> {RUNNING_PROJECT_PHASES[config.sectionNumber].label}</strong>
-                                </div>
-                                <Link href="/running-project" className="rpcb-btn">
-                                    انتقل للمشروع الممتد ←
-                                </Link>
-                            </div>
-                        </motion.div>
-                    )}
-
                     {/* Chapter Recap — shows on last page of each section, once the project's exercise has passed
-                        (its «ابدأ الفصل التالي» skipped the gated exercise, owner 2026-10-22) */}
+                        (its «ابدأ الفصل التالي» skipped the gated exercise, owner 2026-10-22). Its button is the page's own
+                        «next»: a bare link skipped saving the level as finished. */}
                     {isLastPage && gateAt < 0 && config.sectionNumber >= 1 && extras?.recap && (
                         <ChapterRecap
                             recap={extras.recap}
-                            nextSectionPath={config.nextSection?.path || null}
+                            onNext={handleNext}
+                            isCourseEnd={!config.nextSection}
                         />
                     )}
 
@@ -1455,6 +1427,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
                         isNextLocked={isNextPageLocked}
                         isNextBusy={isCompletingChapter}
                         onLockedClick={handleNext}
+                        lastLabel={config.nextSection ? 'المستوى التالي' : 'خلّصت الكورس 🎓'}
                     />
 
                     {mapAtBottom && <div style={{ marginTop: '40px' }}>{courseMap}</div>}

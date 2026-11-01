@@ -2,6 +2,7 @@ import { getAuthenticatedUser } from '@/lib/auth-middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import {
   createMinutesPlan,
+  deletePlan,
   generatePlanTasks,
   getReadingPosition,
   savePlan,
@@ -12,7 +13,6 @@ import {
 import { getLearningPreferences, saveOnboardingAnswers } from '@/lib/learning-preferences'
 import { isDailyMinutes } from '@/lib/onboarding'
 import type { LearningPathId, LearningDurationId } from '@/types/learning'
-import { userHasFeature } from '@/lib/subscription'
 
 // GET — جلب خطة اليوم أو الخطة الكاملة
 export async function GET(request: NextRequest) {
@@ -30,11 +30,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ tasks })
     }
 
-    const todayPlan = await getTodayPlan(userId)
+    let todayPlan = await getTodayPlan(userId)
+    if (todayPlan.stale) {
+      await rebuildStalePlan(userId)
+      todayPlan = await getTodayPlan(userId)
+    }
     return NextResponse.json({ plan: todayPlan })
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
+}
+
+/**
+ * A plan from before 2026-11-01 (removed book chapters, old exercises): rebuilt from where the
+ * reader is. A legacy reader without minutes, or one with nothing left to read, gets no plan,
+ * and /my-plan offers a fresh one.
+ */
+async function rebuildStalePlan(userId: string) {
+  const prefs = await getLearningPreferences(userId)
+  if (prefs?.dailyMinutes) {
+    const plan = await createMinutesPlan(userId, {
+      dailyMinutes: prefs.dailyMinutes,
+      aiLevel: prefs.aiLevel,
+      startFrom: await getReadingPosition(userId),
+      replaceExisting: true,
+    })
+    if (plan.ok && plan.created) return
+  }
+  await deletePlan(userId)
 }
 
 // POST — توليد وحفظ خطة جديدة
@@ -89,10 +112,6 @@ export async function POST(request: NextRequest) {
       prefs.learningPath as LearningPathId,
       prefs.learningDuration as LearningDurationId,
       startDate,
-      {
-        includeProject: await userHasFeature(userId, 'tools'),
-        includeExercises: await userHasFeature(userId, 'exercises'),
-      }
     )
 
     if (tasks.length === 0) {

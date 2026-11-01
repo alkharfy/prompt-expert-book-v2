@@ -1,5 +1,5 @@
-import { getGlobalReadingTarget, getLearningReadingUrl } from '@/config/learningCatalog'
-import { BOOK_CHAPTERS, COURSE_LEVELS, isReleased } from '@/data/courseOutline'
+import { getGlobalReadingTarget } from '@/config/learningCatalog'
+import { COURSE_LEVELS, isReleased } from '@/data/courseOutline'
 
 /**
  * Where a learner stands in the course TOC, worked out from what the site saves:
@@ -28,8 +28,6 @@ export interface TocView {
     level: number
     /** Lesson inside that level (0 when the robot waits at the station). */
     lesson: number
-    /** Reading an old book chapter: continue there. */
-    book: { n: number; title: string; page: number; url: string } | null
     levels: LevelState[]
     lessons: LessonState[][]
     done: number
@@ -37,7 +35,6 @@ export interface TocView {
 }
 
 const N = COURSE_LEVELS.length
-const firstUnreleased = () => { const i = COURSE_LEVELS.findIndex(level => !isReleased(level)); return i === -1 ? N : i }
 
 function parseReaderPath(path: string | null | undefined): { sectionId: string; page: number } | null {
     const match = /^\/read\/(intro|section-\d+)\/(\d+)/.exec(path ?? '')
@@ -60,14 +57,9 @@ export function buildToc(input: TocInput): TocView {
         || (tracked && isReleased(COURSE_LEVELS[i]) && COURSE_LEVELS[i].lessons.every((_, k) => lessonDone(i, k)))
     const pos = position(input)
     const levelIndex = pos ? COURSE_LEVELS.findIndex(level => level.sectionId === pos.sectionId) : -1
-    const chapter = pos && levelIndex === -1 ? BOOK_CHAPTERS.find(c => `section-${c.n}` === pos.sectionId) : undefined
 
-    let level = 0, lesson = 0, book: TocView['book'] = null
-    if (chapter && pos) {
-        // Old book chapters come after the released levels, so the robot waits at the first unreleased one (or the end).
-        level = firstUnreleased()
-        book = { n: chapter.n, title: chapter.title, page: pos.page, url: getLearningReadingUrl(pos.sectionId, pos.page) }
-    } else if (levelIndex !== -1 && pos) {
+    let level = 0, lesson = 0
+    if (levelIndex !== -1 && pos) {
         const lessons = COURSE_LEVELS[levelIndex].lessons.length
         level = levelIndex
         lesson = Math.max(0, Math.min(pos.page, lessons) - 1)
@@ -97,7 +89,7 @@ export function buildToc(input: TocInput): TocView {
         available += item.lessons.length
         done += lessons[i].filter(state => state === 'done').length
     })
-    return { level, lesson, book, levels, lessons, done, available }
+    return { level, lesson, levels, lessons, done, available }
 }
 
 /** «درس واحد / درسين / 3 دروس / 11 درس» */

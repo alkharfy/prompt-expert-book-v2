@@ -7,11 +7,6 @@ export { unit2Data } from './unit2Data';
 export { unit3Data } from './unit3Data';
 export { unit4Data } from './unit4Data';
 export { unit5Data } from './unit5Data';
-export { unit6Data } from './unit6Data';
-export { unit7Data } from './unit7Data';
-export { unit8Data } from './unit8Data';
-export { unit9Data } from './unit9Data';
-export { unit10Data } from './unit10Data';
 
 export const libraryData: PageContent[] = [
     {

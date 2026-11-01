@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
+
+vi.mock('@/components/Navigation', () => ({ default: () => null }))
 import AiUpdatesPage from '@/app/ai-updates/page'
 
 beforeEach(() => { vi.mocked(fetch).mockReset() })

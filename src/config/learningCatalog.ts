@@ -24,12 +24,22 @@ export const LEARNING_SECTIONS: LearningSection[] = [
     { id: 'glossary', label: 'المصطلحات', pageCount: 8, slotSize: 8, progressOffset: 214, basePath: '/read/glossary' },
 ]
 
+const LAST_LEVEL = LEARNING_SECTIONS[SECTION_REGISTRY.length - 1]
+/** Global pages 96–182 were the old book chapters 6–10, removed on 2026-11-01; the library's pages start at 183. */
+const REMOVED_BOOK_PAGES = {
+    from: LAST_LEVEL.progressOffset + LAST_LEVEL.slotSize + 1,
+    to: LEARNING_SECTIONS.find(section => section.id === 'library')!.progressOffset,
+}
+
 /** Resolve a saved global position; unused slots land on the last real page. */
 export function getGlobalReadingTarget(globalPage: number): { section: LearningSection; page: number; url: string } | null {
     if (!Number.isInteger(globalPage)) return null
-    const section = LEARNING_SECTIONS.find(item => globalPage > item.progressOffset
+    // A reader saved inside the removed book chapters had already passed Level 5: they stand at its end.
+    const removed = globalPage >= REMOVED_BOOK_PAGES.from && globalPage <= REMOVED_BOOK_PAGES.to
+    const section = removed ? LAST_LEVEL : LEARNING_SECTIONS.find(item => globalPage > item.progressOffset
         && globalPage <= item.progressOffset + item.slotSize)
     if (!section) return null
+    if (removed) return { section, page: section.pageCount, url: getLearningReadingUrl(section.id, section.pageCount) }
     const page = Math.min(globalPage - section.progressOffset, section.pageCount)
     return { section, page, url: getLearningReadingUrl(section.id, page) }
 }
@@ -38,12 +48,11 @@ export function getGlobalReadingUrl(globalPage: number): string {
     return getGlobalReadingTarget(globalPage)?.url ?? '/toc'
 }
 
-// Checked against the exercise data by the catalog regression test. Keeping this
-// lightweight prevents importing paid questions/answers into onboarding bundles.
+// The exercises inside each section's lessons, for the track with fewer (Ahmed's or Mona's); the
+// catalog regression test checks them against the lessons. Keeping this lightweight prevents
+// importing paid lessons into onboarding bundles.
 export const EXERCISE_COUNTS_BY_SECTION: Readonly<Record<string, number>> = {
-    'section-1': 5, 'section-2': 5, 'section-3': 5, 'section-4': 4,
-    'section-5': 5, 'section-6': 4, 'section-7': 5, 'section-8': 4,
-    'section-9': 4, 'section-10': 4,
+    intro: 2, 'section-1': 6, 'section-2': 15, 'section-3': 15, 'section-4': 10, 'section-5': 14,
 }
 
 export function getLearningReadingUrl(sectionId: string, page: number = 1): string {

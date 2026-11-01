@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Navigation from '@/components/Navigation'
 import ResourceCard from '@/components/resources/ResourceCard'
 import ResourceFilters from '@/components/resources/ResourceFilters'
 
@@ -98,6 +99,8 @@ export default function ResourcesPage() {
   }
 
   return (
+    <>
+    <Navigation />
     <div className="resources-page">
       <div className="resources-header">
         <h1>📚 مكتبة المصادر</h1>
@@ -156,7 +159,7 @@ export default function ResourcesPage() {
         .resources-page {
           max-width: 900px;
           margin: 0 auto;
-          padding: 2rem 1rem;
+          padding: calc(var(--header-h, 70px) + 2rem) 1rem 2rem;
           min-height: 100vh;
           direction: rtl;
         }
@@ -241,7 +244,7 @@ export default function ResourcesPage() {
         }
         @media (max-width: 640px) {
           .resources-page {
-            padding: 1rem 0.75rem;
+            padding: calc(var(--header-h, 70px) + 1rem) 0.75rem 1rem;
           }
           .resources-header h1 {
             font-size: 1.5rem;
@@ -252,5 +255,6 @@ export default function ResourcesPage() {
         }
       `}</style>
     </div>
+    </>
   )
 }

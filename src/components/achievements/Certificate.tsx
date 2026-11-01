@@ -140,7 +140,7 @@ export default function Certificate({
           </p>
           <h3 className="certificate-book">{courseName}</h3>
           <p className="certificate-book-subtitle">
-            {previousRequirements ? 'صدرت وفق متطلبات الإتمام السابقة' : 'إتمام قراءة الفصول الأساسية العشرة'}
+            {previousRequirements ? 'صدرت وفق متطلبات الإتمام السابقة' : 'إتمام المستويات الخمسة'}
           </p>
           <p className="certificate-text">شهادة إتمام من PromptMaster تستند إلى سجل قراءة ذاتي؛ لا تثبت اجتياز اختبار مهارة أو اعتمادًا مهنيًا.</p>
 

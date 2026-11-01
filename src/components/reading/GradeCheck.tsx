@@ -188,24 +188,28 @@ export default function GradeCheck({ rubricId, title, intro, bagLabel, sectionId
                     </div>
                 )}
                 {selfCheck && (
-                    <div style={{ margin: '12px 0 0', padding: '12px 14px', borderRadius: '12px', background: 'rgba(0,0,0,0.25)' }}>
-                        <p style={{ color: '#fff', fontWeight: 700, margin: '0 0 8px', lineHeight: 1.8 }}>
-                            {graderDown ? '✍️ لحد ما المستر يرجع، صحّح نفسك: علّم على اللي موجود في طلبك فعلاً.' : '✍️ المستر ممكن يغلط. لو متأكد إن طلبك فيه كل ده، علّم عليه بنفسك وكمّل.'}
-                        </p>
-                        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '6px' }}>
-                            {checks.map(c => (
-                                <li key={c.id}>
-                                    <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', minHeight: '44px', color: '#ddd', lineHeight: 1.8, cursor: 'pointer' }}>
-                                        <input type="checkbox" checked={!!ticked[c.id]} onChange={e => tick(c.id, e.target.checked)} style={{ width: '20px', height: '20px', marginTop: '5px', flexShrink: 0 }} />
-                                        {c.label}
-                                    </label>
-                                </li>
-                            ))}
-                        </ul>
-                        <p style={{ color: allTicked ? '#4ade80' : '#bbb', margin: '8px 0 0', lineHeight: 1.8 }}>
-                            {allTicked ? '✅ طلبك فيه كل حاجة. احفظه في شنطتك وكمّل.' : 'اللي مش متعلّم عليه، زوّده في طلبك وجرّبه تاني في أداتك.'}
-                        </p>
-                    </div>
+                    // Closed by default after misses (owner 2026-11-01: the open list crowded the Mister's notes); open when the grader is down, since it's the only way on.
+                    <details open={graderDown} style={{ margin: '12px 0 0', borderRadius: '12px', background: 'rgba(0,0,0,0.25)' }}>
+                        <summary style={{ listStyle: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', minHeight: '48px', padding: '10px 14px', color: '#fff', fontWeight: 700, lineHeight: 1.8 }}>
+                            {graderDown ? '✍️ لحد ما المستر يرجع، صحّح نفسك: علّم على اللي موجود في طلبك فعلاً. ▾' : '✍️ متأكد إن طلبك صح والمستر غلطان؟ صحّح نفسك ▾'}
+                        </summary>
+                        <div style={{ padding: '0 14px 12px' }}>
+                            {!graderDown && <p style={{ color: '#bbb', margin: '0 0 8px', lineHeight: 1.8 }}>المستر ممكن يغلط. لو طلبك فيه كل ده، علّم عليه بنفسك وكمّل.</p>}
+                            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '6px' }}>
+                                {checks.map(c => (
+                                    <li key={c.id}>
+                                        <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', minHeight: '44px', color: '#ddd', lineHeight: 1.8, cursor: 'pointer' }}>
+                                            <input type="checkbox" checked={!!ticked[c.id]} onChange={e => tick(c.id, e.target.checked)} style={{ width: '20px', height: '20px', marginTop: '5px', flexShrink: 0 }} />
+                                            {c.label}
+                                        </label>
+                                    </li>
+                                ))}
+                            </ul>
+                            <p style={{ color: allTicked ? '#4ade80' : '#bbb', margin: '8px 0 0', lineHeight: 1.8 }}>
+                                {allTicked ? '✅ طلبك فيه كل حاجة. احفظه في شنطتك وكمّل.' : 'اللي مش متعلّم عليه، زوّده في طلبك وجرّبه تاني في أداتك.'}
+                            </p>
+                        </div>
+                    </details>
                 )}
                 {gated && !opened && (
                     <p style={{ color: '#fbbf24', margin: '12px 0 0', lineHeight: 1.8 }}>🔒 باقي الدرس هيفتح أول ما طلبك ياخد ✅ من المستر. ولو المستر مش متاح، هتصحّح نفسك بقايمة وتكمّل.</p>

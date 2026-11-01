@@ -2,6 +2,7 @@
 // المرحلة 4: ملخصات نهاية كل فصل
 
 import { SECTION_REGISTRY } from '@/config/sections'
+import { EXERCISE_COUNTS_BY_SECTION } from '@/config/learningCatalog'
 
 export interface ChapterRecap {
     sectionId: string
@@ -68,7 +69,7 @@ export const recapsData: Record<string, ChapterRecap> = {
             description: 'بتطلب زي المحترف: طلبات جاهزة لأكتر شغلاناتك، والمستر بيصحّحها.',
             icon: '🔮',
         },
-        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-1')!.pageCount, estimatedMinutes: 180, exercises: 9 },
+        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-1')!.pageCount, estimatedMinutes: 180, exercises: EXERCISE_COUNTS_BY_SECTION['section-1'] },
     },
 
     'section-2': {
@@ -106,7 +107,7 @@ export const recapsData: Record<string, ChapterRecap> = {
             description: 'بتجهّزه لشغلك: تعلّمه طريقة شغلك مرة، فيعمل الشغلانة اللي بتتكرر من غير ما تشرح.',
             icon: '🔮',
         },
-        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-2')!.pageCount, estimatedMinutes: 180, exercises: 8 },
+        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-2')!.pageCount, estimatedMinutes: 180, exercises: EXERCISE_COUNTS_BY_SECTION['section-2'] },
     },
 
     'section-3': {
@@ -149,7 +150,7 @@ export const recapsData: Record<string, ChapterRecap> = {
             description: 'بيشتغل معاك: تسلّمه مهمة فيها كذا خطوة، وتراقبه، وتوقّفه لو غلط.',
             icon: '🔮',
         },
-        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-3')!.pageCount, estimatedMinutes: 195, exercises: 7 },
+        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-3')!.pageCount, estimatedMinutes: 195, exercises: EXERCISE_COUNTS_BY_SECTION['section-3'] },
     },
 
     'section-4': {
@@ -192,7 +193,7 @@ export const recapsData: Record<string, ChapterRecap> = {
             description: 'نظام شغلك: طريقة شغل بالـ AI ليك أو لفريقك، وتقيس وفّرت قد إيه بالأرقام.',
             icon: '🔮',
         },
-        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-4')!.pageCount, estimatedMinutes: 155, exercises: 7 },
+        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-4')!.pageCount, estimatedMinutes: 155, exercises: EXERCISE_COUNTS_BY_SECTION['section-4'] },
     },
 
     'section-5': {
@@ -235,197 +236,7 @@ export const recapsData: Record<string, ChapterRecap> = {
             description: 'الورش: صورة لشغلك، وفيديو من وصف، وسكريبت إعلان، وصوت، وأكتر.',
             icon: '🛠️',
         },
-        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-5')!.pageCount, estimatedMinutes: 185, exercises: 9 },
-    },
-
-    'section-6': {
-        sectionId: 'section-6',
-        chapterLabel: 'الفصل 06',
-        chapterTitle: 'الذكاء متعدد الوسائط',
-        keyTakeaways: [
-            {
-                icon: '🖼️',
-                title: 'تحليل وتوليد الصور',
-                description: 'تعلمت إزاي تستخدم AI لتحليل الصور وتوليد صور جديدة باحترافية.',
-            },
-            {
-                icon: '🎵',
-                title: 'الصوت والنصوص',
-                description: 'تعلمت إزاي تحوّل الكلام لنص والعكس — وإزاي تستخدم ده عملياً.',
-            },
-            {
-                icon: '🎬',
-                title: 'الفيديو والمحتوى المرئي',
-                description: 'اكتشفت إمكانيات AI في إنشاء واديت الفيديو والعروض التقديمية.',
-            },
-            {
-                icon: '🎨',
-                title: 'برومبتات الصور الاحترافية',
-                description: 'تعلمت إزاي تكتب برومبتات محددة تنتج صور بجودة عالية ومتناسقة.',
-            },
-        ],
-        proTip: {
-            text: 'لما تطلب توليد صورة، كن محدد جداً: حدد الأسلوب (realistic, cartoon, minimalist)، الإضاءة، الألوان، والزاوية.',
-            icon: '💡',
-        },
-        nextChapterTeaser: {
-            title: 'في الفصل القادم...',
-            description: 'هتتعلم عن وكلاء الذكاء الاصطناعي — أنظمة ذكية بتشتغل لوحدها وبتنفذ مهام معقدة!',
-            icon: '🔮',
-        },
-        stats: { pages: 18, estimatedMinutes: 30, exercises: 3 },
-    },
-
-    'section-7': {
-        sectionId: 'section-7',
-        chapterLabel: 'الفصل 07',
-        chapterTitle: 'وكلاء الذكاء الاصطناعي',
-        keyTakeaways: [
-            {
-                icon: '🤖',
-                title: 'ما هي الوكلاء AI Agents',
-                description: 'تعلمت الفرق بين الـ chatbot العادي والوكيل الذكي اللي بياخد قرارات وينفذ مهام.',
-            },
-            {
-                icon: '🔧',
-                title: 'الأدوات والتكامل',
-                description: 'الوكلاء بيستخدموا أدوات (بحث، كود، APIs) — تعلمت إزاي تربطهم ببعض.',
-            },
-            {
-                icon: '📋',
-                title: 'تصميم Workflow',
-                description: 'تعلمت إزاي تصمم workflow لوكيل ذكي: المهمة → الخطوات → الأدوات → النتيجة.',
-            },
-            {
-                icon: '🚀',
-                title: 'بناء وكيل متكامل',
-                description: "صممت دور الوكيل وأدواته وقواعده. تنفيذ مهام حقيقية يحتاج ربط الأدوات فعليًا واختبار الصلاحيات وحالات الفشل.",
-            },
-        ],
-        proTip: {
-            text: 'ابدأ باستخدام وكلاء جاهزين (مثل Custom GPTs) قبل ما تحاول تبني وكيل من الصفر. افهم المنطق الأول ثم طوّر.',
-            icon: '💡',
-        },
-        nextChapterTeaser: {
-            title: 'في الفصل القادم...',
-            description: 'هتتعلم عن RAG — إزاي تخلي AI يشتغل ببياناتك الخاصة!',
-            icon: '🔮',
-        },
-        stats: { pages: 18, estimatedMinutes: 30, exercises: 3 },
-    },
-
-    'section-8': {
-        sectionId: 'section-8',
-        chapterLabel: 'الفصل 08',
-        chapterTitle: 'RAG والبيانات الخاصة',
-        keyTakeaways: [
-            {
-                icon: '🗄️',
-                title: 'ليه AI مش بيعرف بياناتك',
-                description: 'فهمت ليه AI بيرد بمعلومات عامة — وإزاي RAG بيحل المشكلة دي.',
-            },
-            {
-                icon: '🔗',
-                title: 'Retrieval Augmented Generation',
-                description: 'تعلمت إزاي تربط AI ببياناتك الخاصة عشان يرد بمعلومات دقيقة ومحدثة.',
-            },
-            {
-                icon: '📊',
-                title: 'التطبيقات العملية',
-                description: 'شفت أمثلة حقيقية: chatbot لشركة، محرك بحث ذكي، مساعد لتحليل المستندات.',
-            },
-            {
-                icon: '⚡',
-                title: 'تحسين الجودة',
-                description: 'تعلمت إزاي تحسّن جودة RAG: تنظيف البيانات، Chunking الصح، واختيار Embeddings.',
-            },
-        ],
-        proTip: {
-            text: 'جرب أداة مثل NotebookLM من Google — ارفعلها ملفات PDF وابدأ اسألها أسئلة. ده أبسط شكل من RAG!',
-            icon: '💡',
-        },
-        nextChapterTeaser: {
-            title: 'في الفصل القادم...',
-            description: 'هتتعلم إزاي تطبق AI في مجالات مختلفة: التسويق، البزنس، التعليم، والإبداع!',
-            icon: '🔮',
-        },
-        stats: { pages: 16, estimatedMinutes: 22, exercises: 3 },
-    },
-
-    'section-9': {
-        sectionId: 'section-9',
-        chapterLabel: 'الفصل 09',
-        chapterTitle: 'AI للصناعات والتخصصات',
-        keyTakeaways: [
-            {
-                icon: '📈',
-                title: 'AI للتسويق والمبيعات',
-                description: 'تعلمت إزاي تستخدم AI لكتابة محتوى تسويقي، تحليل السوق، وبناء استراتيجيات.',
-            },
-            {
-                icon: '💼',
-                title: 'AI للبزنس والإدارة',
-                description: 'اكتشفت إزاي AI بيساعد في اتخاذ القرارات، التخطيط، وتحسين العمليات.',
-            },
-            {
-                icon: '📚',
-                title: 'AI للتعليم والبحث',
-                description: 'تعلمت إزاي تستخدم AI كمدرس شخصي وكأداة بحث أكاديمية قوية.',
-            },
-            {
-                icon: '🎨',
-                title: 'AI للإبداع والفنون',
-                description: 'شفت إزاي AI بيدعم الإبداع في الكتابة، التصميم، الموسيقى، والفنون.',
-            },
-        ],
-        proTip: {
-            text: 'اختار مجال واحد من اللي اتعلمتهم وطبّق 3 برومبتات عملية فيه هذا الأسبوع. التطبيق العملي هو اللي بيثبت المعرفة.',
-            icon: '💡',
-        },
-        nextChapterTeaser: {
-            title: 'في الفصل القادم...',
-            description: 'الفصل الأخير! هنتكلم عن مستقبل AI وإزاي تستعد للتغييرات القادمة.',
-            icon: '🔮',
-        },
-        stats: { pages: 16, estimatedMinutes: 22, exercises: 3 },
-    },
-
-    'section-10': {
-        sectionId: 'section-10',
-        chapterLabel: 'الفصل 10',
-        chapterTitle: 'المستقبل والخطوات القادمة',
-        keyTakeaways: [
-            {
-                icon: '🔮',
-                title: 'اتجاهات AI القادمة',
-                description: 'تعرفت على أهم الاتجاهات التقنية المتوقعة في السنوات القادمة وتأثيرها على حياتك.',
-            },
-            {
-                icon: '💪',
-                title: 'المهارات المطلوبة',
-                description: 'عرفت إيه المهارات اللي محتاج تطورها عشان تفضل متقدم في عصر AI.',
-            },
-            {
-                icon: '🗺️',
-                title: 'خريطة الطريق',
-                description: 'عندك دلوقتي خريطة واضحة: إيه اللي تتعلمه بعدين وإزاي تستمر.',
-            },
-            {
-                icon: '🏆',
-                title: 'إنت بقيت خبير',
-                description: 'مبروك! عدّيت على كل الأساسيات والمتقدم — دلوقتي دورك تطبق وتشارك!',
-            },
-        ],
-        proTip: {
-            text: 'ابدأ مشروع شخصي يستخدم AI هذا الأسبوع — حتى لو بسيط. أحسن طريقة للتعلم هي التطبيق المستمر.',
-            icon: '💡',
-        },
-        nextChapterTeaser: null, // Last chapter
-        stats: { pages: 16, estimatedMinutes: 22, exercises: 2 },
-        keyQuote: {
-            text: 'الخبير مش اللي يعرف كل حاجة — ده اللي يعرف يسأل الأسئلة الصح.',
-            pageNumber: 14,
-        },
+        stats: { pages: SECTION_REGISTRY.find(section => section.id === 'section-5')!.pageCount, estimatedMinutes: 185, exercises: EXERCISE_COUNTS_BY_SECTION['section-5'] },
     },
 }
 

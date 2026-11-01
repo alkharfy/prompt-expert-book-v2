@@ -54,15 +54,6 @@ export const COURSE_LEVELS: CourseLevel[] = [
     },
 ]
 
-/** Old book chapters 6–10: extra reading for subscribers, after the five levels (Level 5 replaced chapter 5 on 2026-10-20). */
-export const BOOK_CHAPTERS = [
-    { n: 6, title: 'صور وصوت وفيديو', note: 'تشتغل بأكتر من نوع ملف' },
-    { n: 7, title: 'وكلاء AI', note: 'أدوات بتنفّذ مهام عنك تحت عينك' },
-    { n: 8, title: 'AI على ملفاتك', note: 'يرد من مصادرك، وتتأكد من إجابته' },
-    { n: 9, title: 'تطبيقات عملية', note: 'أمثلة حسب مجالك' },
-    { n: 10, title: 'تكمّل تتطور', note: 'تتابع الجديد وتقدّم خدمة' },
-]
-
 export const COURSE_EXTRAS = [
     { icon: '🛠️', name: 'الورش', note: 'صورة وفيديو لشغلك ببلاش، وسكريبت وصوت وأكتر للمشتركين', href: '/workshops' },
     { icon: '📚', name: 'مكتبة القوالب', note: `${PRODUCT_STATS.templates} قالب جاهز تنسخه`, href: '/library/1' },
@@ -72,4 +63,3 @@ export const COURSE_EXTRAS = [
 
 export const isReleased = (level: CourseLevel) => level.sectionId !== null
 export const lessonHref = (level: CourseLevel, lesson: number) => `/read/${level.sectionId}/${lesson + 1}`
-export const bookChapterHref = (n: number) => `/read/section-${n}/1`

@@ -129,14 +129,16 @@ describe('SectionPage completion uses the last real page', () => {
     it.each([
         { sectionId: 'intro', page: 3, globalPage: 3, chapter: null },
         { sectionId: 'section-1', page: 9, globalPage: 15, chapter: 1 },
+        // Level 5 ends the course (old book chapters 6–10 removed 2026-11-01): its «next» saves it, then opens the course map.
+        { sectionId: 'section-5', page: 8, globalPage: 85, chapter: 5 },
     ])('completes $sectionId at global page $globalPage', async ({ sectionId, page, globalPage, chapter }) => {
         const config = SECTION_REGISTRY.find(section => section.id === sectionId)!
         renderSection(config, page)
         await waitFor(() => expect(updateReadingProgress).toHaveBeenCalledWith(globalPage))
 
-        fireEvent.click(screen.getByRole('button', { name: 'الفصل التالي' }))
+        fireEvent.click(screen.getByRole('button', { name: config.nextSection ? 'المستوى التالي' : 'خلّصت الكورس 🎓' }))
 
-        await waitFor(() => expect(router.push).toHaveBeenCalledWith(config.nextSection!.path))
+        await waitFor(() => expect(router.push).toHaveBeenCalledWith(config.nextSection?.path ?? '/toc'))
         expect(router.replace).not.toHaveBeenCalled()
         expect(updateReadingProgress).toHaveBeenCalledTimes(2)
         expect(updateReadingProgress).toHaveBeenLastCalledWith(globalPage)

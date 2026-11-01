@@ -1,5 +1,6 @@
 import type { LearningPath, LearningPathId } from '@/types/learning'
 import { LEARNING_SECTIONS, EXERCISE_COUNTS_BY_SECTION } from '@/config/learningCatalog'
+import { SECTION_REGISTRY } from '@/config/sections'
 
 /* ──────────────────────────────────────────────
    Section → Page count helper
@@ -17,64 +18,55 @@ function countExercises(sectionIds: string[]): number {
    The three learning paths
    ────────────────────────────────────────────── */
 const QUICK_SECTIONS = ['intro', 'section-1', 'section-2']
-const INTERMEDIATE_SECTIONS = [
-    'intro',
-    'section-1',
-    'section-2',
-    'section-3',
-    'section-4',
-    'section-5',
-    'section-6',
-]
-const COMPREHENSIVE_SECTIONS = LEARNING_SECTIONS.map((s) => s.id)
+const INTERMEDIATE_SECTIONS = ['intro', 'section-1', 'section-2', 'section-3']
+// The intro and the five levels (the old book chapters 6–10 left on 2026-11-01; the library, appendix and
+// glossary are references, not part of a plan).
+const COMPREHENSIVE_SECTIONS = SECTION_REGISTRY.map((s) => s.id)
 
 export const LEARNING_PATHS: Record<LearningPathId, LearningPath> = {
     quick: {
         id: 'quick',
         nameAr: 'المسار السريع',
-        descriptionAr: 'أساسيات البرومبت — مثالي لأول تجربة سريعة',
+        descriptionAr: 'التمهيد والمستوى 1 و2: تستخدمه صح، وتطلب زي المحترف',
         icon: '⚡',
         sections: QUICK_SECTIONS,
         totalPages: countPages(QUICK_SECTIONS),
         estimatedHours: 4,
         exerciseCount: countExercises(QUICK_SECTIONS),
         features: [
-            'ما هو AI التوليدي',
-            'أساسيات البرومبتات',
-            'أول تقنيات التواصل',
+            'بتستخدمه صح',
+            'بتطلب زي المحترف',
+            '«شنطة طلباتك»',
         ],
     },
     intermediate: {
         id: 'intermediate',
         nameAr: 'المسار المتوسط',
-        descriptionAr: 'تعمّق في تقنيات البرومبت والأدوات',
+        descriptionAr: 'لحد المستوى 3: مساعد جاهز لشغلانتك',
         icon: '📘',
         sections: INTERMEDIATE_SECTIONS,
         totalPages: countPages(INTERMEDIATE_SECTIONS),
         estimatedHours: 12,
         exerciseCount: countExercises(INTERMEDIATE_SECTIONS),
         features: [
-            'كل محتوى المسار السريع',
-            'إطار GOLDS',
-            'البرومبتات المتسلسلة',
-            'ضمان الجودة',
-            'الذكاء متعدد الوسائط',
+            'كل المسار السريع',
+            'بتجهّزه لشغلك',
+            '«مساعد شغلانتك»',
         ],
     },
     comprehensive: {
         id: 'comprehensive',
         nameAr: 'المسار الشامل',
-        descriptionAr: 'الفصول العشرة والمراجع والتمارين؛ مراحل المشروع تُضاف عند توفر أدوات البرومبت في باقتك',
+        descriptionAr: 'التمهيد والمستويات الخمسة، بتمارينها',
         icon: '🏆',
         sections: COMPREHENSIVE_SECTIONS,
         totalPages: countPages(COMPREHENSIVE_SECTIONS),
         estimatedHours: 20,
         exerciseCount: countExercises(COMPREHENSIVE_SECTIONS),
         features: [
-            'كل المحتوى',
-            'وكلاء الذكاء الاصطناعي',
-            'مكتبة القوالب',
-            'مراحل المشروع الممتد عند توفر الأدوات في الباقة',
+            'المستويات الخمسة',
+            'بيشتغل معاك',
+            'نظام شغلك',
             'شهادة إتمام وفق متطلباتها وباقتك',
         ],
     },

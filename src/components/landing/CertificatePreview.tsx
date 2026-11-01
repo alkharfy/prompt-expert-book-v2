@@ -17,7 +17,7 @@ export default function CertificatePreview() {
                         <span className="section-badge">🎓 شهادة إتمام من PromptMaster</span>
                         <h2 className="section-title">احصل على شهادة إتمام</h2>
                         <p className="section-description">
-                            بعد تسجيل إتمام قراءة الفصول الأساسية العشرة وكتابة اسمك الثلاثي، مع اشتراك المتقدمة أو VIP نشط، تحصل على شهادة إتمام من PromptMaster
+                            بعد تسجيل إتمام المستويات الخمسة وكتابة اسمك الثلاثي، مع اشتراك المتقدمة أو VIP نشط، تحصل على شهادة إتمام من PromptMaster
                             برقم فريد قابل للتحقق ورابط عام للمشاركة على LinkedIn ومنصات التواصل.
                         </p>
 
@@ -64,7 +64,7 @@ export default function CertificatePreview() {
                                         <p className="cert-text">يُشهد بأن</p>
                                         <h3 className="cert-name">اسم المتعلم — نموذج توضيحي</h3>
                                         <p className="cert-text">سجّل إتمام قراءة</p>
-                                        <p className="course-name">إتمام قراءة الفصول الأساسية العشرة</p>
+                                        <p className="course-name">إتمام المستويات الخمسة</p>
                                     </div>
 
                                     <div className="certificate-footer">

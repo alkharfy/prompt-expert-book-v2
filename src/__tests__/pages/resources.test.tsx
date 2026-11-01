@@ -2,6 +2,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
+vi.mock('@/components/Navigation', () => ({ default: () => null }))
+
 // Must mock fetch before importing page
 const mockFetch = vi.fn()
 global.fetch = mockFetch

@@ -1,6 +1,5 @@
 import { LEARNING_SECTIONS } from '@/config/learningCatalog'
 import { LEARNING_PATHS } from '@/data/learningPaths'
-import { allExercises } from '@/data/exercisesData'
 import {
     FREE_SCOPE_SECTIONS,
     compareReadingPositions,
@@ -22,16 +21,10 @@ export const minutesDurationLabel = (minutes: DailyMinutes) => `${minutes}min`
 const MINUTES_DURATION = /^(10|20|30)min$/
 export const isMinutesDuration = (duration: string | null | undefined) => MINUTES_DURATION.test(duration || '')
 
-const PROJECT_PHASE_AFTER_SECTION: Record<string, number> = {
-    'section-2': 0, 'section-3': 1, 'section-4': 2, 'section-5': 3,
-    'section-6': 4, 'section-8': 5, 'section-10': 6,
-}
-
 export function generatePlanTasks(
     learningPath: LearningPathId,
     learningDuration: LearningDurationId,
     startDate: string,
-    options: { includeProject?: boolean; includeExercises?: boolean } = {},
 ): PlanTask[] {
     const path = LEARNING_PATHS[learningPath]
     const totalDays = DURATION_DAYS[learningDuration]
@@ -41,8 +34,6 @@ export function generatePlanTasks(
         start: { sectionId: path.sections[0], page: 1 },
         totalDays,
         startDate,
-        includeExercises: options.includeExercises,
-        includeProject: learningPath === 'comprehensive' && options.includeProject,
     })
 }
 
@@ -55,8 +46,6 @@ export function generateMinutesPlanTasks(input: {
     start: ReadingPosition
     dailyMinutes: DailyMinutes
     startDate: string
-    includeExercises?: boolean
-    includeProject?: boolean
 }): PlanTask[] {
     const totalDays = planDaysFor(countPagesFrom(input.scope, input.start), input.dailyMinutes)
     if (!totalDays) return []
@@ -65,8 +54,6 @@ export function generateMinutesPlanTasks(input: {
         start: input.start,
         totalDays,
         startDate: input.startDate,
-        includeExercises: input.includeExercises,
-        includeProject: input.scope === 'comprehensive' && input.includeProject,
     })
 }
 
@@ -75,8 +62,6 @@ function buildPlanTasks(input: {
     start: ReadingPosition
     totalDays: number
     startDate: string
-    includeExercises?: boolean
-    includeProject?: boolean
 }): PlanTask[] {
     const { totalDays, startDate } = input
     if (!Number.isInteger(totalDays) || totalDays < 1 || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return []
@@ -116,26 +101,8 @@ function buildPlanTasks(input: {
             dailyBudget -= pagesToday
             nextPage = endPage + 1
 
+            // A level's exercises live inside its lessons, so reading the pages covers them (2026-11-01).
             if (endPage === section.pageCount) {
-                for (const exercise of input.includeExercises === false ? [] : allExercises[section.id] || []) {
-                    tasks.push({
-                        taskDate, taskType: 'exercise', sectionId: section.id,
-                        exerciseId: exercise.exerciseId, dayNumber: day,
-                        titleAr: `✏️ ${section.label}: ${exercise.type === 'quiz' ? exercise.question : exercise.title}`,
-                        descriptionAr: 'أكمل التمرين وراجع الإجابة أو الناتج وفق تعليماته.',
-                        estimatedMinutes: exercise.type === 'prompt_builder' ? 15 : 5,
-                    })
-                }
-                const phase = PROJECT_PHASE_AFTER_SECTION[section.id]
-                if (input.includeProject && phase !== undefined) {
-                    tasks.push({
-                        taskDate, taskType: 'exercise', sectionId: 'running-project',
-                        exerciseId: `running-project-phase-${phase}`, dayNumber: day,
-                        titleAr: `🛠️ المشروع الممتد — المرحلة ${phase + 1}`,
-                        descriptionAr: 'تابع مشروعك المختار، وجرّب الطلب، واحفظ الناتج وراجع متطلبات المرحلة.',
-                        estimatedMinutes: 30,
-                    })
-                }
                 sectionIndex++
                 nextPage = 1
             }

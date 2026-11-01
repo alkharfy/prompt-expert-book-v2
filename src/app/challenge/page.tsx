@@ -142,10 +142,10 @@ export default function ChallengePage() {
                                             {progress[day.day] ? '✅ مكتمل — إلغاء؟' : '☐ علّم كمكتمل'}
                                         </button>
                                         <Link
-                                            href={`/read/section-${day.relatedUnit}/1`}
+                                            href={day.related.href}
                                             className="challenge-unit-link"
                                         >
-                                            📖 راجع الفصل {day.relatedUnit}
+                                            📖 راجع: {day.related.label}
                                         </Link>
                                     </div>
                                 </div>

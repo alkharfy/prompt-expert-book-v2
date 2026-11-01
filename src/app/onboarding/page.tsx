@@ -195,10 +195,10 @@ function OnboardingContent() {
   const minutesOptions: ChoiceOption<DailyMinutes>[] = DAILY_MINUTES_OPTIONS.map(value => {
     const estimate = estimatePlan(value, destination.planStart);
     const hint = hasFullAccess
-      ? `الكتاب كله في ${duration(estimate.fullDays)}`
+      ? `الكورس كله في ${duration(estimate.fullDays)}`
       : estimate.freePages > 0
         ? `الجزء المجاني يخلص في ${days(estimate.freeDays)}`
-        : `الكتاب كله في ${duration(estimate.fullDays)} لو اشتركت`;
+        : `الكورس كله في ${duration(estimate.fullDays)} لو اشتركت`;
     return { id: value, icon: MINUTES_ICON[value], label: MINUTES_LABEL[value], hint };
   });
 

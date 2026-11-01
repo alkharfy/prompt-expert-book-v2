@@ -1,19 +1,20 @@
 'use client'
 
 import { motion, useReducedMotion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
 import RecapCard from './RecapCard'
 import ShareButton from '@/components/sharing/ShareButton'
 import type { ChapterRecap as ChapterRecapType } from '@/data/recapsData'
 
 interface ChapterRecapProps {
     recap: ChapterRecapType
-    nextSectionPath: string | null
+    /** The reader's own «next»: saves the level as finished, then moves on (a bare link skipped the save). */
+    onNext: () => void
+    /** Level 5: the course ends here, so the button goes to the finished course map instead of a next level. */
+    isCourseEnd: boolean
     onShare?: () => void
 }
 
-export default function ChapterRecap({ recap, nextSectionPath, onShare }: ChapterRecapProps) {
-    const router = useRouter()
+export default function ChapterRecap({ recap, onNext, isCourseEnd, onShare }: ChapterRecapProps) {
     const prefersReduced = useReducedMotion()
 
     return (
@@ -130,7 +131,7 @@ export default function ChapterRecap({ recap, nextSectionPath, onShare }: Chapte
                     data={{
                         type: 'chapter',
                         title: `${recap.chapterLabel}: ${recap.chapterTitle}`,
-                        subtitle: `أكملت هذا الفصل!`,
+                        subtitle: `خلّصت المستوى!`,
                         icon: '🏆',
                         stats: [
                             { label: 'صفحة', value: recap.stats.pages },
@@ -140,14 +141,12 @@ export default function ChapterRecap({ recap, nextSectionPath, onShare }: Chapte
                     }}
                     label="شارك إنجازك"
                 />
-                {nextSectionPath && (
-                    <button
-                        className="recap-btn recap-btn-primary"
-                        onClick={() => router.push(nextSectionPath)}
-                    >
-                        ▶️ ابدأ الفصل التالي
-                    </button>
-                )}
+                <button
+                    className="recap-btn recap-btn-primary"
+                    onClick={onNext}
+                >
+                    {isCourseEnd ? '🎓 خلّصت الكورس' : '▶️ ابدأ المستوى الجاي'}
+                </button>
             </motion.div>
         </motion.div>
     )

@@ -7,7 +7,7 @@ import 'server-only'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 import type { AiLevelId, DailyMinutes, LearningPathId, LearningDurationId } from '@/types/learning'
 import { dbLogger } from './logger'
-import { getGlobalReadingTarget } from '@/config/learningCatalog'
+import { LEARNING_SECTIONS, getGlobalReadingTarget } from '@/config/learningCatalog'
 import { userHasFeature } from '@/lib/subscription'
 import {
   countPagesFrom,
@@ -64,6 +64,8 @@ export interface TodayPlan {
   isFlexible: boolean
   summary: PlanSummary | null
   needsRegeneration?: boolean
+  /** Built before 2026-11-01: holds removed book chapters, old chapter exercises or the running project. */
+  stale?: boolean
 }
 
 export interface DailyTask {
@@ -110,9 +112,7 @@ export async function savePlan(
     const endDate = new Date(`${startDate}T00:00:00.000Z`)
     endDate.setUTCDate(endDate.getUTCDate() + totalDays - 1)
 
-    // Delete existing plan
-    await supabase.from('learning_plan_tasks').delete().eq('user_id', userId)
-    await supabase.from('learning_plan_summary').delete().eq('user_id', userId)
+    await deletePlan(userId)
 
     // Save summary
     const { error: summaryError } = await supabase.from('learning_plan_summary').insert({
@@ -211,17 +211,13 @@ export async function createMinutesPlan(
       if (active) return { ok: true, created: false, existing: true }
     }
 
-    const [hasReading, includeExercises, includeProject] = await Promise.all([
-      userHasFeature(userId, 'reading'),
-      userHasFeature(userId, 'exercises'),
-      userHasFeature(userId, 'tools'),
-    ])
+    const hasReading = await userHasFeature(userId, 'reading')
     const scope: PlanScopeId = hasReading ? 'comprehensive' : 'free'
     const start = laterPosition(getLevelStart(input.aiLevel), input.startFrom)
     const totalDays = planDaysFor(countPagesFrom(scope, start), input.dailyMinutes)
     const startDate = new Date().toISOString().split('T')[0]
     const tasks = generateMinutesPlanTasks({
-      scope, start, dailyMinutes: input.dailyMinutes, startDate, includeExercises, includeProject,
+      scope, start, dailyMinutes: input.dailyMinutes, startDate,
     })
     // Nothing left in scope (e.g. a free reader who already finished the free part).
     if (tasks.length === 0) return { ok: true, created: false, scope, totalDays: 0 }
@@ -233,6 +229,22 @@ export async function createMinutesPlan(
     dbLogger.error('Error in createMinutesPlan', error)
     return { ok: false, created: false, error: 'Internal error' }
   }
+}
+
+/**
+ * Plans saved before 2026-11-01 can hold tasks for the removed book chapters 6–10, the old
+ * chapter exercises or the running project. Plans are reading-only now: a level's exercises
+ * live inside its lessons.
+ */
+export function isStalePlan(tasks: Pick<DailyTask, 'taskType' | 'sectionId'>[]): boolean {
+  return tasks.some(task => task.taskType === 'exercise'
+    || (task.sectionId != null && !LEARNING_SECTIONS.some(section => section.id === task.sectionId)))
+}
+
+export async function deletePlan(userId: string): Promise<void> {
+  const supabase = getSupabaseAdmin()
+  await supabase.from('learning_plan_tasks').delete().eq('user_id', userId)
+  await supabase.from('learning_plan_summary').delete().eq('user_id', userId)
 }
 
 export async function getTodayPlan(userId: string): Promise<TodayPlan> {
@@ -299,6 +311,7 @@ export async function getTodayPlan(userId: string): Promise<TodayPlan> {
       isFlexible: false,
       summary: { ...summary, completedDays, skippedDays },
       needsRegeneration,
+      stale: isStalePlan(allTasks),
     }
   } catch (error) {
     dbLogger.error('Error in getTodayPlan', error)

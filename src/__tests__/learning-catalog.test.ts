@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+vi.mock('server-only', () => ({}))
 import * as book from '@/data/bookData'
-import { allExercises } from '@/data/exercisesData'
+import { countSectionExercises } from '@/lib/server/course-exercises'
 import { EXERCISE_COUNTS_BY_SECTION, getGlobalReadingTarget, getGlobalReadingUrl, getLearningReadingUrl, LEARNING_SECTIONS } from '@/config/learningCatalog'
 import { getPathCompletion, isSectionInPath, LEARNING_PATHS } from '@/data/learningPaths'
 import type { LearningPathId } from '@/types/learning'
@@ -9,12 +10,12 @@ const actualPages = {
     intro: book.introData,
     'section-1': book.unit1Data, 'section-2': book.unit2Data,
     'section-3': book.unit3Data, 'section-4': book.unit4Data,
-    'section-5': book.unit5Data, 'section-6': book.unit6Data,
-    'section-7': book.unit7Data, 'section-8': book.unit8Data,
-    'section-9': book.unit9Data, 'section-10': book.unit10Data,
+    'section-5': book.unit5Data,
     library: book.libraryData, appendix: book.appendixData, glossary: book.glossaryData,
 }
-const expectedExerciseCounts: Record<LearningPathId, number> = { quick: 10, intermediate: 28, comprehensive: 45 }
+const expectedExerciseCounts: Record<LearningPathId, number> = { quick: 23, intermediate: 38, comprehensive: 62 }
+/** What one reader meets in a section: the track (Ahmed's or Mona's) with fewer exercises. */
+const lessonExercises = (sectionId: string) => Math.min(countSectionExercises(sectionId, 'accounting'), countSectionExercises(sectionId, 'service'))
 
 describe('learning catalog matches the shipped data', () => {
     it('contains the advertised 95 numbered library templates without gaps or duplicates', () => {
@@ -30,12 +31,14 @@ describe('learning catalog matches the shipped data', () => {
         }
         const actualTotal = Object.values(actualPages).reduce((sum, pages) => sum + pages.length, 0)
         expect(LEARNING_SECTIONS.reduce((sum, section) => sum + section.pageCount, 0)).toBe(actualTotal)
-        expect(actualTotal).toBe(170)
+        expect(actualTotal).toBe(83)
     })
 
     it('has continuous reserved global slots, including the references', () => {
         let expectedOffset = 0
         for (const section of LEARNING_SECTIONS) {
+            // 96–182 stay reserved for the removed book chapters 6–10, so saved positions keep their meaning.
+            if (section.id === 'library') expectedOffset = 182
             expect(section.progressOffset, section.id).toBe(expectedOffset)
             expect(section.slotSize).toBeGreaterThanOrEqual(section.pageCount)
             expectedOffset += section.slotSize
@@ -43,13 +46,12 @@ describe('learning catalog matches the shipped data', () => {
         expect(expectedOffset).toBe(222)
     })
 
-    it('keeps its lightweight exercise counts equal to the actual exercises', () => {
-        expect(Object.keys(EXERCISE_COUNTS_BY_SECTION).sort()).toEqual(Object.keys(allExercises).sort())
-        for (const [sectionId, exercises] of Object.entries(allExercises)) {
-            expect(EXERCISE_COUNTS_BY_SECTION[sectionId], sectionId).toBe(exercises.length)
+    it('keeps its lightweight exercise counts equal to the exercises inside the lessons', () => {
+        expect(Object.keys(EXERCISE_COUNTS_BY_SECTION)).toEqual(['intro', 'section-1', 'section-2', 'section-3', 'section-4', 'section-5'])
+        for (const sectionId of Object.keys(EXERCISE_COUNTS_BY_SECTION)) {
+            expect(EXERCISE_COUNTS_BY_SECTION[sectionId], sectionId).toBe(lessonExercises(sectionId))
         }
-        expect(EXERCISE_COUNTS_BY_SECTION.intro).toBeUndefined()
-        expect(Object.values(EXERCISE_COUNTS_BY_SECTION).reduce((sum, count) => sum + count, 0)).toBe(45)
+        expect(Object.values(EXERCISE_COUNTS_BY_SECTION).reduce((sum, count) => sum + count, 0)).toBe(62)
     })
 
     it('uses the appropriate reading route and clamps unsafe page numbers', () => {
@@ -70,6 +72,11 @@ describe('learning catalog matches the shipped data', () => {
     ])('clamps saved global gap %s to %s', (globalPage, url) => {
         expect(getGlobalReadingUrl(globalPage)).toBe(url)
         expect(getGlobalReadingTarget(globalPage)?.url).toBe(url)
+    })
+
+    it.each([96, 100, 182])('puts saved page %s of the removed book chapters at the end of Level 5', globalPage => {
+        expect(getGlobalReadingUrl(globalPage)).toBe('/read/section-5/8')
+        expect(getGlobalReadingUrl(183)).toBe('/library/1')
     })
 
     it('keeps every real global position on its original section and page', () => {
@@ -93,21 +100,21 @@ describe('learning path totals', () => {
         const path = LEARNING_PATHS[pathId]
         expect(new Set(path.sections).size).toBe(path.sections.length)
         const pages = path.sections.flatMap(id => actualPages[id as keyof typeof actualPages])
-        const exercises = path.sections.flatMap(id => allExercises[id] || [])
+        const exercises = path.sections.reduce((sum, id) => sum + lessonExercises(id), 0)
         expect(pages.every(Boolean)).toBe(true)
         expect(path.totalPages).toBe(pages.length)
-        expect(path.exerciseCount).toBe(exercises.length)
+        expect(path.exerciseCount).toBe(exercises)
         expect(path.exerciseCount).toBe(expectedExerciseCounts[pathId])
         for (const section of LEARNING_SECTIONS) {
             expect(isSectionInPath(section.id, pathId)).toBe(path.sections.includes(section.id))
         }
     })
 
-    it('includes the whole catalog in the comprehensive path', () => {
-        expect(LEARNING_PATHS.comprehensive.sections).toEqual(LEARNING_SECTIONS.map(section => section.id))
-        expect(LEARNING_PATHS.comprehensive.totalPages).toBe(170)
-        expect(getPathCompletion(182, 'comprehensive')).toBeLessThan(100)
-        expect(getPathCompletion(222, 'comprehensive')).toBe(100)
+    it('covers the intro and the five levels in the comprehensive path, not the references', () => {
+        expect(LEARNING_PATHS.comprehensive.sections).toEqual(['intro', 'section-1', 'section-2', 'section-3', 'section-4', 'section-5'])
+        expect(LEARNING_PATHS.comprehensive.totalPages).toBe(43)
+        expect(getPathCompletion(78, 'comprehensive')).toBeLessThan(100)
+        expect(getPathCompletion(95, 'comprehensive')).toBe(100)
     })
 
     it.each(Object.keys(LEARNING_PATHS) as LearningPathId[])('%s clamps reading progress at its boundaries', pathId => {

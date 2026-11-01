@@ -6,7 +6,7 @@ export const MAIN_CHAPTER_IDS = SECTION_REGISTRY
     .filter(section => section.sectionNumber > 0)
     .map(section => String(section.chapterIndex))
 export const CERTIFICATE_CHAPTER_COUNT = MAIN_CHAPTER_IDS.length
-export const CERTIFICATE_COURSE_NAME = 'PromptMaster — إتمام الفصول الأساسية العشرة'
+export const CERTIFICATE_COURSE_NAME = 'PromptMaster — إتمام المستويات الخمسة'
 
 // Completion uses the last real page, even when unused global slots follow it.
 const chapterEndPages: Record<string, number> = Object.fromEntries(

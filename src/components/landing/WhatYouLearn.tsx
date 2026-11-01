@@ -141,7 +141,7 @@ export default function WhatYouLearn() {
                         </li>
                     ))}
                 </ol>
-                <p className="wyl-note">وجنبهم ورش قصيرة (الصور والفيديو ببلاش للكل)، والفصول 6–10 من كتاب PromptMaster للمشتركين.</p>
+                <p className="wyl-note">وجنبهم ورش قصيرة (الصور والفيديو ببلاش للكل).</p>
 
                 <p className="wyl-section-label">حاجات مش هتلاقيها في فيديو على يوتيوب</p>
                 <div className="wyl-tools">

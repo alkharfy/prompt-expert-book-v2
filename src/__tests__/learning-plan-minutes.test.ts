@@ -15,7 +15,7 @@ const readingPages = (tasks: PlanTask[]) => tasks.filter(task => task.taskType =
 describe('minutes-based learning plans', () => {
   it('covers the three free intro pages once and finishes the 20-minute plan on day one', () => {
     const tasks = generateMinutesPlanTasks({
-      scope: 'free', start: { sectionId: 'intro', page: 1 }, dailyMinutes: 20, startDate, includeExercises: false,
+      scope: 'free', start: { sectionId: 'intro', page: 1 }, dailyMinutes: 20, startDate,
     })
     const pages = readingPages(tasks)
     expect(pages).toEqual([
@@ -31,7 +31,7 @@ describe('minutes-based learning plans', () => {
 
   it('starts a daily AI reader at intro page three and checks coverage from there', () => {
     const tasks = generateMinutesPlanTasks({
-      scope: 'free', start: { sectionId: 'intro', page: 3 }, dailyMinutes: 10, startDate, includeExercises: false,
+      scope: 'free', start: { sectionId: 'intro', page: 3 }, dailyMinutes: 10, startDate,
     })
     const readingTasks = tasks.filter(task => task.taskType === 'reading')
     expect(readingTasks[0]).toMatchObject({ sectionId: 'intro', startPage: 3 })
@@ -46,7 +46,7 @@ describe('minutes-based learning plans', () => {
     const start = { sectionId: 'section-2', page: 1 }
     const pages = countPagesFrom('comprehensive', start)
     const expectedDays = Math.ceil(pages * 5 / 30)
-    const tasks = generateMinutesPlanTasks({ scope: 'comprehensive', start, dailyMinutes: 30, startDate, includeExercises: false })
+    const tasks = generateMinutesPlanTasks({ scope: 'comprehensive', start, dailyMinutes: 30, startDate })
     expect(tasks.filter(task => task.taskType === 'reading')[0]).toMatchObject({ sectionId: 'section-2', startPage: 1 })
     expect(tasks.some(task => task.sectionId === 'intro' || task.sectionId === 'section-1')).toBe(false)
     expect(readingPages(tasks)).toHaveLength(pages)
@@ -61,7 +61,7 @@ describe('minutes-based learning plans', () => {
 
   it('never includes the running project in a free plan', () => {
     const tasks = generateMinutesPlanTasks({
-      scope: 'free', start: { sectionId: 'intro', page: 1 }, dailyMinutes: 20, startDate, includeProject: true,
+      scope: 'free', start: { sectionId: 'intro', page: 1 }, dailyMinutes: 20, startDate,
     })
     expect(tasks.length).toBeGreaterThan(0)
     expect(hasCompleteReadingCoverage(tasks, 'free')).toBe(true)

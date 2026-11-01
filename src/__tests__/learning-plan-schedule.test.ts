@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { getGlobalReadingTarget, getLearningReadingUrl, LEARNING_SECTIONS } from '@/config/learningCatalog'
-import { allExercises } from '@/data/exercisesData'
 import { LEARNING_PATHS } from '@/data/learningPaths'
 import { calculatePlanProgress, generatePlanTasks, hasCompleteReadingCoverage } from '@/lib/learning-plan-schedule'
 import type { DailyTask, PlanTask } from '@/lib/learning-plan'
@@ -15,7 +14,7 @@ type ProgressTask = Pick<DailyTask, 'taskDate' | 'taskType' | 'status'>
 const progressTask = (taskDate: string, taskType: ProgressTask['taskType'], status: ProgressTask['status']): ProgressTask => ({ taskDate, taskType, status })
 
 describe('learning plan scheduling', () => {
-    it.each(cases)('$path over $days days covers every included page and exercise exactly once', ({ path, duration, days }) => {
+    it.each(cases)('$path over $days days covers every included page exactly once', ({ path, duration, days }) => {
         const tasks = generatePlanTasks(path, duration, startDate)
         const readingTasks = tasks.filter(task => task.taskType === 'reading')
         const coveredPages = readingTasks.flatMap(task => {
@@ -34,16 +33,8 @@ describe('learning plan scheduling', () => {
         expect(new Set(coveredPages).size).toBe(coveredPages.length)
         expect(coveredPages).toHaveLength(LEARNING_PATHS[path].totalPages)
 
-        const exerciseTasks = tasks.filter(task => task.taskType === 'exercise')
-        const expectedExercises = LEARNING_PATHS[path].sections.flatMap(id => allExercises[id] || [])
-        expect(exerciseTasks.map(task => task.exerciseId)).toEqual(expectedExercises.map(exercise => exercise.exerciseId))
-        expect(exerciseTasks).toHaveLength({ quick: 10, intermediate: 28, comprehensive: 45 }[path])
-        expect(exerciseTasks.some(task => task.sectionId === 'intro')).toBe(false)
-        for (const task of exerciseTasks) {
-            const finalReading = readingTasks.find(reading => reading.sectionId === task.sectionId && reading.endPage === LEARNING_SECTIONS.find(item => item.id === task.sectionId)!.pageCount)!
-            expect(tasks.indexOf(task)).toBeGreaterThan(tasks.indexOf(finalReading))
-            expect(task.taskDate >= finalReading.taskDate).toBe(true)
-        }
+        // Since 2026-11-01 a level's exercises live inside its lessons: plans have no separate exercise tasks.
+        expect(tasks.some(task => task.taskType === 'exercise')).toBe(false)
 
         for (const task of tasks) {
             expect(task.dayNumber).toBeGreaterThanOrEqual(1)
@@ -54,35 +45,6 @@ describe('learning plan scheduling', () => {
         expect(finalTasks).toHaveLength(1)
         expect(finalTasks[0].taskDate).toBe(dateOnDay(startDate, days))
         expect(finalTasks[0].dayNumber).toBe(days)
-    })
-
-    it.each(cases)('$path over $days days adds project phases only when the comprehensive option is enabled', ({ path, duration }) => {
-        const withoutProject = generatePlanTasks(path, duration, startDate, { includeProject: false })
-        expect(withoutProject.some(task => task.sectionId === 'running-project')).toBe(false)
-        const withProject = generatePlanTasks(path, duration, startDate, { includeProject: true })
-        const phases = withProject.filter(task => task.sectionId === 'running-project')
-        expect(phases.map(task => task.exerciseId)).toEqual(path === 'comprehensive'
-            ? Array.from({ length: 7 }, (_, i) => `running-project-phase-${i}`)
-            : [])
-        const ordinaryExercises = withProject.filter(task => task.taskType === 'exercise' && task.sectionId !== 'running-project')
-        expect(ordinaryExercises).toHaveLength(LEARNING_PATHS[path].exerciseCount)
-    })
-
-    it.each(cases)('$path over $days days can omit ordinary exercises while keeping project access independent', ({ path, duration }) => {
-        const defaultPlan = generatePlanTasks(path, duration, startDate)
-        expect(generatePlanTasks(path, duration, startDate, { includeExercises: true })).toEqual(defaultPlan)
-
-        const readingPlan = generatePlanTasks(path, duration, startDate, { includeExercises: false })
-        expect(readingPlan).toEqual(defaultPlan.filter(task => task.taskType !== 'exercise'))
-        expect(readingPlan.some(task => task.taskType === 'exercise')).toBe(false)
-
-        const projectPlan = generatePlanTasks(path, duration, startDate, { includeExercises: false, includeProject: true })
-        const exerciseTasks = projectPlan.filter(task => task.taskType === 'exercise')
-        expect(exerciseTasks.map(task => task.exerciseId)).toEqual(path === 'comprehensive'
-            ? Array.from({ length: 7 }, (_, i) => `running-project-phase-${i}`)
-            : [])
-        expect(exerciseTasks.every(task => task.sectionId === 'running-project')).toBe(true)
-        expect(projectPlan.filter(task => task.taskType !== 'exercise')).toEqual(readingPlan)
     })
 
     it('rolls dates across the end of the year without duplicating a calendar day', () => {
@@ -106,7 +68,7 @@ describe('learning plan scheduling', () => {
     })
 
     it.each(paths)('%s flexible mode does not fabricate dated tasks', path => {
-        expect(generatePlanTasks(path, 'flexible', startDate, { includeProject: true })).toEqual([])
+        expect(generatePlanTasks(path, 'flexible', startDate)).toEqual([])
     })
 
     it('rejects unknown paths and durations at the runtime boundary', () => {
@@ -162,9 +124,8 @@ describe('learning plan progress', () => {
 })
 
 describe('legacy learning plan reading coverage', () => {
-    it.each(cases)('$path over $days days has complete coverage with or without ordinary exercises', ({ path, duration }) => {
+    it.each(cases)('$path over $days days has complete coverage', ({ path, duration }) => {
         expect(hasCompleteReadingCoverage(generatePlanTasks(path, duration, startDate), path)).toBe(true)
-        expect(hasCompleteReadingCoverage(generatePlanTasks(path, duration, startDate, { includeExercises: false, includeProject: true }), path)).toBe(true)
     })
 
     it.each(paths)('%s accepts saved ranges spanning the old free-page slots without rewriting later tasks', path => {
@@ -208,9 +169,9 @@ describe('legacy learning plan reading coverage', () => {
         expect(hasCompleteReadingCoverage(tasks, path)).toBe(false)
     })
 
-    it('rejects the old comprehensive plan that only covered the 182 core pages', () => {
-        const tasks = generatePlanTasks('comprehensive', '1week', startDate)
-            .filter(task => !['library', 'appendix', 'glossary'].includes(task.sectionId || ''))
+    it('rejects a saved plan that still reads a removed book chapter', () => {
+        const tasks = [...generatePlanTasks('comprehensive', '1week', startDate),
+            { taskType: 'reading' as const, sectionId: 'section-7', startPage: 1, endPage: 4 }]
         expect(hasCompleteReadingCoverage(tasks, 'comprehensive')).toBe(false)
     })
 

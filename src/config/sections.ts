@@ -107,89 +107,9 @@ export const SECTION_REGISTRY: SectionConfig[] = [
         freePageLimit: 0, // المستوى ٥ مدفوع (20 أكتوبر 2026: بدل الفصل 05 القديم)
         chapterIndex: 5,
         prevSection: { path: '/read/section-4', lastPage: 6 },
-        nextSection: { path: '/read/section-6/1' },
+        nextSection: null, // آخر مستوى: الكورس خلص هنا (الفصول القديمة 6–10 اتشالت 2026-11-01)
         robotSize: 320,
         hasGlossary: true,
-        hasRewards: true,
-        useExplicitImageSize: false,
-    },
-    {
-        id: 'section-6',
-        sectionNumber: 6,
-        pageCount: 20,
-        slotSize: 20,
-        chapterLabel: 'الفصل 06',
-        progressOffset: 95, // + S5: 18
-        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
-        chapterIndex: 6,
-        prevSection: { path: '/read/section-5', lastPage: 8 },
-        nextSection: { path: '/read/section-7/1' },
-        robotSize: 320,
-        hasGlossary: false,
-        hasRewards: true,
-        useExplicitImageSize: true,
-    },
-    {
-        id: 'section-7',
-        sectionNumber: 7,
-        pageCount: 18,
-        slotSize: 18,
-        chapterLabel: 'الفصل 07',
-        progressOffset: 115, // + S6: 20
-        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
-        chapterIndex: 7,
-        prevSection: { path: '/read/section-6', lastPage: 20 },
-        nextSection: { path: '/read/section-8/1' },
-        robotSize: 320,
-        hasGlossary: false,
-        hasRewards: true,
-        useExplicitImageSize: true,
-    },
-    {
-        id: 'section-8',
-        sectionNumber: 8,
-        pageCount: 16,
-        slotSize: 16,
-        chapterLabel: 'الفصل 08',
-        progressOffset: 133, // + S7: 18
-        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
-        chapterIndex: 8,
-        prevSection: { path: '/read/section-7', lastPage: 18 },
-        nextSection: { path: '/read/section-9/1' },
-        robotSize: 320,
-        hasGlossary: false,
-        hasRewards: true,
-        useExplicitImageSize: false,
-    },
-    {
-        id: 'section-9',
-        sectionNumber: 9,
-        pageCount: 16,
-        slotSize: 16,
-        chapterLabel: 'الفصل 09',
-        progressOffset: 149, // + S8: 16
-        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
-        chapterIndex: 9,
-        prevSection: { path: '/read/section-8', lastPage: 16 },
-        nextSection: { path: '/read/section-10/1' },
-        robotSize: 320,
-        hasGlossary: false,
-        hasRewards: true,
-        useExplicitImageSize: false,
-    },
-    {
-        id: 'section-10',
-        sectionNumber: 10,
-        pageCount: 17,
-        slotSize: 17,
-        chapterLabel: 'الفصل 10',
-        progressOffset: 165, // + S9: 16
-        freePageLimit: 0, // مقفول — المعاينة المجانية = التمهيد بس (قرار 2026-10-16)
-        chapterIndex: 10,
-        prevSection: { path: '/read/section-9', lastPage: 16 },
-        nextSection: { path: '/library/1' },
-        robotSize: 320,
-        hasGlossary: false,
         hasRewards: true,
         useExplicitImageSize: false,
     },

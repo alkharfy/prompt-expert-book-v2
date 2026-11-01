@@ -8,7 +8,7 @@ import { useBottomBarOffset } from '@/hooks/useBottomBarOffset'
 import { GUEST_LAST_PAGE_KEY } from '@/lib/onboarding'
 import { MONTHLY_PRICE_EGP } from '@/lib/pricing'
 import { trackCtaClick } from '@/lib/analytics'
-import { BOOK_CHAPTERS, COURSE_EXTRAS, COURSE_LEVELS, bookChapterHref, isReleased, lessonHref } from '@/data/courseOutline'
+import { COURSE_EXTRAS, COURSE_LEVELS, isReleased, lessonHref } from '@/data/courseOutline'
 import { buildToc, lessonsWord, type LevelState, type TocInput, type TocView } from '@/lib/tocProgress'
 
 /**
@@ -23,11 +23,10 @@ const tickPct = (i: number, k: number) => pct(i) + (SPAN / N) * ((k + 1) / (COUR
 const SPOT_KEY = 'pm_toc_spot'
 const PAY_HREF = '/payment?plan=monthly'
 const releasedCount = COURSE_LEVELS.filter(isReleased).length
-const nextLevelsText = COURSE_LEVELS.filter(level => !isReleased(level)).map(level => level.label.replace('المستوى ', '')).join(' و')
 
 /** Before we know who is reading: every level plain, no robot. */
 const LOADING: TocView = {
-    level: -1, lesson: -1, book: null, done: 0,
+    level: -1, lesson: -1, done: 0,
     available: COURSE_LEVELS.filter(isReleased).reduce((n, level) => n + level.lessons.length, 0),
     levels: COURSE_LEVELS.map(level => isReleased(level) ? 'todo' : 'soon'),
     lessons: COURSE_LEVELS.map(level => level.lessons.map(() => isReleased(level) ? 'todo' : 'soon')),
@@ -148,18 +147,13 @@ export default function CourseToc() {
     const spotState: LevelState | 'end' = view.level >= N ? 'end' : view.levels[Math.max(view.level, 0)]
     const percent = Math.round(view.done / view.available * 100)
     let kicker = '', title = '', sub = '', cta = '', ctaHref = '/read/intro/1', ring = false
-    if (view.book) {
-        kicker = `إنت واقف عند: الفصل ${view.book.n} من الكتاب · صفحة ${view.book.page}`
-        title = view.book.title
-        sub = releasedCount < N ? `لحد ما المستويات ${nextLevelsText} تنزل، فصول الكتاب مفتوحالك.` : 'قراية زيادة من الكتاب، بعد المستويات الخمسة.'
-        cta = 'كمّل من مكانك'; ctaHref = view.book.url; ring = true
-    } else if (spotState === 'end') {
+    if (spotState === 'end') {
         title = `خلّصت الـ ${view.available} درس كلهم 🎉`; kicker = 'خلّصت الكورس'
         cta = 'شوف إنجازاتك'; ctaHref = '/achievements'; ring = true
     } else if (spotState === 'waiting') {
         kicker = 'خلّصت كل اللي نزل لحد دلوقتي 👏'; title = `${spotLevel.label} بينزل قريب`
-        sub = 'ولحد ما ينزل، فصول الكتاب مفتوحالك.'
-        cta = 'افتح فصول الكتاب'; ctaHref = bookChapterHref(BOOK_CHAPTERS[0].n); ring = true
+        sub = 'ولحد ما ينزل، جرّب الورش: صورة وفيديو لشغلك.'
+        cta = 'افتح الورش'; ctaHref = '/workshops'; ring = true
     } else if (spotState === 'gate') {
         kicker = 'خلّصت التمهيد 👏'; title = `الخطوة الجاية: ${spotLevel.label}، ${spotLevel.name}`
         sub = `هتطلع بـ: ${spotLevel.out}`
@@ -272,7 +266,7 @@ export default function CourseToc() {
                                     <Link className="ct-btn primary" href={PAY_HREF} onClick={() => trackCtaClick('اشترك وافتح المستوى', 'toc_panel')}>اشترك وافتح {picked.label} ←</Link>
                                     {!started && <Link className="ct-btn ghost" href="/read/intro/1">جرّب التمهيد ببلاش</Link>}
                                 </>}
-                                {(pickedState === 'soon' || pickedState === 'waiting') && <span className="ct-note">⏳ {picked.label} بينزل قريب. لحد ما ينزل، فصول الكتاب مفتوحة للمشتركين.</span>}
+                                {(pickedState === 'soon' || pickedState === 'waiting') && <span className="ct-note">⏳ {picked.label} بينزل قريب.</span>}
                             </footer>
                         )}
                     </section>
@@ -305,18 +299,6 @@ export default function CourseToc() {
                             <div className="ct-end-card">{view.level >= N && <Rider />}<div><b>آخر محطة</b><small>خلّصت الخمس مستويات، والـ AI بقى جزء من طريقة شغلك.</small></div></div>
                         </li>
                     </ol>
-
-                    {BOOK_CHAPTERS.length > 0 && (
-                        <section className="ct-book" id="ct-book">
-                            <h3>📖 من الكتاب</h3>
-                            <p>{releasedCount < N ? `لحد ما المستويات ${nextLevelsText} تنزل، فصول الكتاب مفتوحة ` : 'وزيادة على المستويات الخمسة: فصول من كتاب PromptMaster، مفتوحة '}{member ? 'ليك' : 'للمشتركين'}.</p>
-                            <ul>
-                                {BOOK_CHAPTERS.map(chapter => (
-                                    <li key={chapter.n}><Link href={bookChapterHref(chapter.n)}>الفصل {chapter.n}: {chapter.title}{member ? '' : ' 🔒'}<small>{chapter.note}</small></Link></li>
-                                ))}
-                            </ul>
-                        </section>
-                    )}
                 </section>
 
                 <aside className="ct-side" id="ct-side">
@@ -332,7 +314,6 @@ export default function CourseToc() {
                             <small>{releasedCount < N ? `بيفتحلك ${COURSE_LEVELS.filter(level => isReleased(level) && !level.free).map(level => level.label).join(' و')} دلوقتي، واللي بعدهم أول ما ينزل` : 'بيفتحلك الخمس مستويات'}، ومعاهم:</small>
                             <ul>
                                 {COURSE_EXTRAS.map(extra => <li key={extra.href}>{extra.icon} {extra.name}: {extra.note}</li>)}
-                                <li>📖 {releasedCount < N ? 'فصول الكتاب، لحد ما المستويات الجاية تنزل' : 'فصول من كتاب PromptMaster، قراية زيادة'}</li>
                             </ul>
                             <Link className="ct-btn ghost" href="/#pricing" onClick={() => trackCtaClick('شوف الباقات', 'toc_price')}>شوف الباقات</Link>
                         </div>

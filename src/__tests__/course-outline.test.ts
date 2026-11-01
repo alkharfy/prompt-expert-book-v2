@@ -99,10 +99,13 @@ describe('where the learner stands in the TOC', () => {
         expect([view.level, view.levels[0], view.levels[1]]).toEqual([1, 'done', 'gate'])
     })
 
-    it('sends a subscriber reading an old book chapter back to that page', () => {
-        const view = buildToc({ access: 'member', currentPage: globalPage('section-6', 5), completedChapters: [0] })
-        expect(view.level).toBe(6)
-        expect(view.book).toMatchObject({ n: 6, page: 5, url: '/read/section-6/5' })
-        expect(view.levels).toEqual(['done', 'todo', 'todo', 'todo', 'todo', 'todo'])
+    // Global pages 96–182 were the old book chapters 6–10 (removed 2026-11-01): a reader saved there had passed Level 5.
+    it('puts a reader saved inside the removed book chapters at the end of Level 5', () => {
+        const oldChapter6Page5 = 100
+        const unfinished = buildToc({ access: 'member', currentPage: oldChapter6Page5, completedChapters: [0] })
+        expect([unfinished.level, unfinished.lesson, unfinished.levels[5]]).toEqual([5, 7, 'here'])
+        const finished = buildToc({ access: 'member', currentPage: oldChapter6Page5, completedChapters: [0, 1, 2, 3, 4, 5] })
+        expect(finished.level).toBe(6)
+        expect(finished.levels).toEqual(['done', 'done', 'done', 'done', 'done', 'done'])
     })
 })

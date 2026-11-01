@@ -300,7 +300,7 @@ export default function CertificatePage() {
                                 <span className="completion-icon">🏆</span>
                                 <span>{certificate.previous_requirements
                                     ? 'صدرت وفق متطلبات الإتمام السابقة'
-                                    : 'إتمام قراءة الفصول الأساسية العشرة'}</span>
+                                    : 'إتمام المستويات الخمسة'}</span>
                             </div>
                             <p className="cert-intro">تستند إلى سجل قراءة ذاتي؛ لا تثبت اجتياز اختبار مهارة أو اعتمادًا مهنيًا.</p>
                         </div>

@@ -452,7 +452,7 @@ export default function AchievementsPage() {
             >
               <span className="lock-icon">🔐</span>
               <h4>الشهادة غير متاحة بعد</h4>
-              <p>سجّل إتمام قراءة الفصول الأساسية العشرة للحصول على شهادة إتمام من PromptMaster، مع اشتراك المتقدمة أو VIP نشط واسم ثلاثي. الشهادة تستند إلى سجل قراءة ذاتي.</p>
+              <p>سجّل إتمام المستويات الخمسة للحصول على شهادة إتمام من PromptMaster، مع اشتراك المتقدمة أو VIP نشط واسم ثلاثي. الشهادة تستند إلى سجل قراءة ذاتي.</p>
               <div className="book-progress">
                 <div className="book-progress-bar">
                   <div
@@ -460,7 +460,7 @@ export default function AchievementsPage() {
                     style={{ width: `${(userStats.completedChapters / CERTIFICATE_CHAPTER_COUNT) * 100}%` }}
                   />
                 </div>
-                <span>{userStats.completedChapters} / {CERTIFICATE_CHAPTER_COUNT} فصول أساسية</span>
+                <span>{userStats.completedChapters} / {CERTIFICATE_CHAPTER_COUNT} مستويات</span>
               </div>
             </motion.div>
           )}

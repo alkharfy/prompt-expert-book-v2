@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Navigation from '@/components/Navigation'
 
 interface ChangelogEntry {
   id: string
@@ -56,6 +57,8 @@ export default function AiUpdatesPage() {
   }, [])
 
   return (
+    <>
+    <Navigation />
     <div className="updates-page">
       <div className="updates-header">
         <h1>🔮 أخبار AI</h1>
@@ -101,7 +104,7 @@ export default function AiUpdatesPage() {
         .updates-page {
           max-width: 800px;
           margin: 0 auto;
-          padding: 2rem 1rem;
+          padding: calc(var(--header-h, 70px) + 2rem) 1rem 2rem;
           min-height: 100vh;
           direction: rtl;
         }
@@ -207,7 +210,7 @@ export default function AiUpdatesPage() {
         }
         @media (max-width: 640px) {
           .updates-page {
-            padding: 1rem 0.75rem;
+            padding: calc(var(--header-h, 70px) + 1rem) 0.75rem 1rem;
           }
           .updates-header h1 {
             font-size: 1.5rem;
@@ -215,5 +218,6 @@ export default function AiUpdatesPage() {
         }
       `}</style>
     </div>
+    </>
   )
 }

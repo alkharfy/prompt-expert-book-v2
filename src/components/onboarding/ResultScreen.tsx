@@ -81,18 +81,18 @@ export default function ResultScreen(props: Props) {
         <p className="rs-strong">{startLabel(destination, level)}</p>
         {level && <p className="rs-muted">{LEVEL_NOTE[level]}</p>}
         {!startsAtIntroOne && (
-          <Link href="/read/intro/1" className="rs-link">أو ابدأ من أول الكتاب</Link>
+          <Link href="/read/intro/1" className="rs-link">أو ابدأ من أول الكورس</Link>
         )}
       </div>
 
       <div className="rs-card">
         <h2 className="rs-card-title"><span aria-hidden="true">⏱️</span> {minutes} دقيقة في اليوم = {pages(estimate.pagesPerDay)} قراية</h2>
         {hasFullAccess ? (
-          <p className="rs-strong">الكتاب كله من مكانك هيخلص في {duration(estimate.fullDays)}.</p>
+          <p className="rs-strong">الكورس كله من مكانك هيخلص في {duration(estimate.fullDays)}.</p>
         ) : estimate.freePages > 0 ? (
           <p className="rs-strong">
             الجزء المجاني ({pages(estimate.freePages)}) هيخلص في {days(estimate.freeDays)}.
-            {' '}ولو اشتركت، الكتاب كله في {duration(estimate.fullDays)}.
+            {' '}ولو اشتركت، الكورس كله في {duration(estimate.fullDays)}.
           </p>
         ) : (
           <p className="rs-strong">خلّصت الجزء المجاني 👏 والباقي محتاج اشتراك — وبنفس وقتك هيخلص في {duration(estimate.fullDays)}.</p>

@@ -79,7 +79,7 @@ describe('validated self-reported reading', () => {
     })
     it.each([
         { chapter: 0, endpoint: 3, completed: ['0'], percentage: 0, allowed: false },
-        { chapter: 1, endpoint: 15, completed: ['1'], percentage: 10, allowed: true },
+        { chapter: 1, endpoint: 15, completed: ['1'], percentage: 20, allowed: true },
     ])('accepts chapter $chapter completion at its real endpoint $endpoint', async ({ chapter, endpoint, completed, percentage, allowed }) => {
         h.allowed = allowed; h.row.current_page = endpoint
         expect(getChapterEndPage(String(chapter))).toBe(endpoint)
@@ -102,28 +102,29 @@ describe('validated self-reported reading', () => {
     it('counts Level 1 once for a subscriber', async () => {
         h.allowed = true; h.row = { current_page: 15, completed_chapters: ['0'] }
         expect((await POST(request({ completed_chapter: 1 }))).status).toBe(200)
-        expect(h.writes[0]).toMatchObject({ completed_chapters: ['0', '1'], completion_percentage: 10 })
+        expect(h.writes[0]).toMatchObject({ completed_chapters: ['0', '1'], completion_percentage: 20 })
         expect(h.sync).toHaveBeenCalledWith('u1', 1, expect.anything())
     })
     it('rejects a bulk completion claim even at the final page', async () => {
-        h.row.current_page = 182
-        expect((await POST(request({ completed_chapters: Array.from({ length: 10 }, (_, i) => String(i + 1)) }))).status).toBe(400)
+        h.row.current_page = 85
+        expect((await POST(request({ completed_chapters: Array.from({ length: 5 }, (_, i) => String(i + 1)) }))).status).toBe(400)
         expect(h.writes).toHaveLength(0)
     })
     it('requires the end page to have been saved separately', async () => {
         expect((await POST(request({ current_page: 15, completed_chapter: 1 }))).status).toBe(400)
         expect(h.writes).toHaveLength(0)
     })
-    it('merges a valid last-chapter marker and sanitizes legacy duplicates', async () => {
-        h.row = { current_page: 182, completed_chapters: ['0', '1', '1', 'bogus', ...Array.from({ length: 8 }, (_, i) => String(i + 2))] }
-        expect((await POST(request({ completed_chapter: '10' }))).status).toBe(200)
+    it('merges a valid last-level marker and sanitizes legacy duplicates and removed book chapters', async () => {
+        // Level 5 ends on global page 85; markers 6–10 belonged to the book chapters removed on 2026-11-01.
+        h.row = { current_page: 85, completed_chapters: ['0', '1', '1', 'bogus', '2', '3', '4', '6', '10'] }
+        expect((await POST(request({ completed_chapter: '5' }))).status).toBe(200)
         expect(h.writes[0].completion_percentage).toBe(100)
-        expect(h.writes[0].completed_chapters).toHaveLength(11)
+        expect(h.writes[0].completed_chapters).toEqual(['0', '1', '2', '3', '4', '5'])
     })
     it('derives returned completion from unique main chapters, never the old percentage', async () => {
         h.row = { current_page: 222, total_pages: 89, completed_chapters: ['0', '1', '1', '11', '12', 'bogus'], completion_percentage: 100 }
         expect((await (await GET()).json()).data).toMatchObject({ total_pages: 222,
-            completed_chapters: ['0', '1', '11', '12'], completion_percentage: 10 })
+            completed_chapters: ['0', '1', '11', '12'], completion_percentage: 20 })
     })
     it('fails closed when the saved reading record cannot be checked', async () => {
         h.readError = { message: 'unavailable' }
