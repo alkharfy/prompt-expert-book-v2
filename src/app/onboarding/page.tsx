@@ -8,13 +8,13 @@ import ChoiceStep, { type ChoiceOption } from '@/components/onboarding/ChoiceSte
 import ResultScreen, { type PlanOutcome } from '@/components/onboarding/ResultScreen';
 import { days, duration } from '@/components/onboarding/arabicCounts';
 import { useSubscription } from '@/context/SubscriptionContext';
-import { PROFESSION_TRIES } from '@/data/professionTries';
 import { trackOnboarding } from '@/lib/analytics';
 import { authSystem } from '@/lib/auth_system';
 import {
   DAILY_MINUTES_OPTIONS,
   GUEST_LAST_PAGE_KEY,
-  PROFESSION_IDS,
+  TRACK_PROFESSIONS,
+  TRACK_PROFESSION_LABELS,
   estimatePlan,
   getSafeDestination,
   isAiLevelId,
@@ -24,10 +24,14 @@ import {
 } from '@/lib/onboarding';
 import type { AiLevelId, DailyMinutes, OnboardingStatus, ProfessionId } from '@/types/learning';
 
-const PROFESSION_OPTIONS: ChoiceOption<ProfessionId>[] = PROFESSION_IDS.map(id => ({
+// Owner 2026-11-01: the lessons follow only two people (Ahmed in accounting, Mona in customer service), so the
+// reader picks the one closer to their work instead of 8 jobs the course doesn't really cover. Older answers
+// (teacher, programmer…) stay valid and still map to a track (readerTrack).
+const PROFESSION_OPTIONS: ChoiceOption<ProfessionId>[] = TRACK_PROFESSIONS.map(id => ({
   id,
-  icon: PROFESSION_TRIES[id].icon,
-  label: PROFESSION_TRIES[id].label,
+  icon: TRACK_PROFESSION_LABELS[id].icon,
+  label: TRACK_PROFESSION_LABELS[id].label,
+  hint: TRACK_PROFESSION_LABELS[id].hint,
 }));
 
 const LEVEL_OPTIONS: ChoiceOption<AiLevelId>[] = [
@@ -227,11 +231,11 @@ function OnboardingContent() {
           {step === 0 && (
             <ChoiceStep
               key="profession"
-              title="بتشتغل إيه؟"
-              helper="عشان الأمثلة تبقى من شغلك"
+              title="شغلك أقرب لأنهي واحد؟"
+              helper="الدروس ماشية مع اتنين من الشغل. اختار الأقرب ليك، وتقدر تغيّره بعدين من ملفك الشخصي."
               options={PROFESSION_OPTIONS}
               selected={profession}
-              columns={2}
+              columns={1}
               onSelect={chooseProfession}
             />
           )}

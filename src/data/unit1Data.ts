@@ -148,7 +148,13 @@ export const unit1Data: PageContent[] = [
             },
             {
                 type: 'text' as const,
+                track: 'accounting' as const,
                 content: "أحمد فتح ChatGPT من موبايله في الميكروباص، وبدأ يكتب طلب طويل… تعب من الكتابة في نص السطر التاني، وقفل.\n\nأغلب الناس بيقفوا هنا، مش عشان الأداة صعبة، عشان محدش جهّزها معاهم. يلا نجهّزها في 6 خطوات."
+            },
+            {
+                type: 'text' as const,
+                track: 'service' as const,
+                content: "منى فتحت ChatGPT من موبايلها في المترو، وبدأت تكتب طلب طويل… تعبت من الكتابة في نص السطر التاني، وقفلت.\n\nأغلب الناس بيقفوا هنا، مش عشان الأداة صعبة، عشان محدش جهّزها معاهم. يلا نجهّزها في 6 خطوات."
             },
             {
                 type: 'card' as const,
@@ -229,7 +235,7 @@ export const unit1Data: PageContent[] = [
                 title: '👀 ده اللي طلع لما طلبنا الصورة',
                 content: '📸 صور حقيقية من ChatGPT المجاني (أكتوبر 2026). الدرس بيقول Gemini، وجرّبناها على ChatGPT: الفكرة والمراجعة هي هي. دوس على الصورة عشان تقلّب.',
                 frames: [
-                    { src: '/assets/content/stories/level-1/1-2/1.webp', caption: 'أحمد كتب طلب الصورة زي ما هو في الدرس، وآخره «من غير أي كتابة في الصورة».', box: { x: 7.1, y: 62.5, w: 85.9, h: 18.3 } },
+                    { src: '/assets/content/stories/level-1/1-2/1.webp', caption: 'كتبنا طلب الصورة زي ما هو في الدرس، وآخره «من غير أي كتابة في الصورة».', box: { x: 7.1, y: 62.5, w: 85.9, h: 18.3 } },
                     { src: '/assets/content/stories/level-1/1-2/2.webp', caption: 'وطلعت الصورة دي في أقل من دقيقة. الفنجان سليم، والمكتب خشب، والشمس داخلة من الشباك ✓', box: { x: 2, y: 11.6, w: 95.9, h: 76.6 } },
                     { src: '/assets/content/stories/level-1/1-2/3.webp', caption: '🔎 راجع: الأداة زوّدت من عندها برج القاهرة وجامع ورا الشباك. ده مش غلط، بس محدش طلبه. ولو فيه حاجة غريبة (فنجان بودنين، أو إيد بستة صوابع)، اطلب تصليحها أو اعملها تاني.', box: { x: 31, y: 30.3, w: 66.9, h: 39.1 } }
                 ]
@@ -334,7 +340,7 @@ export const unit1Data: PageContent[] = [
                 content: STORY_NOTE,
                 frames: [
                     { src: '/assets/content/stories/level-1/1-3-mona/1.webp', caption: 'منى كتبت الطلب العام: «اكتبلي رد على عميل زعلان».', box: { x: 42.5, y: 15.5, w: 55.2, h: 12.6 } },
-                    { src: '/assets/content/stories/level-1/1-3-mona/2.webp', caption: 'الرد طويل وعام، ومفيهوش ميعاد. والأخطر: «نتمنى نقدر نعوض حضرتك». ده وعد بتعويض مش في إيدها.', box: { x: 2.5, y: 72.5, w: 94.9, h: 23.6 } },
+                    { src: '/assets/content/stories/level-1/1-3-mona/2.webp', caption: 'الرد طويل وعام، ومفيهوش ميعاد. والأخطر: «نتمنى نقدر نعوض حضرتك». ده بيفتح للعميل باب تعويض مش في إيدها، وهيستناه.', box: { x: 2.5, y: 72.5, w: 94.9, h: 23.6 } },
                     { src: '/assets/content/stories/level-1/1-3-mona/3.webp', caption: 'المرة دي كتبت شروط القبول في الطلب: 3 سطور بالعامية، واعتذار، والميعاد، ومن غير وعود. والرد طلع كده.', box: { x: 2.5, y: 29.3, w: 94.9, h: 36.7 } },
                     { src: '/assets/content/stories/level-1/1-3-mona/4.webp', caption: 'وراجعت بشروطها: 3 سطور ✓ اعتذار ✓ الميعاد ✓ مفيش خصم ولا تعويض ✓', box: { x: 7.2, y: 45.6, w: 87.2, h: 12 } }
                 ]
@@ -376,7 +382,14 @@ export const unit1Data: PageContent[] = [
             },
             {
                 type: 'text' as const,
+                track: 'accounting' as const,
                 content: "أحمد طلب إيميل لمديره. الرد طلع طويل ورسمي زيادة. مسح المحادثة، وكتب الطلب من الأول. وبعدين تاني. وبعدين تالت… ربع ساعة على إيميل من 4 سطور.\n\nاللي فات أحمد: **الرد الأول مسودة.** إنت بتكمّل معاه الكلام، مش بتبدأ من الصفر."
+            },
+            {
+                // Owner 2026-11-01: a reader who picked Mona still read Ahmed here.
+                type: 'text' as const,
+                track: 'service' as const,
+                content: "منى طلبت رسالة للمشرف. الرد طلع فقرة طويلة ورسمية زيادة. مسحت المحادثة، وكتبت الطلب من الأول. وبعدين تاني. وبعدين تالت… ربع ساعة على رسالة من 4 سطور، والعميل مستني.\n\nاللي فات منى: **الرد الأول مسودة.** إنت بتكمّل معاه الكلام، مش بتبدأ من الصفر."
             },
             {
                 type: 'card' as const,
@@ -411,6 +424,7 @@ export const unit1Data: PageContent[] = [
             },
             {
                 type: 'story' as const,
+                track: 'accounting' as const,
                 title: '👀 اتفرج على أحمد في التلات لفّات',
                 content: STORY_NOTE,
                 frames: [
@@ -418,6 +432,19 @@ export const unit1Data: PageContent[] = [
                     { src: '/assets/content/stories/level-1/1-4/2.webp', caption: 'اللفة التانية، في نفس المحادثة: «قصّره لـ 4 سطور، وخليه أبسط». بقى 4 سطور بالعامية.', box: { x: 2, y: 12.4, w: 95.9, h: 74.9 } },
                     { src: '/assets/content/stories/level-1/1-4/3.webp', caption: 'اللفة التالتة: «سيب كل حاجة زي ما هي، وغيّر جملة الختام بس: خليها «شكراً لحضرتك»».', box: { x: 2, y: 7.9, w: 95.9, h: 83.9 } },
                     { src: '/assets/content/stories/level-1/1-4/4.webp', caption: 'بس قارن بالنسخة اللي قبلها: سطر «هأرسله لحضرتك فور وصولهم» **اختفى**. غيّر حاجة محدش طلبها. عشان كده بتحط النسختين جنب بعض وتقارن.', box: { x: 68.5, y: 46.6, w: 25.9, h: 6.7 } }
+                ]
+            },
+            {
+                // Real screenshots of free ChatGPT running the service-track request above (temporary chat, 1 Nov 2026).
+                type: 'story' as const,
+                track: 'service' as const,
+                title: '👀 اتفرج على منى في التلات لفّات',
+                content: STORY_NOTE,
+                frames: [
+                    { src: '/assets/content/stories/level-1/1-4-mona/1.webp', caption: 'اللفّة الأولى: الرسالة طلعت فقرة واحدة طويلة ورسمية («أستاذي… وأبلغه بالقرار»). منى مبدأتش من الأول.', box: { x: 6.1, y: 52.9, w: 88.8, h: 23.6 } },
+                    { src: '/assets/content/stories/level-1/1-4-mona/2.webp', caption: 'اللفّة التانية، في نفس المحادثة: «قصّره لـ 4 سطور، وخليه أبسط». بقت 4 سطور بسيطة.', box: { x: 6.1, y: 8.1, w: 88.8, h: 53.3 } },
+                    { src: '/assets/content/stories/level-1/1-4-mona/3.webp', caption: 'اللفّة التالتة: «سيب كل حاجة زي ما هي، وغيّر جملة الختام بس». والختام بقى «شكراً لحضرتك».', box: { x: 54.7, y: 60.7, w: 39.2, h: 6.5 } },
+                    { src: '/assets/content/stories/level-1/1-4-mona/4.webp', caption: 'وقبل ما تبعت، قارن بالنسخة اللي قبلها سطر سطر: التلات سطور زي ما هما ✓. المرة دي متغيّرش حاجة محدش طلبها. بس ده بيحصل، وعشان كده بتحط النسختين جنب بعض وتقارن.', box: { x: 6.1, y: 44.8, w: 88.8, h: 16.7 } }
                 ]
             },
             {
@@ -828,7 +855,7 @@ export const unit1Data: PageContent[] = [
                 title: '👀 ده البوستر اللي طلع، والمراجعة',
                 content: '📸 صور حقيقية من ChatGPT المجاني (أكتوبر 2026). الدرس بيقول Gemini، وجرّبناها على ChatGPT: الفكرة والمراجعة هي هي. دوس على الصورة عشان تقلّب.',
                 frames: [
-                    { src: '/assets/content/stories/level-1/1-8/1.webp', caption: 'أحمد طلب بوستر لـ «حلويات الهنا»، ومكتوب فوق بخط كبير: «خصم 20٪ على الكنافة».', box: { x: 7.1, y: 57.2, w: 85.9, h: 23.6 } },
+                    { src: '/assets/content/stories/level-1/1-8/1.webp', caption: 'طلبنا بوستر لـ «حلويات الهنا»، ومكتوب فوق بخط كبير: «خصم 20٪ على الكنافة».', box: { x: 7.1, y: 57.2, w: 85.9, h: 23.6 } },
                     { src: '/assets/content/stories/level-1/1-8/2.webp', caption: 'وده البوستر اللي طلع.', box: { x: 2, y: 0, w: 95.9, h: 100 } },
                     { src: '/assets/content/stories/level-1/1-8/3.webp', caption: '🔎 راجع الكتابة حرف حرف: «حلويات الهنا» ✓ «خصم 20% على الكنافة» ✓. المرة دي طلعت سليمة، بس ده مش مضمون كل مرة. لو فيه حرف مكسور، اطلب تصليح الكلمة دي بس.', box: { x: 13.7, y: 15.9, w: 71.8, h: 68 } }
                 ]

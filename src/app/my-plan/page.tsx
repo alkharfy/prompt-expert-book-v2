@@ -213,6 +213,15 @@ export default function MyPlanPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
+        {/* Owner 2026-11-01: no visible way back from here. Opened directly (no history) → the course map. */}
+        <button
+          type="button"
+          className="plan-back-btn"
+          onClick={() => (window.history.length > 1 ? router.back() : router.push('/toc'))}
+        >
+          → رجوع
+        </button>
+
         {/* Header */}
         <div className="plan-header">
           <h1>📅 خطتي</h1>
@@ -393,6 +402,25 @@ const pageStyles = `
   .plan-container {
     max-width: 700px;
     margin: 0 auto;
+  }
+  .plan-back-btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    margin-bottom: 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: #ccc;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .plan-back-btn:hover {
+    border-color: #FF6B35;
+    color: #fff;
   }
   .plan-header {
     text-align: center;

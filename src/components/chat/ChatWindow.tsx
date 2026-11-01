@@ -26,9 +26,12 @@ const MODEL_OPTIONS = [
     { value: 'gpt-oss-120b', label: 'GPT-OSS 120B (سريع)' },
 ] as const
 
+// Stored per account (`<key>:<userId>`): owner 2026-11-01, a brand-new account opened the chat on
+// another account's old questions from the same browser. The old shared keys can't be told apart, so they go.
 const STORAGE_KEY = 'book-chat-messages'
 const RATED_KEY = 'book-chat-rated'
 const SESSION_KEY = 'book-chat-session-id'
+const LEGACY_KEYS = [STORAGE_KEY, RATED_KEY, SESSION_KEY]
 const MAX_MESSAGE_LENGTH = 2000
 
 const SUGGESTED_QUESTIONS = [
@@ -52,19 +55,23 @@ function generateSessionId(): string {
     return `session-${Date.now()}-${randomPart}`
 }
 
-function getOrCreateSessionId(): string {
+function userKey(key: string, userId: string): string {
+    return `${key}:${userId}`
+}
+
+function getOrCreateSessionId(userId: string): string {
     if (typeof window === 'undefined') return generateSessionId()
-    const stored = localStorage.getItem(SESSION_KEY)
+    const stored = localStorage.getItem(userKey(SESSION_KEY, userId))
     if (stored) return stored
     const newId = generateSessionId()
-    localStorage.setItem(SESSION_KEY, newId)
+    localStorage.setItem(userKey(SESSION_KEY, userId), newId)
     return newId
 }
 
-function loadMessages(): Message[] {
+function loadMessages(userId: string): Message[] {
     if (typeof window === 'undefined') return []
     try {
-        const stored = localStorage.getItem(STORAGE_KEY)
+        const stored = localStorage.getItem(userKey(STORAGE_KEY, userId))
         if (!stored) return []
         const parsed = JSON.parse(stored)
         if (Array.isArray(parsed)) return parsed
@@ -74,12 +81,20 @@ function loadMessages(): Message[] {
     return []
 }
 
-function saveMessages(messages: Message[]): void {
+function saveMessages(userId: string, messages: Message[]): void {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+        localStorage.setItem(userKey(STORAGE_KEY, userId), JSON.stringify(messages))
     } catch {
         // Storage full or unavailable
     }
+}
+
+function loadRated(userId: string): Set<string> {
+    try {
+        const arr = JSON.parse(localStorage.getItem(userKey(RATED_KEY, userId)) || '[]')
+        if (Array.isArray(arr)) return new Set(arr)
+    } catch { /* corrupted data */ }
+    return new Set()
 }
 
 function getModelLabel(value: string): string {
@@ -90,7 +105,8 @@ function getModelLabel(value: string): string {
 
 export default function ChatWindow() {
     const [isOpen, setIsOpen] = useState(false)
-    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const [userId, setUserId] = useState<string | null>(null)
+    const isLoggedIn = !!userId
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
@@ -105,33 +121,35 @@ export default function ChatWindow() {
     const abortControllerRef = useRef<AbortController | null>(null)
     const pendingRetryRef = useRef<string | null>(null)
     const sendingRef = useRef(false)
+    const userIdRef = useRef<string | null>(null)
 
-    // Load messages, sessionId, and rated messages from localStorage on mount
+    // Check auth status (again on every open: the reader may have logged in or switched accounts)
     useEffect(() => {
-        setMessages(loadMessages())
-        setSessionId(getOrCreateSessionId())
-        // Restore rated messages
-        try {
-            const stored = localStorage.getItem(RATED_KEY)
-            if (stored) {
-                const arr = JSON.parse(stored)
-                if (Array.isArray(arr)) setRatedMessages(new Set(arr))
-            }
-        } catch { /* corrupted data */ }
-    }, [])
+        setUserId(getAuthCookies().userId || null)
+    }, [isOpen])
 
-    // Save messages to localStorage whenever they change
+    // This account's conversation, session and ratings
     useEffect(() => {
-        if (messages.length > 0) {
-            saveMessages(messages)
+        try { for (const key of LEGACY_KEYS) localStorage.removeItem(key) } catch { /* storage unavailable */ }
+        userIdRef.current = userId
+        setError(null)
+        if (!userId) {
+            setMessages([])
+            setRatedMessages(new Set())
+            return
+        }
+        setMessages(loadMessages(userId))
+        setSessionId(getOrCreateSessionId(userId))
+        setRatedMessages(loadRated(userId))
+    }, [userId])
+
+    // Save messages whenever they change. The ref (not a dependency) keeps the previous account's
+    // messages from being written under a new account in the render where the account changes.
+    useEffect(() => {
+        if (userIdRef.current && messages.length > 0) {
+            saveMessages(userIdRef.current, messages)
         }
     }, [messages])
-
-    // Check auth status
-    useEffect(() => {
-        const { userId } = getAuthCookies()
-        setIsLoggedIn(!!userId)
-    }, [isOpen])
 
     // Auto-scroll to bottom
     const scrollToBottom = useCallback(() => {
@@ -211,7 +229,7 @@ export default function ChatWindow() {
             }
 
             if (!res.ok) {
-                let errorMsg = '\u062d\u062f\u062b \u062e\u0637\u0623 \u063a\u064a\u0631 \u0645\u062a\u0648\u0642\u0639'
+                let errorMsg = 'حدث خطأ غير متوقع'
                 try {
                     const data = await res.json()
                     errorMsg = data.error || errorMsg
@@ -226,7 +244,7 @@ export default function ChatWindow() {
             // Stream the response
             const reader = res.body?.getReader()
             if (!reader) {
-                setError('\u0644\u0627 \u064a\u0645\u0643\u0646 \u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u0631\u062f')
+                setError('لا يمكن قراءة الرد')
                 setIsLoading(false)
                 return
             }
@@ -274,7 +292,7 @@ export default function ChatWindow() {
             }
 
             if (!assistantContent.trim()) {
-                setError('\u0644\u0645 \u064a\u062a\u0645 \u0627\u0633\u062a\u0644\u0627\u0645 \u0631\u062f \u0645\u0646 \u0627\u0644\u0646\u0645\u0648\u0630\u062c')
+                setError('لم يتم استلام رد من النموذج')
                 // Remove the empty assistant message
                 setMessages(prev => prev.filter(m => m.id !== assistantId))
             }
@@ -283,7 +301,7 @@ export default function ChatWindow() {
                 // Request was cancelled by user - not an error
                 return
             }
-            setError('\u062d\u062f\u062b \u062e\u0637\u0623 \u0641\u064a \u0627\u0644\u0627\u062a\u0635\u0627\u0644. \u062a\u0623\u0643\u062f \u0645\u0646 \u0627\u062a\u0635\u0627\u0644\u0643 \u0628\u0627\u0644\u0625\u0646\u062a\u0631\u0646\u062a.')
+            setError('حدث خطأ في الاتصال. تأكد من اتصالك بالإنترنت.')
         } finally {
             abortControllerRef.current = null
             sendingRef.current = false
@@ -323,12 +341,15 @@ export default function ChatWindow() {
         setMessages([])
         setError(null)
         setRatedMessages(new Set())
-        localStorage.removeItem(STORAGE_KEY)
         // Generate new session ID for next conversation
         const newSessionId = generateSessionId()
         setSessionId(newSessionId)
-        localStorage.setItem(SESSION_KEY, newSessionId)
-    }, [isLoading])
+        if (userId) {
+            localStorage.removeItem(userKey(STORAGE_KEY, userId))
+            localStorage.removeItem(userKey(RATED_KEY, userId))
+            localStorage.setItem(userKey(SESSION_KEY, userId), newSessionId)
+        }
+    }, [isLoading, userId])
 
     const handleExport = useCallback(() => {
         if (messages.length === 0) return
@@ -340,16 +361,16 @@ export default function ChatWindow() {
             day: 'numeric',
         })
 
-        let text = `\u0645\u062d\u0627\u062f\u062b\u0629 \u0627\u0644\u0645\u0633\u062a\u0631 - \u062e\u0628\u064a\u0631 \u0627\u0644\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a\n`
-        text += `\u0627\u0644\u062a\u0627\u0631\u064a\u062e: ${date}\n`
-        text += `\u0627\u0644\u0646\u0645\u0648\u0630\u062c: ${modelLabel}\n`
+        let text = `محادثة المستر - خبير البرومبتات\n`
+        text += `التاريخ: ${date}\n`
+        text += `النموذج: ${modelLabel}\n`
         text += `================================\n\n`
 
         for (const msg of messages) {
             if (msg.role === 'user') {
-                text += `[\u0623\u0646\u062a]: ${msg.content}\n\n`
+                text += `[أنت]: ${msg.content}\n\n`
             } else {
-                text += `[\u0627\u0644\u0645\u0633\u062a\u0631]: ${msg.content}\n\n`
+                text += `[المستر]: ${msg.content}\n\n`
             }
             text += `================================\n\n`
         }
@@ -388,7 +409,7 @@ export default function ChatWindow() {
             const next = new Set(prev).add(messageId)
             // Persist rated messages to localStorage
             try {
-                localStorage.setItem(RATED_KEY, JSON.stringify([...next]))
+                if (userId) localStorage.setItem(userKey(RATED_KEY, userId), JSON.stringify([...next]))
             } catch { /* storage full */ }
             return next
         })
@@ -407,7 +428,7 @@ export default function ChatWindow() {
         } catch {
             // Silently fail - rating is a nice-to-have
         }
-    }, [messages, model])
+    }, [messages, model, userId])
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -442,14 +463,14 @@ export default function ChatWindow() {
                         transition={{ duration: 0.2 }}
                         role="dialog"
                         aria-modal="true"
-                        aria-label="\u0627\u0644\u0645\u0633\u062a\u0631"
+                        aria-label="المستر"
                     >
                         {/* Header */}
                         <div className="chat-window__header">
                             <div className="chat-window__title">
-                                {/* The course's own coach answers here (owner 2026-10-22), not a generic \u00abbook assistant\u00bb */}
+                                {/* The course's own coach answers here (owner 2026-10-22), not a generic «book assistant» */}
                                 <img src="/assets/robot-marker.png" alt="" width={26} height={26} style={{ transform: 'scaleX(-1)' }} />
-                                <span>\u0627\u0633\u0623\u0644 \u0627\u0644\u0645\u0633\u062a\u0631</span>
+                                <span>اسأل المستر</span>
                             </div>
                             <div className="chat-window__controls">
                                 {isLoggedIn && messages.length > 0 && (
@@ -457,8 +478,8 @@ export default function ChatWindow() {
                                         <button
                                             className="chat-window__export-btn"
                                             onClick={handleExport}
-                                            aria-label="\u062a\u0635\u062f\u064a\u0631 \u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629"
-                                            title="\u062a\u0635\u062f\u064a\u0631 \u0643\u0645\u0644\u0641 \u0646\u0635\u064a"
+                                            aria-label="تصدير المحادثة"
+                                            title="تصدير كملف نصي"
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -469,8 +490,8 @@ export default function ChatWindow() {
                                         <button
                                             className="chat-window__clear-btn"
                                             onClick={handleClearChat}
-                                            aria-label="\u0645\u0633\u062d \u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629"
-                                            title="\u0645\u0633\u062d \u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629"
+                                            aria-label="مسح المحادثة"
+                                            title="مسح المحادثة"
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <polyline points="3 6 5 6 21 6" />
@@ -486,7 +507,7 @@ export default function ChatWindow() {
                                         className="chat-window__model-select"
                                         value={model}
                                         onChange={(e) => setModel(e.target.value)}
-                                        aria-label="\u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0646\u0645\u0648\u0630\u062c"
+                                        aria-label="اختيار النموذج"
                                     >
                                         {MODEL_OPTIONS.map((opt) => (
                                             <option key={opt.value} value={opt.value}>
@@ -498,7 +519,7 @@ export default function ChatWindow() {
                                 <button
                                     className="chat-window__close-btn"
                                     onClick={() => setIsOpen(false)}
-                                    aria-label="\u0625\u063a\u0644\u0627\u0642"
+                                    aria-label="إغلاق"
                                 >
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <line x1="18" y1="6" x2="6" y2="18" />
@@ -511,7 +532,7 @@ export default function ChatWindow() {
                         {/* Rate limit info */}
                         {isLoggedIn && remaining !== null && (
                             <div className="chat-window__rate-info">
-                                {'\u0631\u0633\u0627\u0626\u0644 \u0645\u062a\u0628\u0642\u064a\u0629: '}{remaining}/30
+                                {'رسائل متبقية: '}{remaining}/30
                             </div>
                         )}
 
@@ -524,10 +545,10 @@ export default function ChatWindow() {
                                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                     </svg>
                                 </div>
-                                <h3>{'\u0633\u062c\u0644 \u062f\u062e\u0648\u0644\u0643 \u0623\u0648\u0644\u0627\u064b'}</h3>
-                                <p>\u0633\u062c\u0651\u0644 \u062f\u062e\u0648\u0644\u0643 \u0639\u0634\u0627\u0646 \u062a\u0633\u0623\u0644 \u0627\u0644\u0645\u0633\u062a\u0631.</p>
+                                <h3>{'سجل دخولك أولاً'}</h3>
+                                <p>سجّل دخولك عشان تسأل المستر.</p>
                                 <Link href="/login" className="chat-window__auth-gate-btn">
-                                    {'\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u062f\u062e\u0648\u0644'}
+                                    {'تسجيل الدخول'}
                                 </Link>
                             </div>
                         ) : (
@@ -536,8 +557,8 @@ export default function ChatWindow() {
                                     {messages.length === 0 && (
                                         <div className="chat-window__welcome">
                                             <img src="/assets/robot-toc.webp" alt="" width={64} height={64} style={{ display: 'block', margin: '0 auto 8px', objectFit: 'contain' }} />
-                                            <h3>\u0623\u0647\u0644\u0627\u064b\u060c \u0623\u0646\u0627 \u0627\u0644\u0645\u0633\u062a\u0631 \ud83d\udc4b</h3>
-                                            <p>\u0627\u0633\u0623\u0644\u0646\u064a \u0639\u0646 \u0623\u064a \u062f\u0631\u0633 \u0623\u0648 \u0641\u0643\u0631\u0629 \u0623\u0648 \u062a\u0645\u0631\u064a\u0646 \u0641\u064a \u0627\u0644\u0643\u0648\u0631\u0633\u060c \u0648\u0647\u062c\u0627\u0648\u0628\u0643 \u0645\u0646 \u0627\u0644\u062f\u0631\u0648\u0633 \u0646\u0641\u0633\u0647\u0627\u060c \u0648\u0645\u0639\u0627\u0647\u0627 \u0631\u0627\u0628\u0637 \u0627\u0644\u062f\u0631\u0633.</p>
+                                            <h3>أهلاً، أنا المستر 👋</h3>
+                                            <p>اسألني عن أي درس أو فكرة أو تمرين في الكورس، وهجاوبك من الدروس نفسها، ومعاها رابط الدرس.</p>
 
                                             {/* Suggested questions */}
                                             <div className="chat-window__suggestions">
@@ -590,7 +611,7 @@ export default function ChatWindow() {
                                                 <img src="/assets/robot-marker.png" alt="" width={24} height={24} style={{ transform: 'scaleX(-1)' }} />
                                             </div>
                                             <div className="chat-message__bubble">
-                                                <div className="chat-window__loading" role="status" aria-label="\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0645\u064a\u0644">
+                                                <div className="chat-window__loading" role="status" aria-label="جاري التحميل">
                                                     <span className="chat-window__loading-dot" />
                                                     <span className="chat-window__loading-dot" />
                                                     <span className="chat-window__loading-dot" />
@@ -619,10 +640,10 @@ export default function ChatWindow() {
                                             value={input}
                                             onChange={(e) => setInput(e.target.value)}
                                             onKeyDown={handleKeyDown}
-                                            placeholder={'\u0627\u0643\u062a\u0628 \u0633\u0624\u0627\u0644\u0643 \u0647\u0646\u0627...'}
+                                            placeholder={'اكتب سؤالك هنا...'}
                                             disabled={isLoading}
                                             maxLength={MAX_MESSAGE_LENGTH}
-                                            aria-label={'\u0627\u0643\u062a\u0628 \u0633\u0624\u0627\u0644\u0643'}
+                                            aria-label={'اكتب سؤالك'}
                                             autoComplete="off"
                                         />
                                         {input.length > 0 && (
@@ -635,8 +656,8 @@ export default function ChatWindow() {
                                         <button
                                             className="chat-window__stop-btn"
                                             onClick={handleStopStreaming}
-                                            aria-label="\u0625\u064a\u0642\u0627\u0641"
-                                            title="\u0625\u064a\u0642\u0627\u0641 \u0627\u0644\u062a\u0648\u0644\u064a\u062f"
+                                            aria-label="إيقاف"
+                                            title="إيقاف التوليد"
                                         >
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                                                 <rect x="6" y="6" width="12" height="12" rx="2" />
@@ -647,7 +668,7 @@ export default function ChatWindow() {
                                             className="chat-window__send-btn"
                                             onClick={() => handleSend()}
                                             disabled={!input.trim()}
-                                            aria-label={'\u0625\u0631\u0633\u0627\u0644'}
+                                            aria-label={'إرسال'}
                                         >
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <line x1="22" y1="2" x2="11" y2="13" />

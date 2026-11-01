@@ -68,3 +68,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500 })
   }
 }
+
+/**
+ * Profile «أمثلة الدروس على مين؟»: change only the profession (so the lesson track), without
+ * touching the onboarding status, the other answers or the plan.
+ */
+export async function PUT(request: NextRequest) {
+  try {
+    const userId = await getAuthenticatedUser()
+    if (!userId) {
+      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    }
+    const body = await request.json().catch(() => null)
+    const profession = body && typeof body === 'object' ? (body as Record<string, unknown>).profession : undefined
+    if (!isProfessionId(profession)) {
+      return NextResponse.json({ ok: false, error: 'profession غير صالح' }, { status: 400 })
+    }
+    const saved = await saveOnboardingAnswers(userId, { profession })
+    if (!saved.ok) {
+      return NextResponse.json({ ok: false, error: 'save_failed' }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true })
+  } catch {
+    return NextResponse.json({ ok: false, error: 'Internal error' }, { status: 500 })
+  }
+}

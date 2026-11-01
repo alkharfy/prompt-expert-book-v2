@@ -42,7 +42,9 @@ export default function ExercisesHub({ levels }: { levels: LevelPractice[] }) {
             .catch(() => { /* no ticks, the list still works */ })
     }, [levels])
 
-    const track = savedTrack ?? readerTrack(preferences?.profession ?? null)
+    // Same rule as the lessons: an onboarding answer decides; the saved switch is only for readers without one.
+    const profession = preferences?.profession ?? null
+    const track = profession ? readerTrack(profession) : savedTrack ?? readerTrack(null)
     const view = useMemo(() => levels.map(level => {
         const lessons = level.lessons
             .map(lesson => ({ ...lesson, exercises: lesson.exercises.filter(exercise => !exercise.track || exercise.track === track) }))

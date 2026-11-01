@@ -15,8 +15,8 @@ export default function ChatButton({ isOpen, onClick }: ChatButtonProps) {
             aria-expanded={isOpen}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            aria-label={isOpen ? '\u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0645\u0633\u0627\u0639\u062f' : '\u0627\u0633\u0623\u0644 \u0627\u0644\u0645\u0633\u062a\u0631'}
-            title={isOpen ? '\u0625\u063a\u0644\u0627\u0642 \u0627\u0644\u0645\u0633\u0627\u0639\u062f' : '\u0627\u0633\u0623\u0644 \u0627\u0644\u0645\u0633\u062a\u0631'}
+            aria-label={isOpen ? 'إغلاق المساعد' : 'اسأل المستر'}
+            title={isOpen ? 'إغلاق المساعد' : 'اسأل المستر'}
         >
             <AnimatePresence mode="wait" initial={false}>
                 {isOpen ? (

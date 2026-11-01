@@ -9,6 +9,7 @@ import { authSystem } from '@/lib/auth_system'
 import ProgressCircle from '@/components/ProgressCircle'
 import SearchDialog from '@/components/SearchDialog'
 import { useSubscription } from '@/context/SubscriptionContext'
+import { REFERRALS_LIVE } from '@/lib/referrals'
 
 export default function Navigation() {
     const pathname = usePathname()
@@ -494,7 +495,7 @@ export default function Navigation() {
                             </li>
                         )}
 
-                        {isLoggedIn && (
+                        {isLoggedIn && REFERRALS_LIVE && (
                             <li>
                                 <Link
                                     href="/profile#referral"

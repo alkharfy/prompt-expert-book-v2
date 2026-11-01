@@ -86,8 +86,8 @@ export default function ChatMessage({ role, content, isStreaming, onRetry, onRat
                         <button
                             className="chat-message__action-btn"
                             onClick={handleCopy}
-                            aria-label={copied ? '\u062a\u0645 \u0627\u0644\u0646\u0633\u062e' : '\u0646\u0633\u062e \u0627\u0644\u0631\u062f'}
-                            title={copied ? '\u062a\u0645 \u0627\u0644\u0646\u0633\u062e' : '\u0646\u0633\u062e'}
+                            aria-label={copied ? 'تم النسخ' : 'نسخ الرد'}
+                            title={copied ? 'تم النسخ' : 'نسخ'}
                         >
                             {copied ? (
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -104,8 +104,8 @@ export default function ChatMessage({ role, content, isStreaming, onRetry, onRat
                             <button
                                 className="chat-message__action-btn"
                                 onClick={onRetry}
-                                aria-label={'\u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0645\u062d\u0627\u0648\u0644\u0629'}
-                                title={'\u0625\u0639\u0627\u062f\u0629'}
+                                aria-label={'إعادة المحاولة'}
+                                title={'إعادة'}
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="1 4 1 10 7 10" />
@@ -115,7 +115,7 @@ export default function ChatMessage({ role, content, isStreaming, onRetry, onRat
                         )}
                         {/* Rating buttons */}
                         {isRated ? (
-                            <span className="chat-message__rated" aria-label="\u062a\u0645 \u0627\u0644\u062a\u0642\u064a\u064a\u0645">
+                            <span className="chat-message__rated" aria-label="تم التقييم">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="20 6 9 17 4 12" />
                                 </svg>
@@ -125,8 +125,8 @@ export default function ChatMessage({ role, content, isStreaming, onRetry, onRat
                                 <button
                                     className="chat-message__action-btn chat-message__rate-btn"
                                     onClick={() => onRate(1)}
-                                    aria-label={'\u0625\u0639\u062c\u0627\u0628'}
-                                    title={'\u0625\u0639\u062c\u0627\u0628'}
+                                    aria-label={'إعجاب'}
+                                    title={'إعجاب'}
                                 >
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
@@ -135,8 +135,8 @@ export default function ChatMessage({ role, content, isStreaming, onRetry, onRat
                                 <button
                                     className="chat-message__action-btn chat-message__rate-btn"
                                     onClick={() => onRate(-1)}
-                                    aria-label={'\u0639\u062f\u0645 \u0625\u0639\u062c\u0627\u0628'}
-                                    title={'\u0639\u062f\u0645 \u0625\u0639\u062c\u0627\u0628'}
+                                    aria-label={'عدم إعجاب'}
+                                    title={'عدم إعجاب'}
                                 >
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />

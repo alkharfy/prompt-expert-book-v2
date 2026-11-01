@@ -8,6 +8,9 @@ import Navigation from '@/components/Navigation'
 import { authSystem } from '@/lib/auth_system'
 import ShareButton from '@/components/sharing/ShareButton'
 import { trackWhatsAppClick, trackReferralShared } from '@/lib/analytics'
+import LessonTrackSetting from '@/components/profile/LessonTrackSetting'
+import DeleteAccount from '@/components/profile/DeleteAccount'
+import { REFERRALS_LIVE } from '@/lib/referrals'
 import '@/app/auth.css'
 
 interface EmailPrefs {
@@ -148,7 +151,7 @@ export default function ProfilePage() {
         loadUserData()
         loadEmailPrefs()
         initLoadDevices()
-        initLoadReferral()
+        if (REFERRALS_LIVE) initLoadReferral()
     }, [router])
 
     const copyToClipboard = async (text: string) => {
@@ -413,7 +416,12 @@ export default function ProfilePage() {
                     )}
                 </div>
 
+                {/* Lesson track (Ahmed / Mona) */}
+                <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '24px 0' }} />
+                <LessonTrackSetting />
+
                 {/* Referral Section */}
+                {REFERRALS_LIVE && (<>
                 <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '24px 0' }} />
                 
                 <div style={{ marginTop: '16px' }}>
@@ -547,6 +555,7 @@ export default function ProfilePage() {
                         </>
                     )}
                 </div>
+                </>)}
 
                 {/* Subscription Management Link */}
                 <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '24px 0' }} />
@@ -700,6 +709,10 @@ export default function ProfilePage() {
                         {emailPrefsLoading ? 'جاري الحفظ...' : 'حفظ تفضيلات الإيميل'}
                     </button>
                 </div>
+
+                {/* Delete account */}
+                <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '24px 0' }} />
+                <DeleteAccount />
             </AuthCard>
         </main>
     )

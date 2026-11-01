@@ -9,23 +9,39 @@ const pages = [...introData, ...unit1Data]
 
 describe('reading block personalization', () => {
   it('replaces the intro profession try with the teacher request and its review instructions', () => {
-    const index = introBlocks.findIndex(block => block.personalize === 'profession-try')
+    // A teacher (older answer) follows Mona's track, so only that track's blocks are on the page.
+    const visible = introBlocks.filter(block => !block.track || block.track === readerTrack('teacher'))
+    const index = visible.findIndex(block => block.personalize === 'profession-try')
     expect(index).toBeGreaterThanOrEqual(0)
     const result = personalizeBlocks(introBlocks, { profession: 'teacher', aiLevel: null })
-    expect(result).toHaveLength(introBlocks.length + 1)
+    expect(result).toHaveLength(visible.length + 1)
     expect(result[index]).toMatchObject({ type: 'code', personalize: 'profession-try', code: PROFESSION_TRIES.teacher.request })
     expect(result[index].title).toContain('مدرس')
     expect(result[index + 1].type).toBe('card')
     expect(result[index + 1].content).toContain(PROFESSION_TRIES.teacher.reviewTip)
     expect(result[index + 1].content).toContain('تجريبية')
-    introBlocks.forEach((block, blockIndex) => {
+    visible.forEach((block, blockIndex) => {
       if (blockIndex === index) return
       expect(result[blockIndex < index ? blockIndex : blockIndex + 1]).toBe(block)
     })
   })
 
-  it.each([null, 'some', 'daily'] as const)('preserves the array reference without a profession for AI level %s', aiLevel => {
-    expect(personalizeBlocks(introBlocks, { profession: null, aiLevel })).toBe(introBlocks)
+  it.each([null, 'some', 'daily'] as const)('preserves the array reference on a page without tracks, without a profession, for AI level %s', aiLevel => {
+    const plain = introData.find(page => !page.contentBlocks.some(block => block.track))!.contentBlocks
+    expect(personalizeBlocks(plain, { profession: null, aiLevel })).toBe(plain)
+  })
+
+  // Owner 2026-11-01: a reader on Mona's track saw Ahmed's walkthrough on intro p1 and Ahmed's story in lesson 1.4.
+  it.each(['accounting', 'service'] as const)('gives the %s track its own walkthrough, review and story where the lessons were one person', track => {
+    const other = track === 'accounting' ? 'service' : 'accounting'
+    for (const page of [introData[0], introData[2], unit1Data[3]]) {
+      const result = personalizeBlocks(page.contentBlocks, { profession: null, aiLevel: 'some', track })
+      expect(result.some(block => block.track === other)).toBe(false)
+      expect(result.filter(block => block.type === 'story' && block.track === track)).toHaveLength(1)
+    }
+    const intro1 = personalizeBlocks(introData[0].contentBlocks, { profession: null, aiLevel: 'some', track })
+    expect(intro1.filter(block => block.type === 'code' && block.track === track)).toHaveLength(2)
+    expect(intro1.filter(block => block.personalize === 'profession-try')).toHaveLength(1)
   })
 
   it('collapses every advanced block and no other block for a first-time AI reader', () => {

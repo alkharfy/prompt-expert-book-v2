@@ -145,7 +145,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
     const { preferences: learner } = useLearning()
     const learnerProfession = learner?.profession ?? null
     const learnerLevel = learner?.aiLevel ?? null
-    // The reader's own pick of Ahmed's or Mona's examples beats the guess from their profession (TrackSwitch).
+    // Readers who answered onboarding follow the track of their answer (changed from /profile); owner 2026-11-01:
+    // «ليه بخليه يختار ما أنا أظهرله المحتوى اللي يناسب اختياره». Only readers with no answer (guests, old
+    // accounts) get the on-page switch, and their pick is kept in this browser.
     const [trackChoice, setTrackChoice] = useState<ReaderTrack | null>(null)
     useEffect(() => {
         try {
@@ -157,8 +159,9 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
         setTrackChoice(next)
         try { localStorage.setItem(TRACK_KEY, next) } catch { /* the choice lasts for this visit */ }
     }, [])
-    const track = trackChoice ?? readerTrack(learnerProfession)
+    const track = learnerProfession ? readerTrack(learnerProfession) : trackChoice ?? readerTrack(null)
     const pageHasTracks = !!currentPage?.contentBlocks.some(block => block.track)
+    const showTrackSwitch = pageHasTracks && !learnerProfession
     const pageBlocks = React.useMemo(
         () => personalizeBlocks(currentPage?.contentBlocks ?? [], { profession: learnerProfession, aiLevel: learnerLevel, track }),
         [currentPage, learnerProfession, learnerLevel, track],
@@ -686,7 +689,7 @@ export default function SectionPage({ config, data, initialHasAccess = false, in
 
                     {/* The intro is a first-time visitor's first page: the map comes after the content there. */}
                     {!mapAtBottom && courseMap}
-                    {pageHasTracks && !isCurrentPageLocked && <TrackSwitch track={track} onChange={chooseTrack} />}
+                    {showTrackSwitch && !isCurrentPageLocked && <TrackSwitch track={track} onChange={chooseTrack} />}
 
                     {/* Header */}
                     <motion.div

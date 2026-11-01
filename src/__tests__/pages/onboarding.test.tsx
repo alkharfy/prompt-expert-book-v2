@@ -62,7 +62,7 @@ async function chooseOption(name: string | RegExp) {
 
 async function reachMinutes(level = 'أول مرة') {
   await renderPage()
-  await chooseOption('محاسب أو مالية')
+  await chooseOption(/^أرقام وفواتير وجداول/)
   expect(screen.getByRole('heading', { name: 'استخدمت الـ AI قبل كده؟' })).toBeInTheDocument()
   await chooseOption(new RegExp(level))
 }
@@ -199,8 +199,16 @@ describe('OnboardingPage', () => {
   })
 
   it('prefills the saved profession as an accessible checked option', async () => {
-    preferences = { profession: 'teacher' }
+    preferences = { profession: 'sales_service' }
     await renderPage()
-    expect(screen.getByRole('radio', { name: 'مدرس' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radio', { name: /^عملاء ورسايل وشكاوى/ })).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('offers only the two lesson tracks, each naming whose examples the lessons follow', async () => {
+    await renderPage()
+    const options = screen.getAllByRole('radio')
+    expect(options).toHaveLength(2)
+    expect(options[0]).toHaveTextContent('أحمد')
+    expect(options[1]).toHaveTextContent('منى')
   })
 })

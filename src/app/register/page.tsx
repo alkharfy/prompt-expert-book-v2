@@ -13,6 +13,7 @@ import { trackSignUp, trackFunnelStep } from '@/lib/analytics'
 import { leadEventId } from '@/lib/tracking-config'
 import { getSignupRedirect } from '@/lib/signup-redirect'
 import { getSafeRedirectPath } from '@/lib/safe-redirect'
+import { REFERRALS_LIVE } from '@/lib/referrals'
 import '@/app/auth.css'
 
 // Where ?next= may send the visitor after this step (see lib/safe-redirect).
@@ -264,7 +265,7 @@ function RegisterContent() {
                         required
                     />
 
-                    <div style={{ position: 'relative' }}>
+                    {REFERRALS_LIVE && <div style={{ position: 'relative' }}>
                         <AuthInput
                             id="register-referral"
                             label="كود صاحبك (لو معاك)"
@@ -310,7 +311,7 @@ function RegisterContent() {
                                 {referralValid}
                             </p>
                         )}
-                    </div>
+                    </div>}
 
                     <button
                         id="register-submit"

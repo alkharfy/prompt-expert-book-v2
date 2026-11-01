@@ -21,6 +21,15 @@ export const PROFESSION_IDS: readonly ProfessionId[] = [
   'programmer',
   'other',
 ]
+/**
+ * What onboarding and the profile offer since 2026-11-01: one profession per lesson track (Ahmed's accounting,
+ * Mona's customer service). The other ids stay valid for answers given before.
+ */
+export const TRACK_PROFESSIONS: readonly ProfessionId[] = ['accounting', 'sales_service']
+export const TRACK_PROFESSION_LABELS: Record<string, { icon: string; label: string; hint: string; person: string }> = {
+  accounting: { icon: '📊', label: 'أرقام وفواتير وجداول', hint: 'الدروس هتمشي مع أحمد، محاسب في شركة صغيرة', person: 'أحمد · محاسب' },
+  sales_service: { icon: '💬', label: 'عملاء ورسايل وشكاوى', hint: 'الدروس هتمشي مع منى، في خدمة العملاء', person: 'منى · خدمة عملاء' },
+}
 export const AI_LEVEL_IDS: readonly AiLevelId[] = ['new', 'some', 'daily']
 export const DAILY_MINUTES_OPTIONS: readonly DailyMinutes[] = [10, 20, 30]
 

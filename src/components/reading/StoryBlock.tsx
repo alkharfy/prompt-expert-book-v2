@@ -55,7 +55,7 @@ export default function StoryBlock({ title, note, frames, formatText = text => t
                 style={{ position: 'relative', display: 'block', width: '100%', padding: 0, border: '1px solid rgba(255, 107, 53, 0.25)', borderRadius: '16px', overflow: 'hidden', background: '#050505', cursor: 'pointer', aspectRatio: '4 / 5' }}
             >
                 {/* eslint-disable-next-line @next/next/no-img-element -- small pre-sized webp frames, swapped on tap */}
-                <img src={frame.src} alt={frame.caption} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <img src={frame.src} alt={frame.caption.replace(/\*\*/g, '')} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 {frame.box && (
                     <span
                         key={index}
